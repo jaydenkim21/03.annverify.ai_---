@@ -299,19 +299,22 @@ tailwind.config = {
      PAGE: PARTNER NEWS
 ════════════════════════════════════ -->
 <section id="page-partner" class="page flex-col">
-  <header class="sticky top-0 z-40 bg-bg-light/90 dark:bg-bg-dark/90 backdrop-blur-md px-8 py-4 border-b border-slate-200 dark:border-slate-800">
-    <div class="max-w-7xl mx-auto flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <span class="material-symbols-outlined text-primary">flag</span>
-        <h2 class="font-display text-xl font-bold text-slate-900 dark:text-white">Partner Feed</h2>
-      </div>
-      <div class="relative">
-        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
-        <input class="pl-10 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm w-64 focus:ring-2 focus:ring-primary outline-none" placeholder="Search partner articles..." id="partner-search"/>
+  <header class="sticky top-0 z-40 bg-bg-light/90 dark:bg-bg-dark/90 backdrop-blur-md px-8 py-6 border-b border-slate-200/60 dark:border-slate-800">
+    <div class="max-w-7xl mx-auto">
+      <div class="flex items-end justify-between mb-6">
+        <div>
+          <h2 class="font-display text-3xl font-black text-slate-900 dark:text-white tracking-tight">Partner News Feed</h2>
+          <p class="text-slate-500 dark:text-slate-400 mt-1 text-sm font-medium">Verified articles from trusted ANN partner networks.</p>
+        </div>
+        <div class="relative">
+          <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
+          <input class="pl-10 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm w-64 focus:ring-2 focus:ring-primary outline-none" placeholder="Search partner articles..." id="partner-search"/>
+        </div>
       </div>
     </div>
   </header>
-  <div class="flex-1 max-w-7xl mx-auto w-full px-8 py-6 space-y-8">
+  <div class="flex-1 p-8 lg:p-10">
+  <div class="max-w-7xl mx-auto space-y-8">
     <section class="space-y-4">
       <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Verified Partners</h3>
       <div class="flex items-center gap-5 overflow-x-auto pb-3 hide-scroll" id="partners-row"></div>
@@ -343,35 +346,38 @@ tailwind.config = {
       </button>
     </div>
   </div>
+  </div>
 </section>
 
 <!-- ════════════════════════════════════
      PAGE: COMMUNITY
 ════════════════════════════════════ -->
 <section id="page-community" class="page flex-col">
-  <header class="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-8 py-4">
-    <div class="flex items-center justify-between mb-4">
-      <div class="flex items-center gap-3">
-        <span class="material-symbols-outlined text-primary">forum</span>
-        <h2 class="font-display text-xl font-bold tracking-tight">Community Discussion</h2>
-      </div>
-      <div class="flex items-center gap-3 flex-1 max-w-sm mx-8">
-        <div class="relative w-full">
-          <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
-          <input class="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-xl py-2 pl-10 pr-4 focus:ring-2 focus:ring-primary/50 text-sm" placeholder="Search discussions..." id="community-search"/>
+  <header class="sticky top-0 z-40 bg-bg-light/90 dark:bg-bg-dark/90 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-800 px-4 sm:px-8 py-4 sm:py-6">
+    <div class="max-w-7xl mx-auto">
+      <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-4 sm:mb-6">
+        <div>
+          <h2 class="font-display text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">Community Discussion</h2>
+          <p class="text-slate-500 dark:text-slate-400 mt-1 text-sm font-medium hidden sm:block">Join the conversation — discuss, debate, and verify together.</p>
+        </div>
+        <div class="flex items-center gap-2 sm:gap-3">
+          <div class="relative flex-1 sm:flex-none">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
+            <input class="w-full sm:w-56 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl py-2 pl-9 pr-3 focus:ring-2 focus:ring-primary/50 text-sm outline-none" placeholder="Search discussions..." id="community-search"/>
+          </div>
+          <button onclick="goPage('home')" class="shrink-0 px-3 sm:px-4 py-2 bg-primary text-white text-sm font-bold rounded-xl flex items-center gap-1 hover:bg-primary/90 transition-colors">
+            <span class="material-symbols-outlined text-sm">add</span><span class="hidden sm:inline">New Check</span>
+          </button>
         </div>
       </div>
-      <button onclick="goPage('home')" class="px-4 py-2 bg-primary text-white text-sm font-bold rounded-xl flex items-center gap-1 hover:bg-primary/90 transition-colors">
-        <span class="material-symbols-outlined text-sm">add</span>New Check
-      </button>
-    </div>
-    <div class="flex gap-6 border-b border-slate-100 dark:border-slate-800">
-      <button onclick="setCommunityTab('popular')" id="ctab-popular" class="pb-3 text-sm font-bold border-b-2 border-primary text-primary px-1">Popular</button>
-      <button onclick="setCommunityTab('recent')"  id="ctab-recent"  class="pb-3 text-sm font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 px-1 border-b-2 border-transparent">Recent</button>
-      <button onclick="setCommunityTab('my')"      id="ctab-my"      class="pb-3 text-sm font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 px-1 border-b-2 border-transparent">My Checks</button>
+      <div class="flex gap-4 sm:gap-6 border-b border-slate-100 dark:border-slate-800 overflow-x-auto hide-scroll">
+        <button onclick="setCommunityTab('popular')" id="ctab-popular" class="pb-3 text-sm font-bold border-b-2 border-primary text-primary px-1 whitespace-nowrap">Popular</button>
+        <button onclick="setCommunityTab('recent')"  id="ctab-recent"  class="pb-3 text-sm font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 px-1 border-b-2 border-transparent whitespace-nowrap">Recent</button>
+        <button onclick="setCommunityTab('my')"      id="ctab-my"      class="pb-3 text-sm font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 px-1 border-b-2 border-transparent whitespace-nowrap">My Checks</button>
+      </div>
     </div>
   </header>
-  <div class="flex-1 p-8">
+  <div class="flex-1 p-8 lg:p-10">
     <div id="community-grid" class="grid grid-cols-1 xl:grid-cols-2 gap-6 max-w-7xl mx-auto"></div>
     <div class="flex justify-center py-8">
       <button class="text-primary font-bold text-sm flex items-center gap-2 hover:underline bg-primary/5 px-6 py-2 rounded-full">
@@ -385,20 +391,29 @@ tailwind.config = {
      PAGE: REPORT
 ════════════════════════════════════ -->
 <section id="page-report" class="page flex-col">
-  <header class="h-16 border-b border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md sticky top-0 z-40 px-8 flex items-center justify-between">
-    <div class="flex items-center gap-2 text-sm text-slate-500">
-      <button onclick="goPage('home')" class="hover:text-primary transition-colors">Home</button>
-      <span class="material-symbols-outlined text-xs">chevron_right</span>
-      <span class="text-slate-900 dark:text-white font-medium">Verification Report</span>
-    </div>
-    <div class="flex items-center gap-3">
-      <button onclick="shareReport()" class="p-2 text-slate-400 hover:text-primary transition-colors" title="Share"><span class="material-symbols-outlined">share</span></button>
-      <button onclick="downloadReport()" class="p-2 text-slate-400 hover:text-primary transition-colors" title="Download"><span class="material-symbols-outlined">download</span></button>
-      <button onclick="goPage('home')" class="text-xs text-slate-500 hover:text-primary transition-colors border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2">New Check</button>
+  <header class="sticky top-0 z-40 bg-bg-light/90 dark:bg-bg-dark/90 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-800 px-8 py-6">
+    <div class="max-w-7xl mx-auto">
+      <div class="flex items-end justify-between mb-1">
+        <div>
+          <div class="flex items-center gap-2 text-sm text-slate-500 mb-1">
+            <button onclick="goPage('home')" class="hover:text-primary transition-colors">Home</button>
+            <span class="material-symbols-outlined text-xs">chevron_right</span>
+            <span class="text-slate-900 dark:text-white font-medium">Verification Report</span>
+          </div>
+          <h2 class="font-display text-3xl font-black text-slate-900 dark:text-white tracking-tight">Verification Report</h2>
+          <p class="text-slate-500 dark:text-slate-400 mt-1 text-sm font-medium">7-Layer AI fact-check result with full evidence breakdown.</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <button onclick="shareReport()" class="p-2 text-slate-400 hover:text-primary transition-colors" title="Share"><span class="material-symbols-outlined">share</span></button>
+          <button onclick="downloadReport()" class="p-2 text-slate-400 hover:text-primary transition-colors" title="Download"><span class="material-symbols-outlined">download</span></button>
+          <button onclick="goPage('home')" class="text-xs text-slate-500 hover:text-primary transition-colors border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2">New Check</button>
+        </div>
+      </div>
     </div>
   </header>
 
-  <div class="flex-1 p-8 max-w-7xl mx-auto w-full space-y-8">
+  <div class="flex-1 p-8 lg:p-10">
+  <div class="max-w-7xl mx-auto space-y-8">
     <!-- Loading State -->
     <div id="report-loading" class="hidden">
       <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-8 shadow-sm">
@@ -472,13 +487,25 @@ tailwind.config = {
       <button onclick="goPage('home')" class="px-8 py-4 bg-primary text-white rounded-2xl font-bold hover:bg-primary/90 transition-colors">Start Fact Check</button>
     </div>
   </div>
+  </div>
 </section>
 
 <!-- ════════════════════════════════════
      PAGE: ABOUT & API
 ════════════════════════════════════ -->
 <section id="page-about" class="page flex-col">
-  <div class="flex-1 p-8 lg:p-12 max-w-7xl mx-auto w-full">
+  <div class="sticky top-0 bg-bg-light/90 dark:bg-bg-dark/90 backdrop-blur-md z-40 border-b border-slate-200/60 dark:border-slate-800 px-8 py-6">
+    <div class="max-w-7xl mx-auto">
+      <div class="flex items-end justify-between">
+        <div>
+          <h2 class="font-display text-3xl font-black text-slate-900 dark:text-white tracking-tight">About & API</h2>
+          <p class="text-slate-500 dark:text-slate-400 mt-1 text-sm font-medium">ANN 7-Layer Fact Engine — Technology, Token & API Access.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="flex-1 p-8 lg:p-10">
+  <div class="max-w-7xl mx-auto">
     <section class="mb-20">
       <div class="mb-12">
         <span class="text-primary font-bold text-sm tracking-widest uppercase">The Philosophy</span>
@@ -588,6 +615,7 @@ tailwind.config = {
         </div>
       </div>
     </section>
+  </div>
   </div>
 </section>
 
