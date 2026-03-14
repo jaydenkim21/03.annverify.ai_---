@@ -14,6 +14,7 @@ function goPage(page) {
   if (page === 'partner'   && !state.partnerData.length)   loadPartner();
   if (page === 'community' && !state.communityData.length) loadCommunity();
   if (page === 'report')   renderReport();
+  if (page === 'profile' && typeof renderProfilePage === 'function') renderProfilePage();
 
   window.scrollTo(0, 0);
 }

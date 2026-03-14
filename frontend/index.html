@@ -120,14 +120,41 @@ tailwind.config = {
       </button>
     </div>
 
-    <!-- 로그인 후: 프로필 -->
-    <div id="user-loggedin" class="hidden bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-3 flex items-center gap-3">
-      <img id="user-avatar" src="" alt="" class="w-9 h-9 shrink-0 rounded-full border border-primary/20 object-cover bg-primary/10"/>
-      <div class="sb-text flex-1 overflow-hidden">
-        <p class="text-sm font-semibold truncate text-slate-900 dark:text-white" id="username-display">User</p>
-        <p class="text-xs text-slate-500 truncate" id="user-email"></p>
+    <!-- 로그인 후: 프로필 + 드롭다운 -->
+    <div id="user-loggedin" class="hidden relative">
+
+      <!-- 드롭다운 메뉴 (프로필 카드 위에 absolute) -->
+      <div id="profile-dropdown" class="hidden absolute bottom-full left-0 right-0 mb-2 z-50">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-xl py-1">
+          <button onclick="goPage('profile'); toggleProfileDropdown()" class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+            <span class="material-symbols-outlined text-base text-slate-400">person</span>
+            <span class="sb-text">My Profile</span>
+          </button>
+          <button onclick="goPage('home'); toggleProfileDropdown()" class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+            <span class="material-symbols-outlined text-base text-slate-400">history</span>
+            <span class="sb-text">Verification History</span>
+          </button>
+          <button onclick="toggleProfileDropdown()" class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+            <span class="material-symbols-outlined text-base text-slate-400">settings</span>
+            <span class="sb-text">Settings</span>
+          </button>
+          <div class="mx-3 my-1 border-t border-slate-100 dark:border-slate-700"></div>
+          <button onclick="authLogout(); toggleProfileDropdown()" class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+            <span class="material-symbols-outlined text-base">logout</span>
+            <span class="sb-text">로그아웃</span>
+          </button>
+        </div>
       </div>
-      <button onclick="authLogout()" class="sb-text material-symbols-outlined text-slate-400 text-lg hover:text-red-500 transition-colors shrink-0" title="로그아웃">logout</button>
+
+      <!-- 프로필 카드 (클릭하면 드롭다운 토글) -->
+      <button onclick="toggleProfileDropdown()" class="w-full bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-3 flex items-center gap-3 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors">
+        <img id="user-avatar" src="" alt="" class="w-9 h-9 shrink-0 rounded-full border border-primary/20 object-cover bg-primary/10"/>
+        <div class="sb-text flex-1 overflow-hidden text-left">
+          <p class="text-sm font-semibold truncate text-slate-900 dark:text-white" id="username-display">User</p>
+          <p class="text-xs text-slate-500 truncate" id="user-email"></p>
+        </div>
+        <span class="sb-text material-symbols-outlined text-slate-400 text-base transition-transform duration-300" id="profile-chevron">expand_less</span>
+      </button>
     </div>
 
     <button onclick="toggleDark()" class="mt-2 w-full flex items-center justify-center gap-2 text-xs text-slate-600 hover:text-slate-800 transition-colors py-2">
@@ -720,6 +747,85 @@ tailwind.config = {
   </div>
 </section>
 
+<!-- ════════════════════════════════════
+     PAGE: PROFILE (My Profile)
+════════════════════════════════════ -->
+<section id="page-profile" class="page flex-col p-8 lg:p-16 min-h-screen">
+  <div class="w-full max-w-5xl mx-auto">
+
+    <!-- 페이지 헤더 -->
+    <div class="mb-10">
+      <h1 class="font-display text-3xl font-black text-slate-900 dark:text-white">My Profile</h1>
+      <p class="text-slate-500 mt-1">Account information and verification history</p>
+    </div>
+
+    <!-- 계정 정보 카드 -->
+    <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-8 mb-6 flex flex-col sm:flex-row items-center sm:items-start gap-6">
+      <img id="profile-avatar-large" src="" alt="" class="w-24 h-24 rounded-full border-4 border-primary/20 object-cover bg-primary/10 shrink-0"/>
+      <div class="flex-1 text-center sm:text-left">
+        <h2 id="profile-name-display" class="font-display text-2xl font-bold text-slate-900 dark:text-white">—</h2>
+        <p id="profile-email-display" class="text-slate-500 mt-1">—</p>
+        <div class="mt-4 flex flex-wrap gap-3 justify-center sm:justify-start">
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary">
+            <span class="material-symbols-outlined text-xs">verified_user</span>
+            ANN Verify Member
+          </span>
+          <span id="profile-provider-badge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+            <span class="material-symbols-outlined text-xs">account_circle</span>
+            Email
+          </span>
+        </div>
+      </div>
+      <button onclick="authLogout()" class="shrink-0 flex items-center gap-2 px-4 py-2 border border-red-200 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl text-sm font-semibold transition-colors">
+        <span class="material-symbols-outlined text-base">logout</span>
+        로그아웃
+      </button>
+    </div>
+
+    <!-- 통계 카드 3개 -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6" id="profile-stats-grid">
+      <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm p-6 flex flex-col items-center">
+        <span class="material-symbols-outlined text-primary text-3xl mb-2">fact_check</span>
+        <p class="text-3xl font-black text-slate-900 dark:text-white" id="stat-total">0</p>
+        <p class="text-xs text-slate-500 mt-1">Total Verifications</p>
+      </div>
+      <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm p-6 flex flex-col items-center">
+        <span class="material-symbols-outlined text-emerald-500 text-3xl mb-2">bar_chart</span>
+        <p class="text-3xl font-black text-slate-900 dark:text-white" id="stat-avg">—</p>
+        <p class="text-xs text-slate-500 mt-1">Average Trust Score</p>
+      </div>
+      <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm p-6 flex flex-col items-center">
+        <span class="material-symbols-outlined text-amber-500 text-3xl mb-2">emoji_events</span>
+        <p class="text-3xl font-black text-slate-900 dark:text-white" id="stat-top-grade">—</p>
+        <p class="text-xs text-slate-500 mt-1">Most Common Grade</p>
+      </div>
+    </div>
+
+    <!-- 등급 분포 -->
+    <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-8 mb-6">
+      <h3 class="font-display text-lg font-bold text-slate-900 dark:text-white mb-6">Grade Distribution</h3>
+      <div id="profile-grade-bars" class="space-y-3">
+        <!-- JS로 렌더링 -->
+      </div>
+    </div>
+
+    <!-- 전체 히스토리 목록 -->
+    <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-8">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="font-display text-lg font-bold text-slate-900 dark:text-white">Verification History</h3>
+        <button onclick="clearHistory(); renderProfilePage()" class="text-xs text-red-400 hover:text-red-600 transition-colors flex items-center gap-1">
+          <span class="material-symbols-outlined text-sm">delete_sweep</span>
+          기록 삭제
+        </button>
+      </div>
+      <div id="profile-history-list" class="space-y-3">
+        <!-- JS로 렌더링 -->
+      </div>
+    </div>
+
+  </div>
+</section>
+
 </div><!-- end main -->
 </div><!-- end flex -->
 
@@ -754,6 +860,104 @@ tailwind.config = {
 </script>
 
 <script>
+// ── My Profile 렌더링 ──────────────────────────────────────────────────
+function renderProfilePage() {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  // 계정 정보
+  const name    = user.displayName || user.email.split('@')[0];
+  const email   = user.email || '';
+  const picture = user.photoURL || '';
+  const isGoogle = user.providerData.some(p => p.providerId === 'google.com');
+
+  document.getElementById('profile-avatar-large').src = picture;
+  document.getElementById('profile-name-display').textContent  = name;
+  document.getElementById('profile-email-display').textContent = email;
+
+  const badge = document.getElementById('profile-provider-badge');
+  badge.innerHTML = isGoogle
+    ? '<svg width="14" height="14" viewBox="0 0 48 48" style="flex-shrink:0"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg> Google'
+    : '<span class="material-symbols-outlined" style="font-size:14px">mail</span> Email';
+
+  // 통계
+  const history = state.history || [];
+  const total = history.length;
+  document.getElementById('stat-total').textContent = total;
+
+  if (total > 0) {
+    const avg = Math.round(history.reduce((s, h) => s + (h.score || 0), 0) / total);
+    document.getElementById('stat-avg').textContent = avg;
+
+    const gradeCount = {};
+    history.forEach(h => { gradeCount[h.grade] = (gradeCount[h.grade] || 0) + 1; });
+    const topGrade = Object.entries(gradeCount).sort((a, b) => b[1] - a[1])[0][0];
+    document.getElementById('stat-top-grade').textContent = topGrade || '—';
+
+    // 등급 분포 바
+    const grades = ['A', 'B', 'C', 'D', 'F'];
+    const gradeColors = { A:'#10B981', B:'#3B82F6', C:'#F59E0B', D:'#F97316', F:'#EF4444' };
+    const barsEl = document.getElementById('profile-grade-bars');
+    barsEl.innerHTML = grades.map(g => {
+      const cnt = gradeCount[g] || 0;
+      const pct = total > 0 ? Math.round(cnt / total * 100) : 0;
+      return `<div class="flex items-center gap-3">
+        <span class="w-6 text-sm font-black text-center" style="color:${gradeColors[g]}">${g}</span>
+        <div class="flex-1 h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+          <div class="h-full rounded-full transition-all duration-700" style="width:${pct}%;background:${gradeColors[g]}"></div>
+        </div>
+        <span class="w-12 text-xs text-slate-500 text-right">${cnt}건 (${pct}%)</span>
+      </div>`;
+    }).join('');
+  } else {
+    document.getElementById('stat-avg').textContent = '—';
+    document.getElementById('stat-top-grade').textContent = '—';
+    document.getElementById('profile-grade-bars').innerHTML =
+      '<p class="text-sm text-slate-400 text-center py-4">검증 기록이 없습니다.</p>';
+  }
+
+  // 전체 히스토리 목록
+  const listEl = document.getElementById('profile-history-list');
+  if (!history.length) {
+    listEl.innerHTML = '<p class="text-sm text-slate-400 text-center py-8">검증 기록이 없습니다.</p>';
+    return;
+  }
+  const verdictLabel = { verified:'Verified', likely:'Likely True', partial:'Partially True', false:'False', unknown:'Unknown' };
+  const verdictColor  = { verified:'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20',
+                          likely:'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20',
+                          partial:'text-amber-600 bg-amber-50 dark:bg-amber-900/20',
+                          false:'text-red-600 bg-red-50 dark:bg-red-900/20',
+                          unknown:'text-slate-500 bg-slate-100 dark:bg-slate-800' };
+  listEl.innerHTML = '';
+  history.forEach(function(h, idx) {
+    const vc  = (h.verdict || 'unknown').toLowerCase();
+    const vcls = verdictColor[vc] || verdictColor.unknown;
+    const vlbl = verdictLabel[vc] || h.verdict || '—';
+    const div = document.createElement('div');
+    div.className = 'flex items-center gap-4 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-primary/30 hover:shadow-sm transition-all cursor-pointer';
+    div.innerHTML = `
+      <div class="w-10 h-10 rounded-full border-2 flex items-center justify-center text-sm font-black shrink-0 grade-${h.grade}">${escHtml(h.grade)}</div>
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-medium text-slate-900 dark:text-white truncate">${escHtml(h.input)}</p>
+        <p class="text-xs text-slate-400 mt-0.5">${new Date(h.ts).toLocaleString()}</p>
+      </div>
+      <div class="flex items-center gap-3 shrink-0">
+        <span class="text-sm font-bold text-slate-700 dark:text-slate-300">${h.score !== undefined ? h.score : '—'}</span>
+        <span class="px-2.5 py-1 rounded-full text-xs font-semibold ${vcls}">${vlbl}</span>
+      </div>`;
+    div.addEventListener('click', function() { rerunHistory(h.input); });
+    listEl.appendChild(div);
+  });
+}
+
+function toggleProfileDropdown() {
+  const dropdown = document.getElementById('profile-dropdown');
+  const chevron  = document.getElementById('profile-chevron');
+  const isHidden = dropdown.classList.contains('hidden');
+  dropdown.classList.toggle('hidden', !isHidden);
+  if (chevron) chevron.style.transform = isHidden ? 'rotate(180deg)' : '';
+}
+
 function toggleSidebar() {
   const sidebar = document.getElementById('sidebar');
   const main = document.getElementById('main-content');
