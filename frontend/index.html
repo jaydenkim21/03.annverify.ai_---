@@ -88,7 +88,7 @@ tailwind.config = {
 
       <!-- ── 중간 버튼 ── -->
       <div class="py-1">
-        <button onclick="goPage('report')" class="w-full flex items-center gap-3 px-3 py-3 rounded-2xl bg-primary/10 hover:bg-primary/20 text-primary transition-colors overflow-hidden">
+        <button onclick="goPage('report')" data-page="report" class="nav-link w-full flex items-center gap-3 px-3 py-3 rounded-2xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors overflow-hidden">
           <span class="material-symbols-outlined shrink-0">fact_check</span>
           <span class="sb-text font-bold whitespace-nowrap">Verify Report</span>
         </button>
@@ -127,7 +127,7 @@ tailwind.config = {
 <!-- ═══════════════════════════════════════════════════════════
      MAIN CONTENT AREA
 ═══════════════════════════════════════════════════════════ -->
-<div id="main-content" class="flex-1 ml-[280px] transition-[margin] duration-300">
+<div id="main-content" class="flex-1 ml-[336px] transition-[margin] duration-300">
 
 <!-- ════════════════════════════════════
      PAGE: HOME
@@ -417,11 +417,6 @@ tailwind.config = {
     <div class="max-w-7xl mx-auto">
       <div class="flex items-end justify-between mb-1">
         <div>
-          <div class="flex items-center gap-2 text-sm text-slate-500 mb-1">
-            <button onclick="goPage('home')" class="hover:text-primary transition-colors">Home</button>
-            <span class="material-symbols-outlined text-xs">chevron_right</span>
-            <span class="text-slate-900 dark:text-white font-medium">Verification Report</span>
-          </div>
           <h2 class="font-display text-3xl font-black text-slate-900 dark:text-white tracking-tight">Verification Report</h2>
           <p class="text-slate-500 dark:text-slate-400 mt-1 text-sm font-medium">7-Layer AI fact-check result with full evidence breakdown.</p>
         </div>
@@ -679,7 +674,7 @@ function toggleSidebar() {
   const sidebar = document.getElementById('sidebar');
   const main = document.getElementById('main-content');
   const collapsed = sidebar.classList.toggle('collapsed');
-  main.style.marginLeft = collapsed ? '72px' : '280px';
+  main.style.marginLeft = collapsed ? '86px' : '336px';
 }
 </script>
 </body>

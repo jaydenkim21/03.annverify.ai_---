@@ -7,7 +7,7 @@
   --emerald: #10B981;
   --amber:   #F59E0B;
   --red:     #EF4444;
-  --sidebar-w: 280px;
+  --sidebar-w: 336px;
 }
 
 html {
@@ -17,23 +17,32 @@ html {
 body { font-family:'Inter',sans-serif; }
 h1,h2,h3,.font-display { font-family:'Space Grotesk',sans-serif; }
 
+/* ── 사이드바 줌 ── */
+#sidebar {
+  zoom: 1.2;
+}
+
+/* ── 콘텐츠 영역 줌 ── */
+#main-content {
+  zoom: 1.2;
+}
+
 /* ── 로고 아이콘 크기 ── */
 .logo-icon-box {
   width: 60px;
   height: 60px;
-  transition: width 0.3s ease, height 0.3s ease, border-radius 0.3s ease;
+  transition: transform 0.3s ease, border-radius 0.3s ease;
+  transform-origin: left center;
 }
 .logo-icon-symbol {
   font-size: 30px;
-  transition: font-size 0.3s ease;
 }
 #sidebar.collapsed .logo-icon-box {
-  width: 40px;
-  height: 40px;
+  transform: scale(0.667);
   border-radius: 0.75rem;
 }
 #sidebar.collapsed .logo-icon-symbol {
-  font-size: 20px;
+  font-size: 30px;
 }
 
 /* ── 사이드바 아코디언 ── */
@@ -59,8 +68,9 @@ h1,h2,h3,.font-display { font-family:'Space Grotesk',sans-serif; }
   transform: scaleX(-1);
 }
 #sidebar nav a,
-#sidebar nav button {
-  transition: justify-content 0.3s;
+#sidebar nav button,
+#sidebar > div > button {
+  transition: gap 0.3s ease, padding 0.3s ease;
 }
 #sidebar.collapsed nav a,
 #sidebar.collapsed nav button,
