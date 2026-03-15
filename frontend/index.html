@@ -292,14 +292,14 @@ tailwind.config = {
 <!-- ════════════════════════════════════
      PAGE: HOME
 ════════════════════════════════════ -->
-<section id="page-home" class="page flex-col items-center justify-center p-8 lg:p-16 min-h-screen">
+<section id="page-home" class="page flex-col items-center justify-center p-4 sm:p-8 lg:p-16 min-h-screen">
   <div class="w-full max-w-7xl flex flex-col items-center">
     <!-- Hero -->
-    <div class="mb-10 text-center">
-      <h2 class="font-display text-5xl md:text-6xl font-bold tracking-tight text-slate-900 dark:text-white mb-6">
+    <div class="mb-8 sm:mb-10 text-center">
+      <h2 class="font-display text-3xl sm:text-5xl md:text-6xl font-bold tracking-tight text-slate-900 dark:text-white mb-4 sm:mb-6">
         Verify anything instantly
       </h2>
-      <p class="text-xl text-slate-500 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
+      <p class="text-sm sm:text-xl text-slate-500 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
         Powered by 7-Layer AI — Claude, GPT-4o, Grok, DeBERTa.
       </p>
     </div>
@@ -311,7 +311,7 @@ tailwind.config = {
         <div class="flex items-start gap-4 p-3">
           <span class="material-symbols-outlined text-slate-300 text-3xl ml-2 mt-1">search</span>
           <textarea id="home-input"
-            class="w-full bg-transparent border-none focus:ring-0 text-xl text-slate-900 dark:text-white placeholder:text-slate-400 resize-none min-h-[60px] max-h-[200px] font-medium py-1"
+            class="w-full bg-transparent border-none focus:ring-0 text-base sm:text-xl text-slate-900 dark:text-white placeholder:text-slate-400 resize-none min-h-[52px] sm:min-h-[60px] max-h-[200px] font-medium py-1"
             placeholder="Paste a news URL, claim, image link, or any statement..."
             rows="2"
             onkeydown="if(event.ctrlKey&&event.key==='Enter')runCheck()"></textarea>
@@ -327,13 +327,13 @@ tailwind.config = {
         <div class="flex items-center justify-between px-6 pb-4 pt-2 border-t border-slate-100 dark:border-slate-800 mt-2">
           <div class="flex items-center gap-2">
             <!-- 파일 업로드 -->
-            <label class="cursor-pointer flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-500 hover:text-primary hover:bg-primary/10 rounded-xl transition-all border border-slate-200 dark:border-slate-700" title="Upload Image">
+            <label class="cursor-pointer flex items-center gap-1.5 px-3 py-2.5 text-xs font-medium text-slate-500 hover:text-primary hover:bg-primary/10 rounded-xl transition-all border border-slate-200 dark:border-slate-700" title="Upload Image">
               <span class="material-symbols-outlined text-base">upload_file</span>
               <span class="hidden sm:inline">Upload</span>
               <input type="file" accept="image/*" class="hidden" onchange="handleImageUpload(event)"/>
             </label>
             <!-- 복사 붙이기 -->
-            <button onclick="pasteFromClipboard()" class="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-500 hover:text-primary hover:bg-primary/10 rounded-xl transition-all border border-slate-200 dark:border-slate-700">
+            <button onclick="pasteFromClipboard()" class="flex items-center gap-1.5 px-3 py-2.5 text-xs font-medium text-slate-500 hover:text-primary hover:bg-primary/10 rounded-xl transition-all border border-slate-200 dark:border-slate-700">
               <span class="material-symbols-outlined text-base">content_paste</span>
               <span class="hidden sm:inline">Paste</span>
             </button>
@@ -357,39 +357,45 @@ tailwind.config = {
     <!-- Analyze Button -->
     <div class="mt-8 text-center">
       <button onclick="runCheck()" id="analyze-btn"
-        class="px-16 py-5 bg-primary text-white text-xl font-bold rounded-2xl shadow-xl shadow-primary/30 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all active:translate-y-0 flex items-center gap-3 mx-auto">
+        class="px-8 sm:px-16 py-4 sm:py-5 bg-primary text-white text-base sm:text-xl font-bold rounded-2xl shadow-xl shadow-primary/30 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all active:translate-y-0 flex items-center gap-3 mx-auto">
         <span>Analyze Claim</span>
         <span class="material-symbols-outlined font-bold">bolt</span>
       </button>
     </div>
 
-    <!-- Quick Actions (모바일 숨김) -->
-    <div class="hidden sm:grid mt-16 w-full grid-cols-1 md:grid-cols-3 gap-6">
-      <div onclick="document.getElementById('home-input').placeholder='Paste any news URL here...';document.getElementById('home-input').focus()" class="p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 hover:border-primary/30 hover:shadow-lg transition-all cursor-pointer text-left group">
-        <div class="w-10 h-10 bg-blue-50 dark:bg-blue-900/30 text-blue-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+    <!-- Quick Actions -->
+    <div class="grid mt-10 sm:mt-16 w-full grid-cols-1 sm:grid-cols-1 md:grid-cols-3 gap-3 sm:gap-6">
+      <div onclick="document.getElementById('home-input').placeholder='Paste any news URL here...';document.getElementById('home-input').focus()" class="flex sm:flex-col items-center sm:items-start gap-3 sm:gap-0 p-4 sm:p-6 bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl border border-slate-100 dark:border-slate-800 hover:border-primary/30 hover:shadow-lg transition-all cursor-pointer text-left group">
+        <div class="w-10 h-10 shrink-0 bg-blue-50 dark:bg-blue-900/30 text-blue-500 rounded-xl flex items-center justify-center sm:mb-4 group-hover:scale-110 transition-transform">
           <span class="material-symbols-outlined">article</span>
         </div>
-        <h3 class="font-display font-bold text-slate-900 dark:text-white mb-1">Verify Article</h3>
-        <p class="text-sm text-slate-500">Paste any news URL to check source reliability and bias.</p>
+        <div>
+          <h3 class="font-display font-bold text-slate-900 dark:text-white mb-0 sm:mb-1">Verify Article</h3>
+          <p class="text-xs sm:text-sm text-slate-500 hidden sm:block">Paste any news URL to check source reliability and bias.</p>
+        </div>
       </div>
-      <div onclick="document.querySelector('label[title=\'Upload Image\']').click()" class="p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 hover:border-primary/30 hover:shadow-lg transition-all cursor-pointer text-left group">
-        <div class="w-10 h-10 bg-purple-50 dark:bg-purple-900/30 text-purple-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+      <div onclick="document.querySelector('label[title=\'Upload Image\']').click()" class="flex sm:flex-col items-center sm:items-start gap-3 sm:gap-0 p-4 sm:p-6 bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl border border-slate-100 dark:border-slate-800 hover:border-primary/30 hover:shadow-lg transition-all cursor-pointer text-left group">
+        <div class="w-10 h-10 shrink-0 bg-purple-50 dark:bg-purple-900/30 text-purple-500 rounded-xl flex items-center justify-center sm:mb-4 group-hover:scale-110 transition-transform">
           <span class="material-symbols-outlined">face</span>
         </div>
-        <h3 class="font-display font-bold text-slate-900 dark:text-white mb-1">Deepfake Detection</h3>
-        <p class="text-sm text-slate-500">Upload an image to detect AI-generated content.</p>
+        <div>
+          <h3 class="font-display font-bold text-slate-900 dark:text-white mb-0 sm:mb-1">Deepfake Detection</h3>
+          <p class="text-xs sm:text-sm text-slate-500 hidden sm:block">Upload an image to detect AI-generated content.</p>
+        </div>
       </div>
-      <div onclick="document.getElementById('home-input').placeholder='Type a claim to cross-reference...';document.getElementById('home-input').focus()" class="p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 hover:border-primary/30 hover:shadow-lg transition-all cursor-pointer text-left group">
-        <div class="w-10 h-10 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+      <div onclick="document.getElementById('home-input').placeholder='Type a claim to cross-reference...';document.getElementById('home-input').focus()" class="flex sm:flex-col items-center sm:items-start gap-3 sm:gap-0 p-4 sm:p-6 bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl border border-slate-100 dark:border-slate-800 hover:border-primary/30 hover:shadow-lg transition-all cursor-pointer text-left group">
+        <div class="w-10 h-10 shrink-0 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-500 rounded-xl flex items-center justify-center sm:mb-4 group-hover:scale-110 transition-transform">
           <span class="material-symbols-outlined">fact_check</span>
         </div>
-        <h3 class="font-display font-bold text-slate-900 dark:text-white mb-1">Quick Fact Check</h3>
-        <p class="text-sm text-slate-500">Type any verbal claim to cross-reference with global databases.</p>
+        <div>
+          <h3 class="font-display font-bold text-slate-900 dark:text-white mb-0 sm:mb-1">Quick Fact Check</h3>
+          <p class="text-xs sm:text-sm text-slate-500 hidden sm:block">Type any verbal claim to cross-reference with global databases.</p>
+        </div>
       </div>
     </div>
 
     <!-- Recent History -->
-    <div class="mt-16 w-full" id="recent-history">
+    <div class="mt-10 sm:mt-16 w-full" id="recent-history">
       <div class="flex items-center justify-between mb-6 px-1">
         <h3 class="font-display font-bold text-slate-900 dark:text-white flex items-center gap-2">
           <span class="material-symbols-outlined text-primary text-xl">history</span>
@@ -411,35 +417,37 @@ tailwind.config = {
      PAGE: AI NEWS
 ════════════════════════════════════ -->
 <section id="page-news" class="page flex-col">
-  <div class="sticky top-0 bg-bg-light/90 dark:bg-bg-dark/90 backdrop-blur-md z-40 border-b border-slate-200/60 dark:border-slate-800 px-8 py-6">
+  <div class="sticky top-14 sm:top-0 bg-bg-light/90 dark:bg-bg-dark/90 backdrop-blur-md z-40 border-b border-slate-200/60 dark:border-slate-800 px-4 sm:px-8 py-4 sm:py-6">
     <div class="max-w-7xl mx-auto">
-      <div class="flex items-end justify-between mb-6">
+      <div class="flex items-end justify-between mb-4 sm:mb-6">
         <div>
-          <h2 class="font-display text-3xl font-black text-slate-900 dark:text-white tracking-tight">AI News Feed</h2>
-          <p class="text-slate-500 dark:text-slate-400 mt-1 text-sm font-medium">Real-time news curated and verified by the ANN 7-Layer Engine.</p>
+          <h2 class="font-display text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">AI News Feed</h2>
+          <p class="text-slate-500 dark:text-slate-400 mt-1 text-xs sm:text-sm font-medium hidden sm:block">Real-time news curated and verified by the ANN 7-Layer Engine.</p>
         </div>
         <button onclick="loadNews()" class="flex items-center gap-1 text-primary font-bold text-xs uppercase tracking-widest cursor-pointer hover:opacity-70 transition-opacity">
           <span class="material-symbols-outlined text-sm">refresh</span> Refresh
         </button>
       </div>
-      <div class="flex flex-wrap items-center gap-3">
-        <select id="news-score-filter" onchange="filterNews()" class="text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full px-4 py-2 font-semibold text-slate-700 dark:text-slate-300 focus:ring-primary">
-          <option value="">All Trust Scores</option>
-          <option value="A">A+ / A (Verified)</option>
-          <option value="B">B+ / B (Credible)</option>
-          <option value="C">C (Caution)</option>
-          <option value="F">F (False)</option>
-        </select>
-        <select id="news-cat-filter" onchange="filterNews()" class="text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full px-4 py-2 font-semibold text-slate-700 dark:text-slate-300 focus:ring-primary">
-          <option value="">All Categories</option>
-          <option value="Tech">Tech</option>
-          <option value="Politics">Politics</option>
-          <option value="Science">Science</option>
-          <option value="Finance">Finance</option>
-          <option value="Ethics">Ethics</option>
-        </select>
-        <div class="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
-        <div id="news-tag-filters" class="flex gap-2 overflow-x-auto hide-scroll">
+      <div class="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 sm:gap-3">
+        <div class="flex items-center gap-2">
+          <select id="news-score-filter" onchange="filterNews()" class="text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full px-3 sm:px-4 py-2 font-semibold text-slate-700 dark:text-slate-300 focus:ring-primary">
+            <option value="">All Trust Scores</option>
+            <option value="A">A+ / A (Verified)</option>
+            <option value="B">B+ / B (Credible)</option>
+            <option value="C">C (Caution)</option>
+            <option value="F">F (False)</option>
+          </select>
+          <select id="news-cat-filter" onchange="filterNews()" class="text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full px-3 sm:px-4 py-2 font-semibold text-slate-700 dark:text-slate-300 focus:ring-primary">
+            <option value="">All Categories</option>
+            <option value="Tech">Tech</option>
+            <option value="Politics">Politics</option>
+            <option value="Science">Science</option>
+            <option value="Finance">Finance</option>
+            <option value="Ethics">Ethics</option>
+          </select>
+        </div>
+        <div class="hidden sm:block h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
+        <div id="news-tag-filters" class="flex gap-2 overflow-x-auto hide-scroll -mx-1 px-1">
           <button onclick="setNewsTag('Trending')" class="px-4 py-1.5 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold whitespace-nowrap">Trending</button>
           <button onclick="setNewsTag('AI Ethics')" class="px-4 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-slate-50 whitespace-nowrap">AI Ethics</button>
           <button onclick="setNewsTag('LLM')" class="px-4 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-slate-50 whitespace-nowrap">LLM</button>
@@ -449,9 +457,9 @@ tailwind.config = {
       </div>
     </div>
   </div>
-  <div class="flex-1 p-8 lg:p-10">
+  <div class="flex-1 p-4 sm:p-8 lg:p-10">
     <div class="max-w-7xl mx-auto">
-      <div id="news-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div id="news-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         <div class="skeleton rounded-3xl h-72"></div>
         <div class="skeleton rounded-3xl h-72"></div>
         <div class="skeleton rounded-3xl h-72"></div>
@@ -469,21 +477,21 @@ tailwind.config = {
      PAGE: PARTNER NEWS
 ════════════════════════════════════ -->
 <section id="page-partner" class="page flex-col">
-  <header class="sticky top-0 z-40 bg-bg-light/90 dark:bg-bg-dark/90 backdrop-blur-md px-8 py-6 border-b border-slate-200/60 dark:border-slate-800">
+  <header class="sticky top-14 sm:top-0 z-40 bg-bg-light/90 dark:bg-bg-dark/90 backdrop-blur-md px-4 sm:px-8 py-4 sm:py-6 border-b border-slate-200/60 dark:border-slate-800">
     <div class="max-w-7xl mx-auto">
-      <div class="flex items-end justify-between mb-6">
+      <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-4 sm:mb-6">
         <div>
-          <h2 class="font-display text-3xl font-black text-slate-900 dark:text-white tracking-tight">Partner News Feed</h2>
-          <p class="text-slate-500 dark:text-slate-400 mt-1 text-sm font-medium">Verified articles from trusted ANN partner networks.</p>
+          <h2 class="font-display text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">Partner News Feed</h2>
+          <p class="text-slate-500 dark:text-slate-400 mt-1 text-xs sm:text-sm font-medium hidden sm:block">Verified articles from trusted ANN partner networks.</p>
         </div>
         <div class="relative">
           <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
-          <input class="pl-10 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm w-64 focus:ring-2 focus:ring-primary outline-none" placeholder="Search partner articles..." id="partner-search"/>
+          <input class="pl-10 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm w-full sm:w-64 focus:ring-2 focus:ring-primary outline-none" placeholder="Search partner articles..." id="partner-search"/>
         </div>
       </div>
     </div>
   </header>
-  <div class="flex-1 p-8 lg:p-10">
+  <div class="flex-1 p-4 sm:p-8 lg:p-10">
   <div class="max-w-7xl mx-auto space-y-8">
     <section class="space-y-4">
       <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Verified Partners</h3>
@@ -523,7 +531,7 @@ tailwind.config = {
      PAGE: COMMUNITY
 ════════════════════════════════════ -->
 <section id="page-community" class="page flex-col">
-  <header class="sticky top-0 z-40 bg-bg-light/90 dark:bg-bg-dark/90 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-800 px-4 sm:px-8 py-4 sm:py-6">
+  <header class="sticky top-14 sm:top-0 z-40 bg-bg-light/90 dark:bg-bg-dark/90 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-800 px-4 sm:px-8 py-4 sm:py-6">
     <div class="max-w-7xl mx-auto">
       <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-4 sm:mb-6">
         <div>
@@ -549,17 +557,17 @@ tailwind.config = {
           <button onclick="setCommunityTab('partner')" id="ctab-partner" class="pb-3 text-sm font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 px-1 border-b-2 border-transparent whitespace-nowrap">Partner News</button>
         </div>
         <!-- 정렬 버튼 -->
-        <div class="flex items-center gap-1 pb-2 shrink-0 ml-4">
-          <button onclick="setCommunitySort('recent')"   id="csort-recent"   class="community-sort-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-primary text-white transition-all">Recent</button>
-          <button onclick="setCommunitySort('oldest')"   id="csort-oldest"   class="community-sort-btn px-2.5 py-1 text-xs font-semibold rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">Oldest</button>
-          <button onclick="setCommunitySort('comments')" id="csort-comments" class="community-sort-btn px-2.5 py-1 text-xs font-semibold rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">Comments</button>
-          <button onclick="setCommunitySort('likes')"    id="csort-likes"    class="community-sort-btn px-2.5 py-1 text-xs font-semibold rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">Likes</button>
+        <div class="flex items-center gap-1 pb-2 shrink-0 ml-2 sm:ml-4 overflow-x-auto hide-scroll">
+          <button onclick="setCommunitySort('recent')"   id="csort-recent"   class="community-sort-btn px-2 sm:px-2.5 py-1 text-xs font-semibold rounded-lg bg-primary text-white transition-all whitespace-nowrap">Recent</button>
+          <button onclick="setCommunitySort('oldest')"   id="csort-oldest"   class="community-sort-btn px-2 sm:px-2.5 py-1 text-xs font-semibold rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all whitespace-nowrap">Oldest</button>
+          <button onclick="setCommunitySort('comments')" id="csort-comments" class="community-sort-btn px-2 sm:px-2.5 py-1 text-xs font-semibold rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all whitespace-nowrap">Comments</button>
+          <button onclick="setCommunitySort('likes')"    id="csort-likes"    class="community-sort-btn px-2 sm:px-2.5 py-1 text-xs font-semibold rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all whitespace-nowrap">Likes</button>
         </div>
       </div>
     </div>
   </header>
-  <div class="flex-1 p-8 lg:p-10">
-    <div id="community-grid" class="grid grid-cols-1 xl:grid-cols-2 gap-6 max-w-7xl mx-auto"></div>
+  <div class="flex-1 p-4 sm:p-8 lg:p-10">
+    <div id="community-grid" class="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6 max-w-7xl mx-auto"></div>
     <div class="flex justify-center py-8">
       <button class="text-primary font-bold text-sm flex items-center gap-2 hover:underline bg-primary/5 px-6 py-2 rounded-full">
         Load more discussions <span class="material-symbols-outlined">expand_more</span>
@@ -573,7 +581,7 @@ tailwind.config = {
 ════════════════════════════════════ -->
 <section id="page-community-detail" class="page flex-col">
   <!-- 헤더 -->
-  <header class="sticky top-0 z-40 bg-bg-light/90 dark:bg-bg-dark/90 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-800 px-4 sm:px-8 py-4 sm:py-5">
+  <header class="sticky top-14 sm:top-0 z-40 bg-bg-light/90 dark:bg-bg-dark/90 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-800 px-4 sm:px-8 py-4 sm:py-5">
     <div class="max-w-4xl mx-auto flex items-center justify-between gap-4">
       <button onclick="goPage('community')" class="flex items-center gap-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-primary transition-colors">
         <span class="material-symbols-outlined text-base">arrow_back</span>
@@ -587,7 +595,7 @@ tailwind.config = {
     </div>
   </header>
 
-  <div class="flex-1 p-4 sm:p-8 lg:p-10">
+  <div class="flex-1 p-3 sm:p-8 lg:p-10">
     <div class="max-w-4xl mx-auto">
 
       <!-- 클레임 카드 (JS 렌더링) -->
@@ -655,23 +663,23 @@ tailwind.config = {
      PAGE: REPORT
 ════════════════════════════════════ -->
 <section id="page-report" class="page flex-col">
-  <header class="sticky top-0 z-40 bg-bg-light/90 dark:bg-bg-dark/90 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-800 px-8 py-6">
+  <header class="sticky top-14 sm:top-0 z-40 bg-bg-light/90 dark:bg-bg-dark/90 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-800 px-4 sm:px-8 py-4 sm:py-6">
     <div class="max-w-7xl mx-auto">
-      <div class="flex items-end justify-between mb-1">
+      <div class="flex items-center justify-between mb-1">
         <div>
-          <h2 class="font-display text-3xl font-black text-slate-900 dark:text-white tracking-tight">Verification Report</h2>
-          <p class="text-slate-500 dark:text-slate-400 mt-1 text-sm font-medium">7-Layer AI fact-check result with full evidence breakdown.</p>
+          <h2 class="font-display text-xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">Verification Report</h2>
+          <p class="text-slate-500 dark:text-slate-400 mt-1 text-xs sm:text-sm font-medium hidden sm:block">7-Layer AI fact-check result with full evidence breakdown.</p>
         </div>
-        <div class="flex items-center gap-3">
-          <button onclick="shareReport()" class="p-2 text-slate-400 hover:text-primary transition-colors" title="Share"><span class="material-symbols-outlined">share</span></button>
-          <button onclick="downloadReport()" class="p-2 text-slate-400 hover:text-primary transition-colors" title="Download"><span class="material-symbols-outlined">download</span></button>
-          <button onclick="goPage('home')" class="text-xs text-slate-500 hover:text-primary transition-colors border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2">New Check</button>
+        <div class="flex items-center gap-1 sm:gap-3">
+          <button onclick="shareReport()" class="p-2 text-slate-400 hover:text-primary transition-colors" title="Share"><span class="material-symbols-outlined text-lg sm:text-2xl">share</span></button>
+          <button onclick="downloadReport()" class="p-2 text-slate-400 hover:text-primary transition-colors" title="Download"><span class="material-symbols-outlined text-lg sm:text-2xl">download</span></button>
+          <button onclick="goPage('home')" class="text-xs text-slate-500 hover:text-primary transition-colors border border-slate-200 dark:border-slate-700 rounded-lg px-2 sm:px-3 py-1.5 sm:py-2">New Check</button>
         </div>
       </div>
     </div>
   </header>
 
-  <div class="flex-1 p-8 lg:p-10">
+  <div class="flex-1 p-4 sm:p-8 lg:p-10">
   <div class="max-w-7xl mx-auto space-y-8">
     <!-- Loading State -->
     <div id="report-loading" class="hidden">
@@ -682,7 +690,7 @@ tailwind.config = {
         </div>
         <div class="mb-8">
           <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">7-Layer Analysis Progress</p>
-          <div class="grid grid-cols-7 gap-2" id="layer-progress-grid"></div>
+          <div class="grid grid-cols-4 sm:grid-cols-7 gap-2" id="layer-progress-grid"></div>
         </div>
         <div id="loading-status" class="text-sm text-slate-500 text-center py-4"></div>
         <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
@@ -694,10 +702,10 @@ tailwind.config = {
     <!-- Result State -->
     <div id="report-result" class="hidden space-y-8">
       <section class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-        <div class="p-8 border-b border-slate-100 dark:border-slate-800 flex flex-col md:flex-row justify-between items-start gap-8">
-          <div class="space-y-4 flex-1">
+        <div class="p-4 sm:p-8 border-b border-slate-100 dark:border-slate-800 flex flex-col md:flex-row justify-between items-start gap-4 sm:gap-8">
+          <div class="space-y-3 sm:space-y-4 flex-1">
             <span id="result-status-badge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider"></span>
-            <h2 id="result-title" class="font-display text-3xl font-bold leading-tight text-slate-900 dark:text-white"></h2>
+            <h2 id="result-title" class="font-display text-xl sm:text-3xl font-bold leading-tight text-slate-900 dark:text-white"></h2>
             <p id="result-meta" class="text-slate-500 flex items-center gap-2 text-sm"><span class="material-symbols-outlined text-sm">event</span></p>
           </div>
           <!-- Circular Trust Score -->
@@ -712,9 +720,9 @@ tailwind.config = {
             </div>
           </div>
         </div>
-        <div class="bg-slate-50/50 dark:bg-slate-800/30 p-5 grid grid-cols-7 gap-2" id="result-layers-bar"></div>
-        <div class="p-6 grid grid-cols-2 md:grid-cols-5 gap-4 border-b border-slate-100 dark:border-slate-800" id="metrics-row"></div>
-        <div class="p-8 space-y-8">
+        <div class="bg-slate-50/50 dark:bg-slate-800/30 p-4 sm:p-5 grid grid-cols-4 sm:grid-cols-7 gap-2" id="result-layers-bar"></div>
+        <div class="p-4 sm:p-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4 border-b border-slate-100 dark:border-slate-800" id="metrics-row"></div>
+        <div class="p-4 sm:p-8 space-y-6 sm:space-y-8">
           <div>
             <h3 class="font-display text-lg font-bold mb-3 text-slate-900 dark:text-white">Executive Summary</h3>
             <p id="result-summary" class="text-slate-600 dark:text-slate-400 leading-relaxed"></p>
@@ -725,10 +733,10 @@ tailwind.config = {
           </div>
           <div id="evidence-section" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
           <div id="temporal-section" class="p-4 bg-slate-50 dark:bg-slate-800 rounded-xl text-sm text-slate-600 dark:text-slate-400 hidden"></div>
-          <div class="flex flex-wrap gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-            <button onclick="goPage('community')" class="px-6 py-2.5 border border-primary text-primary rounded-xl font-bold flex items-center gap-2 hover:bg-primary/5 transition-all"><span class="material-symbols-outlined text-lg">forum</span> Discuss in Community</button>
-            <button onclick="shareReport()" class="px-6 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl font-bold flex items-center gap-2 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"><span class="material-symbols-outlined text-lg">share</span> Share Report</button>
-            <button onclick="runCheck()" class="px-6 py-2.5 bg-primary text-white rounded-xl font-bold flex items-center gap-2 hover:bg-primary/90 transition-all"><span class="material-symbols-outlined text-lg">refresh</span> Re-verify</button>
+          <div class="flex flex-wrap gap-2 sm:gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+            <button onclick="goPage('community')" class="flex-1 sm:flex-none px-4 sm:px-6 py-2.5 border border-primary text-primary rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-primary/5 transition-all text-sm"><span class="material-symbols-outlined text-base sm:text-lg">forum</span><span class="hidden sm:inline">Discuss in Community</span><span class="sm:hidden">Discuss</span></button>
+            <button onclick="shareReport()" class="flex-1 sm:flex-none px-4 sm:px-6 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all text-sm"><span class="material-symbols-outlined text-base sm:text-lg">share</span> Share</button>
+            <button onclick="runCheck()" class="flex-1 sm:flex-none px-4 sm:px-6 py-2.5 bg-primary text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-primary/90 transition-all text-sm"><span class="material-symbols-outlined text-base sm:text-lg">refresh</span> Re-verify</button>
           </div>
         </div>
       </section>
@@ -753,30 +761,30 @@ tailwind.config = {
      PAGE: ABOUT & API
 ════════════════════════════════════ -->
 <section id="page-about" class="page flex-col">
-  <div class="sticky top-0 bg-bg-light/90 dark:bg-bg-dark/90 backdrop-blur-md z-40 border-b border-slate-200/60 dark:border-slate-800 px-8 py-6">
+  <div class="sticky top-14 sm:top-0 bg-bg-light/90 dark:bg-bg-dark/90 backdrop-blur-md z-40 border-b border-slate-200/60 dark:border-slate-800 px-4 sm:px-8 py-4 sm:py-6">
     <div class="max-w-7xl mx-auto">
       <div class="flex items-end justify-between">
         <div>
-          <h2 class="font-display text-3xl font-black text-slate-900 dark:text-white tracking-tight">About & API</h2>
-          <p class="text-slate-500 dark:text-slate-400 mt-1 text-sm font-medium">ANN 7-Layer Fact Engine — Technology, Token & API Access.</p>
+          <h2 class="font-display text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">About & API</h2>
+          <p class="text-slate-500 dark:text-slate-400 mt-1 text-xs sm:text-sm font-medium hidden sm:block">ANN 7-Layer Fact Engine — Technology, Token & API Access.</p>
         </div>
       </div>
     </div>
   </div>
-  <div class="flex-1 p-8 lg:p-10">
+  <div class="flex-1 p-4 sm:p-8 lg:p-10">
   <div class="max-w-7xl mx-auto">
     <section class="mb-20">
       <div class="mb-12">
         <span class="text-primary font-bold text-sm tracking-widest uppercase">The Philosophy</span>
-        <h2 class="font-display text-5xl font-black text-slate-900 dark:text-white mt-2 mb-6 tracking-tight">Verify Simple.</h2>
-        <p class="text-slate-600 dark:text-slate-400 text-lg leading-relaxed max-w-3xl">
+        <h2 class="font-display text-3xl sm:text-5xl font-black text-slate-900 dark:text-white mt-2 mb-4 sm:mb-6 tracking-tight">Verify Simple.</h2>
+        <p class="text-slate-600 dark:text-slate-400 text-base sm:text-lg leading-relaxed max-w-3xl">
           At ANN Verify, we solve the complexity of misinformation by breaking it down into atomic units.
           Our "Verify Simple" approach avoids black-box reasoning, providing transparent, data-backed
           verification layers anyone can audit.
         </p>
       </div>
       <!-- 7-Layer Diagram -->
-      <div class="bg-white dark:bg-slate-900 rounded-3xl p-8 lg:p-12 shadow-sm border border-slate-100 dark:border-slate-800 mb-16">
+      <div class="bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-8 lg:p-12 shadow-sm border border-slate-100 dark:border-slate-800 mb-10 sm:mb-16">
         <h3 class="font-display text-2xl font-bold text-slate-900 dark:text-white mb-8 flex items-center gap-2">
           <span class="material-symbols-outlined text-primary">schema</span>The 7-Layer Fact Engine
         </h3>
@@ -822,7 +830,7 @@ tailwind.config = {
     <!-- API Pricing -->
     <section class="mb-20">
       <div class="text-center mb-12">
-        <h2 class="font-display text-3xl font-black text-slate-900 dark:text-white mb-4">Scalable API Access</h2>
+        <h2 class="font-display text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mb-4">Scalable API Access</h2>
         <p class="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">Integrate the 7-Layer Fact Engine into your applications. Flexible plans for startups to enterprises.</p>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -881,12 +889,12 @@ tailwind.config = {
 <!-- ════════════════════════════════════
      PAGE: PROFILE (My Profile)
 ════════════════════════════════════ -->
-<section id="page-profile" class="page flex-col p-8 lg:p-16 min-h-screen">
+<section id="page-profile" class="page flex-col p-4 sm:p-8 lg:p-16 min-h-screen">
   <div class="w-full max-w-5xl mx-auto">
 
     <!-- 페이지 헤더 -->
     <div class="mb-10">
-      <h1 class="font-display text-3xl font-black text-slate-900 dark:text-white">My Profile</h1>
+      <h1 class="font-display text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">My Profile</h1>
       <p class="text-slate-500 mt-1">Account information and verification history</p>
     </div>
 
@@ -940,13 +948,13 @@ tailwind.config = {
 <!-- ════════════════════════════════════
      PAGE: VERIFICATION HISTORY
 ════════════════════════════════════ -->
-<section id="page-verify-history" class="page flex-col p-8 lg:p-16 min-h-screen">
+<section id="page-verify-history" class="page flex-col p-4 sm:p-8 lg:p-16 min-h-screen">
   <div class="w-full max-w-5xl mx-auto">
 
     <!-- 페이지 헤더 -->
     <div class="mb-10">
-      <h1 class="font-display text-3xl font-black text-slate-900 dark:text-white flex items-center gap-3">
-        <span class="material-symbols-outlined text-primary text-3xl">history</span>
+      <h1 class="font-display text-2xl sm:text-3xl font-black text-slate-900 dark:text-white flex items-center gap-3">
+        <span class="material-symbols-outlined text-primary text-2xl sm:text-3xl">history</span>
         Verification History
       </h1>
       <p class="text-slate-500 mt-1">Your past fact-check results and grade distribution</p>

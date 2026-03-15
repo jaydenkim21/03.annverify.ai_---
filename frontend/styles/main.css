@@ -140,10 +140,15 @@ h1,h2,h3,.font-display { font-family:'Space Grotesk',sans-serif; }
   }
   #main-content {
     margin-left: 0 !important;
-    padding-top: 3.5rem;
+    padding-top: 3.5rem; /* h-14 = 56px topbar */
   }
   /* 데스크탑 전용 세로 토글 버튼 숨김 */
   #sidebar-desktop-toggle {
     display: none !important;
+  }
+  /* 모바일에서 파트너 필터 영역 패딩 */
+  .page > header,
+  .page > div.sticky {
+    scroll-margin-top: 3.5rem;
   }
 }
