@@ -1333,7 +1333,6 @@ auth.onAuthStateChanged(function(user) {
 // ── Google 로그인 ──────────────────────────────────────────────────────
 function signInWithGoogle() {
   const provider = new firebase.auth.GoogleAuthProvider();
-  const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || window.innerWidth < 768;
 
   function showErr(err) {
     console.error('Google auth error:', err.code, err.message);
@@ -1345,19 +1344,8 @@ function signInWithGoogle() {
     if (target) { target.textContent = msg; target.classList.remove('hidden'); }
   }
 
-  if (isMobile) {
-    // 모바일: 리다이렉트 방식 (팝업은 모바일 브라우저에서 불안정)
-    auth.signInWithRedirect(provider).catch(showErr);
-  } else {
-    // PC: 팝업 방식 → 차단 시 리다이렉트 폴백
-    auth.signInWithPopup(provider).catch(function(err) {
-      if (err.code === 'auth/popup-blocked' || err.code === 'auth/cancelled-popup-request') {
-        auth.signInWithRedirect(provider).catch(showErr);
-      } else if (err.code !== 'auth/popup-closed-by-user') {
-        showErr(err);
-      }
-    });
-  }
+  // 모바일/PC 공통: 리다이렉트 방식 (팝업 없이 자연스러운 로그인)
+  auth.signInWithRedirect(provider).catch(showErr);
 }
 
 // 리다이렉트 복귀 후 결과 처리 (signInWithRedirect 폴백용)
