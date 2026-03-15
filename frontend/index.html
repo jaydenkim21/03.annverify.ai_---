@@ -1344,8 +1344,13 @@ function signInWithGoogle() {
     if (target) { target.textContent = msg; target.classList.remove('hidden'); }
   }
 
-  // 모바일/PC 공통: 리다이렉트 방식 (팝업 없이 자연스러운 로그인)
-  auth.signInWithRedirect(provider).catch(showErr);
+  auth.signInWithPopup(provider).catch(function(err) {
+    if (err.code === 'auth/popup-blocked' || err.code === 'auth/cancelled-popup-request') {
+      auth.signInWithRedirect(provider).catch(showErr);
+    } else if (err.code !== 'auth/popup-closed-by-user') {
+      showErr(err);
+    }
+  });
 }
 
 // 리다이렉트 복귀 후 결과 처리 (signInWithRedirect 폴백용)
