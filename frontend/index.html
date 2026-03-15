@@ -50,18 +50,20 @@ tailwind.config = {
 <!-- ═══════════════════════════════════════════════════════════
      MOBILE TOP BAR
 ═══════════════════════════════════════════════════════════ -->
-<div id="mobile-topbar" class="sm:hidden fixed top-0 left-0 right-0 z-[60] bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center gap-3 px-4 h-14 shadow-sm">
+<div id="mobile-topbar" class="sm:hidden fixed top-0 left-0 right-0 z-[60] bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 h-14 shadow-sm">
   <!-- 햄버거 버튼 -->
   <button onclick="toggleMobileSidebar()" class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
     <span class="material-symbols-outlined text-slate-600 dark:text-slate-300">menu</span>
   </button>
-  <!-- 로고 -->
-  <button onclick="goPage('home')" class="flex items-center gap-2">
+  <!-- 로고 (중앙 고정) -->
+  <button onclick="goPage('home')" class="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
     <div class="w-7 h-7 bg-primary rounded-lg flex items-center justify-center shadow-sm">
       <span class="material-symbols-outlined text-white" style="font-size:15px">verified_user</span>
     </div>
     <span class="font-display font-bold text-slate-900 dark:text-white text-base">ANN Verify</span>
   </button>
+  <!-- 우측 여백 (햄버거와 균형) -->
+  <div class="w-10"></div>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════
@@ -278,11 +280,20 @@ tailwind.config = {
       <div class="relative bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-[2rem] p-3 shadow-2xl shadow-slate-200/40 dark:shadow-none focus-within:border-primary/40 transition-all">
         <div class="flex items-start gap-4 p-3">
           <span class="material-symbols-outlined text-slate-300 text-3xl ml-2 mt-1">search</span>
-          <textarea id="home-input"
-            class="w-full bg-transparent border-none focus:ring-0 text-base sm:text-xl text-slate-900 dark:text-white placeholder:text-slate-400 resize-none min-h-[52px] sm:min-h-[60px] max-h-[200px] font-medium py-1"
-            placeholder="Paste a news URL, claim, image link, or any statement..."
-            rows="2"
-            onkeydown="if(event.ctrlKey&&event.key==='Enter')runCheck()"></textarea>
+          <div class="relative flex-1 min-w-0">
+            <textarea id="home-input"
+              class="w-full bg-transparent border-none focus:ring-0 text-base sm:text-xl text-slate-900 dark:text-white placeholder:text-slate-400 resize-none min-h-[52px] sm:min-h-[60px] max-h-[200px] font-medium py-1 pr-8"
+              placeholder="Paste a news URL, claim, image link, or any statement..."
+              rows="2"
+              oninput="toggleInputClear()"
+              onkeydown="if(event.ctrlKey&&event.key==='Enter')runCheck()"></textarea>
+            <button id="input-clear-btn" onclick="clearInput()"
+              style="display:none; position:absolute; top:4px; right:0;"
+              class="w-7 h-7 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
+              title="Clear">
+              <span class="material-symbols-outlined text-slate-500 dark:text-slate-400" style="font-size:16px; display:block; line-height:28px; text-align:center;">close</span>
+            </button>
+          </div>
         </div>
         <!-- Image preview -->
         <div id="image-preview-wrap" class="hidden px-6 pb-4">
@@ -331,8 +342,8 @@ tailwind.config = {
       </button>
     </div>
 
-    <!-- Quick Actions -->
-    <div class="grid mt-10 sm:mt-16 w-full grid-cols-1 sm:grid-cols-1 md:grid-cols-3 gap-3 sm:gap-6">
+    <!-- Quick Actions (모바일 숨김) -->
+    <div class="hidden sm:grid mt-10 sm:mt-16 w-full grid-cols-1 sm:grid-cols-1 md:grid-cols-3 gap-3 sm:gap-6">
       <div onclick="document.getElementById('home-input').placeholder='Paste any news URL here...';document.getElementById('home-input').focus()" class="flex sm:flex-col items-center sm:items-start gap-3 sm:gap-0 p-4 sm:p-6 bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl border border-slate-100 dark:border-slate-800 hover:border-primary/30 hover:shadow-lg transition-all cursor-pointer text-left group">
         <div class="w-10 h-10 shrink-0 bg-blue-50 dark:bg-blue-900/30 text-blue-500 rounded-xl flex items-center justify-center sm:mb-4 group-hover:scale-110 transition-transform">
           <span class="material-symbols-outlined">article</span>

@@ -6,6 +6,25 @@ var LAYER_NAMES = ['Claim Parse','Source Strategy','Evidence','Adversarial','NLI
 var _layer7Timer = null;
 var _layer7Start = null;
 
+// ── 입력창 초기화 ────────────────────────────────────────────────────
+function clearInput() {
+  var el = document.getElementById('home-input');
+  if (el) { el.value = ''; el.focus(); }
+  clearImage();
+  toggleInputClear();
+}
+
+function toggleInputClear() {
+  var el  = document.getElementById('home-input');
+  var btn = document.getElementById('input-clear-btn');
+  if (!btn || !el) return;
+  if (el.value.trim()) {
+    btn.style.display = 'flex';
+  } else {
+    btn.style.display = 'none';
+  }
+}
+
 // ── 깊이 토글 ────────────────────────────────────────────────────────
 function setDepth(val) {
   document.getElementById('home-depth').value = val;

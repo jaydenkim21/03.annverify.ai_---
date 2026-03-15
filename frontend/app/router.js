@@ -18,6 +18,14 @@ function goPage(page) {
   if (page === 'verify-history'     && typeof renderVerifyHistoryPage   === 'function') renderVerifyHistoryPage();
   if (page === 'community-detail'   && state.communityDetail && typeof renderCommunityDetail === 'function') renderCommunityDetail(state.communityDetail);
 
+  // 홈으로 이동 시 입력창 초기화
+  if (page === 'home') {
+    var el = document.getElementById('home-input');
+    if (el) { el.value = ''; }
+    clearImage();
+    toggleInputClear();
+  }
+
   window.scrollTo(0, 0);
   // 모바일: 페이지 이동 시 사이드바 닫기
   if (typeof closeMobileSidebar === 'function') closeMobileSidebar();
