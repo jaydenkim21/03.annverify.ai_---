@@ -1305,19 +1305,35 @@ auth.onAuthStateChanged(function(user) {
 
 // ── Google 로그인 ──────────────────────────────────────────────────────
 function signInWithGoogle() {
-  const provider = new firebase.auth.GoogleAuthProvider();
+  const provider  = new firebase.auth.GoogleAuthProvider();
   const errLogin  = document.getElementById('login-error');
   const errSignup = document.getElementById('signup-error');
-  auth.signInWithPopup(provider).catch(function(err) {
+  const isMobile  = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  function showErr(err) {
     console.error(err);
     const msg = authErrorMsg(err.code);
-    if (!document.getElementById('auth-login').classList.contains('hidden')) {
-      errLogin.textContent = msg; errLogin.classList.remove('hidden');
-    } else {
-      errSignup.textContent = msg; errSignup.classList.remove('hidden');
-    }
-  });
+    const loginHidden = document.getElementById('auth-login').classList.contains('hidden');
+    if (!loginHidden) { errLogin.textContent = msg;  errLogin.classList.remove('hidden'); }
+    else              { errSignup.textContent = msg; errSignup.classList.remove('hidden'); }
+  }
+
+  if (isMobile) {
+    // 모바일: 팝업 차단 우회 — 리다이렉트 방식
+    auth.signInWithRedirect(provider).catch(showErr);
+  } else {
+    auth.signInWithPopup(provider).catch(showErr);
+  }
 }
+
+// 리다이렉트 복귀 후 결과 처리
+auth.getRedirectResult().catch(function(err) {
+  if (err && err.code) {
+    const errLogin  = document.getElementById('login-error');
+    if (errLogin) { errLogin.textContent = authErrorMsg(err.code); errLogin.classList.remove('hidden'); }
+    openAuthModal();
+  }
+});
 
 // ── 이메일 로그인 ──────────────────────────────────────────────────────
 function signInWithEmail() {
