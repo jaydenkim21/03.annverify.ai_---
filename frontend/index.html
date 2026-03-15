@@ -50,7 +50,7 @@ tailwind.config = {
 <!-- ═══════════════════════════════════════════════════════════
      MOBILE TOP BAR
 ═══════════════════════════════════════════════════════════ -->
-<div id="mobile-topbar" class="sm:hidden fixed top-0 left-0 right-0 z-[60] bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 h-14 shadow-sm">
+<div id="mobile-topbar" class="sm:hidden fixed top-0 left-0 right-0 z-[60] bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center gap-3 px-4 h-14 shadow-sm">
   <!-- 햄버거 버튼 -->
   <button onclick="toggleMobileSidebar()" class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
     <span class="material-symbols-outlined text-slate-600 dark:text-slate-300">menu</span>
@@ -61,13 +61,6 @@ tailwind.config = {
       <span class="material-symbols-outlined text-white" style="font-size:15px">verified_user</span>
     </div>
     <span class="font-display font-bold text-slate-900 dark:text-white text-base">ANN Verify</span>
-  </button>
-  <!-- 우측: 로그인 상태에 따라 토글 -->
-  <button id="mobile-login-btn" onclick="openAuthModal()" class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-    <span class="material-symbols-outlined text-slate-600 dark:text-slate-300 text-xl">login</span>
-  </button>
-  <button id="mobile-profile-btn" onclick="toggleMobileProfileDropdown()" class="hidden w-10 h-10 flex items-center justify-center rounded-full">
-    <img id="mobile-user-avatar" src="" alt="" class="w-8 h-8 rounded-full border border-primary/20 object-cover bg-primary/10"/>
   </button>
 </div>
 
@@ -184,31 +177,6 @@ tailwind.config = {
   </div>
 </aside>
 
-<!-- ═══════════════════════════════════════════════════════════
-     MOBILE PROFILE DROPDOWN
-═══════════════════════════════════════════════════════════ -->
-<div id="mobile-profile-dropdown" class="sm:hidden hidden fixed top-14 right-2 z-[65] w-64 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-xl overflow-hidden">
-  <div class="px-4 py-3 border-b border-slate-100 dark:border-slate-700 flex items-center gap-3">
-    <img id="mobile-avatar-mini" src="" alt="" class="w-9 h-9 rounded-full border border-primary/20 object-cover bg-primary/10 shrink-0"/>
-    <div class="overflow-hidden">
-      <p class="text-sm font-semibold text-slate-900 dark:text-white truncate" id="mobile-username-display"></p>
-      <p class="text-xs text-slate-500 truncate" id="mobile-user-email-display"></p>
-    </div>
-  </div>
-  <button onclick="goPage('profile');closeMobileProfileDropdown()" class="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-    <span class="material-symbols-outlined text-base text-slate-400">person</span>My Profile
-  </button>
-  <button onclick="goPage('verify-history');closeMobileProfileDropdown()" class="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-    <span class="material-symbols-outlined text-base text-slate-400">history</span>Verification History
-  </button>
-  <button class="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-    <span class="material-symbols-outlined text-base text-slate-400">settings</span>Settings
-  </button>
-  <div class="mx-3 border-t border-slate-100 dark:border-slate-700"></div>
-  <button onclick="authLogout();closeMobileProfileDropdown()" class="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
-    <span class="material-symbols-outlined text-base">logout</span>Sign Out
-  </button>
-</div>
 
 <!-- MOBILE SIDEBAR OVERLAY -->
 <div id="mobile-overlay" class="sm:hidden hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-[45]" onclick="closeMobileSidebar()"></div>
@@ -429,15 +397,15 @@ tailwind.config = {
         </button>
       </div>
       <div class="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 sm:gap-3">
-        <div class="flex items-center gap-2">
-          <select id="news-score-filter" onchange="filterNews()" class="text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full px-3 sm:px-4 py-2 font-semibold text-slate-700 dark:text-slate-300 focus:ring-primary">
-            <option value="">All Trust Scores</option>
+        <div class="flex items-center gap-2 min-w-0">
+          <select id="news-score-filter" onchange="filterNews()" class="min-w-0 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full px-3 sm:px-4 py-2 font-semibold text-slate-700 dark:text-slate-300 focus:ring-primary truncate">
+            <option value="">All Scores</option>
             <option value="A">A+ / A (Verified)</option>
             <option value="B">B+ / B (Credible)</option>
             <option value="C">C (Caution)</option>
             <option value="F">F (False)</option>
           </select>
-          <select id="news-cat-filter" onchange="filterNews()" class="text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full px-3 sm:px-4 py-2 font-semibold text-slate-700 dark:text-slate-300 focus:ring-primary">
+          <select id="news-cat-filter" onchange="filterNews()" class="min-w-0 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full px-3 sm:px-4 py-2 font-semibold text-slate-700 dark:text-slate-300 focus:ring-primary truncate">
             <option value="">All Categories</option>
             <option value="Tech">Tech</option>
             <option value="Politics">Politics</option>
@@ -447,12 +415,15 @@ tailwind.config = {
           </select>
         </div>
         <div class="hidden sm:block h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
-        <div id="news-tag-filters" class="flex gap-2 overflow-x-auto hide-scroll -mx-1 px-1">
-          <button onclick="setNewsTag('Trending')" class="px-4 py-1.5 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold whitespace-nowrap">Trending</button>
-          <button onclick="setNewsTag('AI Ethics')" class="px-4 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-slate-50 whitespace-nowrap">AI Ethics</button>
-          <button onclick="setNewsTag('LLM')" class="px-4 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-slate-50 whitespace-nowrap">LLM</button>
-          <button onclick="setNewsTag('Deepfakes')" class="px-4 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-slate-50 whitespace-nowrap">Deepfakes</button>
-          <button onclick="setNewsTag('Policy')" class="px-4 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-slate-50 whitespace-nowrap">Policy</button>
+        <!-- 태그 필터: min-w-0으로 부모 폭 제한, overflow-x-auto로 내부 스크롤 -->
+        <div class="min-w-0 overflow-hidden flex-1 sm:flex-none">
+          <div id="news-tag-filters" class="flex gap-2 overflow-x-auto hide-scroll pb-0.5">
+            <button onclick="setNewsTag('Trending')" class="px-4 py-1.5 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold whitespace-nowrap">Trending</button>
+            <button onclick="setNewsTag('AI Ethics')" class="px-4 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-slate-50 whitespace-nowrap">AI Ethics</button>
+            <button onclick="setNewsTag('LLM')" class="px-4 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-slate-50 whitespace-nowrap">LLM</button>
+            <button onclick="setNewsTag('Deepfakes')" class="px-4 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-slate-50 whitespace-nowrap">Deepfakes</button>
+            <button onclick="setNewsTag('Policy')" class="px-4 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-slate-50 whitespace-nowrap">Policy</button>
+          </div>
         </div>
       </div>
     </div>
@@ -495,7 +466,9 @@ tailwind.config = {
   <div class="max-w-7xl mx-auto space-y-8">
     <section class="space-y-4">
       <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Verified Partners</h3>
-      <div class="flex items-center gap-5 overflow-x-auto pb-3 hide-scroll" id="partners-row"></div>
+      <div class="min-w-0 overflow-hidden">
+        <div class="flex items-center gap-5 overflow-x-auto pb-3 hide-scroll" id="partners-row"></div>
+      </div>
     </section>
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-4 border-y border-slate-200 dark:border-slate-800">
       <div class="flex items-center gap-3">
@@ -548,13 +521,15 @@ tailwind.config = {
           </button>
         </div>
       </div>
-      <div class="flex items-end justify-between border-b border-slate-100 dark:border-slate-800">
+      <div class="flex items-end justify-between border-b border-slate-100 dark:border-slate-800 min-w-0">
         <!-- 탭 -->
-        <div class="flex gap-4 sm:gap-6 overflow-x-auto hide-scroll">
-          <button onclick="setCommunityTab('all')"     id="ctab-all"     class="pb-3 text-sm font-bold border-b-2 border-primary text-primary px-1 whitespace-nowrap">All</button>
-          <button onclick="setCommunityTab('user')"    id="ctab-user"    class="pb-3 text-sm font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 px-1 border-b-2 border-transparent whitespace-nowrap">User</button>
-          <button onclick="setCommunityTab('ainews')"  id="ctab-ainews"  class="pb-3 text-sm font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 px-1 border-b-2 border-transparent whitespace-nowrap">AI News</button>
-          <button onclick="setCommunityTab('partner')" id="ctab-partner" class="pb-3 text-sm font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 px-1 border-b-2 border-transparent whitespace-nowrap">Partner News</button>
+        <div class="min-w-0 overflow-hidden">
+          <div class="flex gap-4 sm:gap-6 overflow-x-auto hide-scroll">
+            <button onclick="setCommunityTab('all')"     id="ctab-all"     class="pb-3 text-sm font-bold border-b-2 border-primary text-primary px-1 whitespace-nowrap">All</button>
+            <button onclick="setCommunityTab('user')"    id="ctab-user"    class="pb-3 text-sm font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 px-1 border-b-2 border-transparent whitespace-nowrap">User</button>
+            <button onclick="setCommunityTab('ainews')"  id="ctab-ainews"  class="pb-3 text-sm font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 px-1 border-b-2 border-transparent whitespace-nowrap">AI News</button>
+            <button onclick="setCommunityTab('partner')" id="ctab-partner" class="pb-3 text-sm font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 px-1 border-b-2 border-transparent whitespace-nowrap">Partner News</button>
+          </div>
         </div>
         <!-- 정렬 버튼 -->
         <div class="flex items-center gap-1 pb-2 shrink-0 ml-2 sm:ml-4 overflow-x-auto hide-scroll">
@@ -1206,7 +1181,7 @@ async function saveProfileEdit() {
       });
     }
     if (_editAvatarDataUrl) {
-      ['profile-avatar-large','user-avatar','mobile-user-avatar','mobile-avatar-mini'].forEach(id => {
+      ['profile-avatar-large','user-avatar'].forEach(id => {
         const el = document.getElementById(id); if (el) el.src = _editAvatarDataUrl;
       });
     }
@@ -1268,23 +1243,6 @@ function closeMobileSidebar() {
   document.getElementById('mobile-overlay').classList.add('hidden');
 }
 
-// ── 모바일 프로필 드롭다운 ────────────────────────────────────────────
-function toggleMobileProfileDropdown() {
-  document.getElementById('mobile-profile-dropdown').classList.toggle('hidden');
-}
-
-function closeMobileProfileDropdown() {
-  document.getElementById('mobile-profile-dropdown').classList.add('hidden');
-}
-
-// 모바일에서 화면 밖 클릭 시 드롭다운 닫기
-document.addEventListener('click', function(e) {
-  var dd  = document.getElementById('mobile-profile-dropdown');
-  var btn = document.getElementById('mobile-profile-btn');
-  if (dd && !dd.contains(e.target) && btn && !btn.contains(e.target)) {
-    dd.classList.add('hidden');
-  }
-});
 
 // ── Firebase 초기화 ────────────────────────────────────────────────────
 const firebaseConfig = {
@@ -1310,28 +1268,10 @@ auth.onAuthStateChanged(function(user) {
     document.getElementById('user-avatar').src              = picture;
     document.getElementById('user-guest').classList.add('hidden');
     document.getElementById('user-loggedin').classList.remove('hidden');
-    // 모바일 상단바 동기화
-    var mAvatar = document.getElementById('mobile-user-avatar');
-    var mAvatarMini = document.getElementById('mobile-avatar-mini');
-    if (mAvatar)     mAvatar.src     = picture;
-    if (mAvatarMini) mAvatarMini.src = picture;
-    var mName  = document.getElementById('mobile-username-display');
-    var mEmail = document.getElementById('mobile-user-email-display');
-    if (mName)  mName.textContent  = name;
-    if (mEmail) mEmail.textContent = email;
-    var mLogin   = document.getElementById('mobile-login-btn');
-    var mProfile = document.getElementById('mobile-profile-btn');
-    if (mLogin)   mLogin.classList.add('hidden');
-    if (mProfile) mProfile.classList.remove('hidden');
     closeAuthModal();
   } else {
     document.getElementById('user-guest').classList.remove('hidden');
     document.getElementById('user-loggedin').classList.add('hidden');
-    // 모바일 상단바 로그아웃 상태
-    var mLogin2   = document.getElementById('mobile-login-btn');
-    var mProfile2 = document.getElementById('mobile-profile-btn');
-    if (mLogin2)   mLogin2.classList.remove('hidden');
-    if (mProfile2) mProfile2.classList.add('hidden');
   }
 });
 

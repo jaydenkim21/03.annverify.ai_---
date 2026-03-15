@@ -10,12 +10,20 @@
   --sidebar-w: 336px;
 }
 
-body { font-family:'Inter',sans-serif; }
+body { font-family:'Inter',sans-serif; overflow-x: hidden; }
 h1,h2,h3,.font-display { font-family:'Space Grotesk',sans-serif; }
 
 /* ── 콘텐츠 영역 상단 패딩 ── */
 #main-content {
   padding-top: 48px;
+  overflow-x: clip; /* sticky 위치 영향 없이 가로 오버플로우 차단 */
+  min-width: 0;
+}
+
+/* ── 페이지 너비 보장 ── */
+.page.active {
+  width: 100%;
+  max-width: 100%;
 }
 
 /* ── 로고 아이콘 크기 ── */
