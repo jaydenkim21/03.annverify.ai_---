@@ -77,7 +77,6 @@ ${RESPONSE_SCHEMA}`;
     max_tokens:  4000,
     temperature: 0,
     messages,
-    tools:       [{ type: "web_search_20250305", name: "web_search" }],
   };
 
   const res  = await callAnthropic(anthropicBody, env.ANTHROPIC_API_KEY);
