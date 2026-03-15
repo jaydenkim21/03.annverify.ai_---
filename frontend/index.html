@@ -1333,7 +1333,6 @@ auth.onAuthStateChanged(function(user) {
 // ── Google 로그인 ──────────────────────────────────────────────────────
 function signInWithGoogle() {
   const provider = new firebase.auth.GoogleAuthProvider();
-  provider.setCustomParameters({ prompt: 'select_account' });
 
   function showErr(err) {
     console.error('Google auth error:', err.code, err.message);
