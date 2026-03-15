@@ -1285,7 +1285,24 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 
+// ── 토스트 알림 ────────────────────────────────────────────────────────
+function showToast(msg, type) {
+  var t = document.getElementById('ann-toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'ann-toast';
+    t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:9999;padding:12px 20px;border-radius:14px;font-size:14px;font-weight:600;color:#fff;box-shadow:0 4px 20px rgba(0,0,0,0.15);transition:opacity 0.3s;pointer-events:none;white-space:nowrap;';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.background = type === 'error' ? '#EF4444' : '#10B981';
+  t.style.opacity = '1';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(function() { t.style.opacity = '0'; }, 3000);
+}
+
 // 로그인 상태 감지
+var _prevUser = undefined;
 auth.onAuthStateChanged(function(user) {
   if (user) {
     const name    = user.displayName || user.email.split('@')[0];
@@ -1297,7 +1314,17 @@ auth.onAuthStateChanged(function(user) {
     document.getElementById('user-guest').classList.add('hidden');
     document.getElementById('user-loggedin').classList.remove('hidden');
     closeAuthModal();
+    // 새로 로그인한 경우에만 토스트 표시
+    if (_prevUser === null) {
+      showToast('✓ ' + name + ' 님 로그인되었습니다', 'success');
+      if (window.innerWidth < 640 && typeof toggleMobileSidebar === 'function') {
+        toggleMobileSidebar();
+        setTimeout(function() { closeMobileSidebar(); }, 2000);
+      }
+    }
+    _prevUser = user;
   } else {
+    _prevUser = null;
     document.getElementById('user-guest').classList.remove('hidden');
     document.getElementById('user-loggedin').classList.add('hidden');
   }
@@ -1305,31 +1332,38 @@ auth.onAuthStateChanged(function(user) {
 
 // ── Google 로그인 ──────────────────────────────────────────────────────
 function signInWithGoogle() {
-  const provider  = new firebase.auth.GoogleAuthProvider();
-  const errLogin  = document.getElementById('login-error');
-  const errSignup = document.getElementById('signup-error');
-  const isMobile  = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const provider = new firebase.auth.GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
 
   function showErr(err) {
-    console.error(err);
+    console.error('Google auth error:', err.code, err.message);
     const msg = authErrorMsg(err.code);
     const loginHidden = document.getElementById('auth-login').classList.contains('hidden');
-    if (!loginHidden) { errLogin.textContent = msg;  errLogin.classList.remove('hidden'); }
-    else              { errSignup.textContent = msg; errSignup.classList.remove('hidden'); }
+    const target = loginHidden
+      ? document.getElementById('signup-error')
+      : document.getElementById('login-error');
+    if (target) { target.textContent = msg; target.classList.remove('hidden'); }
   }
 
-  if (isMobile) {
-    // 모바일: 팝업 차단 우회 — 리다이렉트 방식
-    auth.signInWithRedirect(provider).catch(showErr);
-  } else {
-    auth.signInWithPopup(provider).catch(showErr);
-  }
+  // 팝업 시도 → 차단 시 리다이렉트 폴백 (모바일/데스크탑 공통)
+  auth.signInWithPopup(provider).catch(function(err) {
+    if (err.code === 'auth/popup-blocked' || err.code === 'auth/cancelled-popup-request') {
+      // 팝업 차단 → 리다이렉트 방식으로 재시도
+      auth.signInWithRedirect(provider).catch(showErr);
+    } else if (err.code !== 'auth/popup-closed-by-user') {
+      showErr(err);
+    }
+  });
 }
 
-// 리다이렉트 복귀 후 결과 처리
-auth.getRedirectResult().catch(function(err) {
-  if (err && err.code) {
-    const errLogin  = document.getElementById('login-error');
+// 리다이렉트 복귀 후 결과 처리 (signInWithRedirect 폴백용)
+auth.getRedirectResult().then(function(result) {
+  // 성공 시 onAuthStateChanged 가 자동 처리
+}).catch(function(err) {
+  const IGNORE = ['auth/no-auth-event', 'auth/null-user'];
+  if (err && err.code && !IGNORE.includes(err.code)) {
+    console.error('Redirect result error:', err.code, err.message);
+    const errLogin = document.getElementById('login-error');
     if (errLogin) { errLogin.textContent = authErrorMsg(err.code); errLogin.classList.remove('hidden'); }
     openAuthModal();
   }
@@ -1380,7 +1414,7 @@ function authErrorMsg(code) {
     'auth/popup-closed-by-user':  '팝업이 닫혔습니다. 다시 시도해주세요.',
     'auth/popup-blocked':         '팝업이 차단되었습니다. 브라우저 팝업 허용 후 다시 시도해주세요.',
   };
-  return map[code] || '오류가 발생했습니다. 다시 시도해주세요.';
+  return map[code] || `오류가 발생했습니다. (${code})`;
 }
 
 // ── 모달 제어 ─────────────────────────────────────────────────────────
