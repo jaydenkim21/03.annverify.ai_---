@@ -532,22 +532,39 @@ tailwind.config = {
           </button>
         </div>
       </div>
-      <div class="flex items-end justify-between border-b border-slate-100 dark:border-slate-800 min-w-0">
-        <!-- 탭 -->
+      <!-- 모바일: 드롭다운 2개 -->
+      <div class="flex sm:hidden items-center gap-2 pt-1 pb-3">
+        <select id="ctab-select" onchange="setCommunityTab(this.value)"
+          class="flex-1 text-sm font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary/30">
+          <option value="all">All</option>
+          <option value="user">User</option>
+          <option value="ainews">AI News</option>
+          <option value="partner">Partner News</option>
+        </select>
+        <select id="csort-select" onchange="setCommunitySort(this.value)"
+          class="flex-1 text-sm font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary/30">
+          <option value="recent">Recent</option>
+          <option value="oldest">Oldest</option>
+          <option value="comments">Comments</option>
+          <option value="likes">Likes</option>
+        </select>
+      </div>
+
+      <!-- PC: 기존 탭 + 정렬 버튼 -->
+      <div class="hidden sm:flex items-end justify-between border-b border-slate-100 dark:border-slate-800 min-w-0">
         <div class="min-w-0 overflow-hidden">
-          <div class="flex gap-4 sm:gap-6 overflow-x-auto hide-scroll">
+          <div class="flex gap-6 overflow-x-auto hide-scroll">
             <button onclick="setCommunityTab('all')"     id="ctab-all"     class="pb-3 text-sm font-bold border-b-2 border-primary text-primary px-1 whitespace-nowrap">All</button>
             <button onclick="setCommunityTab('user')"    id="ctab-user"    class="pb-3 text-sm font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 px-1 border-b-2 border-transparent whitespace-nowrap">User</button>
             <button onclick="setCommunityTab('ainews')"  id="ctab-ainews"  class="pb-3 text-sm font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 px-1 border-b-2 border-transparent whitespace-nowrap">AI News</button>
             <button onclick="setCommunityTab('partner')" id="ctab-partner" class="pb-3 text-sm font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 px-1 border-b-2 border-transparent whitespace-nowrap">Partner News</button>
           </div>
         </div>
-        <!-- 정렬 버튼 -->
-        <div class="flex items-center gap-1 pb-2 shrink-0 ml-2 sm:ml-4 overflow-x-auto hide-scroll">
-          <button onclick="setCommunitySort('recent')"   id="csort-recent"   class="community-sort-btn px-2 sm:px-2.5 py-1 text-xs font-semibold rounded-lg bg-primary text-white transition-all whitespace-nowrap">Recent</button>
-          <button onclick="setCommunitySort('oldest')"   id="csort-oldest"   class="community-sort-btn px-2 sm:px-2.5 py-1 text-xs font-semibold rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all whitespace-nowrap">Oldest</button>
-          <button onclick="setCommunitySort('comments')" id="csort-comments" class="community-sort-btn px-2 sm:px-2.5 py-1 text-xs font-semibold rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all whitespace-nowrap">Comments</button>
-          <button onclick="setCommunitySort('likes')"    id="csort-likes"    class="community-sort-btn px-2 sm:px-2.5 py-1 text-xs font-semibold rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all whitespace-nowrap">Likes</button>
+        <div class="flex items-center gap-1 pb-2 shrink-0 ml-4">
+          <button onclick="setCommunitySort('recent')"   id="csort-recent"   class="community-sort-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-primary text-white transition-all">Recent</button>
+          <button onclick="setCommunitySort('oldest')"   id="csort-oldest"   class="community-sort-btn px-2.5 py-1 text-xs font-semibold rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">Oldest</button>
+          <button onclick="setCommunitySort('comments')" id="csort-comments" class="community-sort-btn px-2.5 py-1 text-xs font-semibold rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">Comments</button>
+          <button onclick="setCommunitySort('likes')"    id="csort-likes"    class="community-sort-btn px-2.5 py-1 text-xs font-semibold rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">Likes</button>
         </div>
       </div>
     </div>

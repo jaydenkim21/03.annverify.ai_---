@@ -87,7 +87,7 @@ var _communityTab  = 'all';   // 현재 활성 탭
 // ── 정렬 ─────────────────────────────────────────────────────────────
 function setCommunitySort(sort) {
   _communitySort = sort;
-  // 버튼 스타일 업데이트
+  // PC 버튼 스타일 업데이트
   ['recent','oldest','comments','likes'].forEach(s => {
     var btn = document.getElementById('csort-' + s);
     if (!btn) return;
@@ -95,7 +95,9 @@ function setCommunitySort(sort) {
       ? 'community-sort-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-primary text-white transition-all'
       : 'community-sort-btn px-2.5 py-1 text-xs font-semibold rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all';
   });
-  // 현재 활성 탭 기준으로 재렌더링
+  // 모바일 드롭다운 동기화
+  var sel = document.getElementById('csort-select');
+  if (sel) sel.value = sort;
   renderCommunity(_communityTab);
 }
 
@@ -116,6 +118,7 @@ function loadCommunity() {
 
 function setCommunityTab(tab) {
   _communityTab = tab;
+  // PC 탭 버튼 스타일 업데이트
   ['all','user','ainews','partner'].forEach(t => {
     var btn = document.getElementById('ctab-' + t);
     if (!btn) return;
@@ -123,6 +126,9 @@ function setCommunityTab(tab) {
       ? 'pb-3 text-sm font-bold border-b-2 border-primary text-primary px-1 whitespace-nowrap'
       : 'pb-3 text-sm font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 px-1 border-b-2 border-transparent whitespace-nowrap';
   });
+  // 모바일 드롭다운 동기화
+  var sel = document.getElementById('ctab-select');
+  if (sel) sel.value = tab;
   renderCommunity(tab);
 }
 
