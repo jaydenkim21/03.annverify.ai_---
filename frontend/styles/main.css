@@ -10,21 +10,12 @@
   --sidebar-w: 336px;
 }
 
-html {
-  zoom: 0.8;
-}
-
 body { font-family:'Inter',sans-serif; }
 h1,h2,h3,.font-display { font-family:'Space Grotesk',sans-serif; }
 
-/* ── 사이드바 줌 ── */
-#sidebar {
-  zoom: 1.2;
-}
-
-/* ── 콘텐츠 영역 줌 ── */
+/* ── 콘텐츠 영역 상단 패딩 ── */
 #main-content {
-  zoom: 1.2;
+  padding-top: 48px;
 }
 
 /* ── 로고 아이콘 크기 ── */
@@ -60,7 +51,7 @@ h1,h2,h3,.font-display { font-family:'Space Grotesk',sans-serif; }
   max-width: 0;
 }
 #sidebar.collapsed {
-  width: 72px !important;
+  width: 86px !important;
 }
 .sidebar-toggle-arrow {
   transition: transform 0.3s ease;
@@ -139,12 +130,10 @@ h1,h2,h3,.font-display { font-family:'Space Grotesk',sans-serif; }
 
 /* ── 모바일 반응형 ── */
 @media (max-width: 639px) {
-  html { zoom: 1; }
   #sidebar {
     transform: translateX(-100%);
     transition: transform 0.3s ease, width 0.3s ease !important;
     width: 280px !important;
-    zoom: 1 !important;
   }
   #sidebar.mobile-open {
     transform: translateX(0);
@@ -152,7 +141,6 @@ h1,h2,h3,.font-display { font-family:'Space Grotesk',sans-serif; }
   #main-content {
     margin-left: 0 !important;
     padding-top: 3.5rem;
-    zoom: 1 !important;
   }
   /* 데스크탑 전용 세로 토글 버튼 숨김 */
   #sidebar-desktop-toggle {
