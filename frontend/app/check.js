@@ -3,6 +3,8 @@
 
 var LAYER_ICONS = ['source','translate','database','query_stats','robot','fact_check','verified'];
 var LAYER_NAMES = ['Claim Parse','Source Strategy','Evidence','Adversarial','NLI Score','Verdict','BISL Hash'];
+var _layer7Timer = null;
+var _layer7Start = null;
 
 // ── 깊이 토글 ────────────────────────────────────────────────────────
 function setDepth(val) {
@@ -87,6 +89,7 @@ function runCheck() {
 
 // ── 로딩 UI ──────────────────────────────────────────────────────────
 function startLoading(input) {
+  if (_layer7Timer) { clearInterval(_layer7Timer); _layer7Timer = null; }
   document.getElementById('report-loading').classList.remove('hidden');
   document.getElementById('report-result').classList.add('hidden');
   document.getElementById('report-empty').classList.add('hidden');
@@ -109,12 +112,29 @@ function setLayerRunning(n) {
   if (el) { el.classList.add('running'); el.classList.remove('done'); }
   document.getElementById('loading-status').textContent = 'Running Layer ' + n + ' — ' + LAYER_NAMES[n-1] + '...';
   document.getElementById('progress-bar').style.width = ((n-1)/7*85) + '%';
+
+  if (n === 7) {
+    _layer7Start = Date.now();
+    _layer7Timer = setInterval(function() {
+      var sec = Math.floor((Date.now() - _layer7Start) / 1000);
+      var mm = Math.floor(sec / 60), ss = sec % 60;
+      var t = mm > 0 ? mm + ':' + String(ss).padStart(2,'0') : ss + 's';
+      document.getElementById('loading-status').textContent = 'Running Layer 7 — BISL Hash... (' + t + ')';
+    }, 1000);
+  }
 }
 
 function setLayerDone(n) {
   var el = document.getElementById('lp-icon-' + n);
-  if (el) { el.classList.remove('running'); el.classList.add('done'); }
+  if (el) {
+    el.classList.remove('running');
+    el.classList.add('done');
+    var ic = el.querySelector('.material-symbols-outlined');
+    if (ic) ic.textContent = 'check_circle';
+  }
   document.getElementById('progress-bar').style.width = (n/7*85) + '%';
+
+  if (n === 7 && _layer7Timer) { clearInterval(_layer7Timer); _layer7Timer = null; }
 }
 
 // ── v4 Engine — 7-Layer 풀 파이프라인 ────────────────────────────────
