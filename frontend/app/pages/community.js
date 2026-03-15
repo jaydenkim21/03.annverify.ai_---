@@ -82,6 +82,7 @@ var COMMUNITY_MOCK_COMMENTS = [
 ];
 
 var _communitySort = 'recent'; // 현재 정렬 상태
+var _communityTab  = 'all';   // 현재 활성 탭
 
 // ── 정렬 ─────────────────────────────────────────────────────────────
 function setCommunitySort(sort) {
@@ -95,11 +96,7 @@ function setCommunitySort(sort) {
       : 'community-sort-btn px-2.5 py-1 text-xs font-semibold rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all';
   });
   // 현재 활성 탭 기준으로 재렌더링
-  var activeTab = ['all','user','ainews','partner'].find(t => {
-    var btn = document.getElementById('ctab-' + t);
-    return btn && btn.classList.contains('text-primary');
-  }) || 'all';
-  renderCommunity(activeTab);
+  renderCommunity(_communityTab);
 }
 
 function sortCommunityItems(items) {
@@ -118,6 +115,7 @@ function loadCommunity() {
 }
 
 function setCommunityTab(tab) {
+  _communityTab = tab;
   ['all','user','ainews','partner'].forEach(t => {
     var btn = document.getElementById('ctab-' + t);
     if (!btn) return;
@@ -219,7 +217,7 @@ function renderCommunityDetail(item) {
         <h2 class="font-display text-lg sm:text-xl font-bold text-slate-900 dark:text-white leading-snug mb-3">Claim: ${escHtml(item.title)}</h2>
         <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-4">${escHtml(item.description)}</p>
         <div class="flex items-center justify-between flex-wrap gap-3">
-          <p class="text-xs text-slate-400">${escHtml(item.source)}</p>
+          <p class="text-xs text-slate-400">${escHtml(item.claimSource)}</p>
           <button onclick="goPage('report')" class="text-xs font-bold text-primary border border-primary/30 px-3 py-1.5 rounded-xl hover:bg-primary/10 transition-colors flex items-center gap-1">
             <span class="material-symbols-outlined text-sm">open_in_new</span>View Full Evidence Report
           </button>
@@ -328,8 +326,11 @@ function toggleReplyInput(elId) {
 
 function likeCommunityComment(itemId, ci, ri, btn) {
   var comments = state.communityComments[itemId];
-  if (!comments) return;
-  var target = ri !== null ? comments[ci].replies[ri] : comments[ci];
+  if (!comments || !comments[ci]) return;
+  var target = (ri !== null && ri !== undefined && comments[ci].replies && comments[ci].replies[ri])
+    ? comments[ci].replies[ri]
+    : comments[ci];
+  if (!target) return;
   target.liked = !target.liked;
   target.likes += target.liked ? 1 : -1;
   var iconEl  = btn.querySelector('.material-symbols-outlined');

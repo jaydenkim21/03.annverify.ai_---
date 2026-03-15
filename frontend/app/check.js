@@ -31,7 +31,8 @@ async function pasteFromClipboard() {
     var el = document.getElementById('home-input');
     if (el) { el.value = text; el.focus(); }
   } catch(e) {
-    document.getElementById('home-input').focus();
+    var el = document.getElementById('home-input');
+    if (el) el.focus();
   }
 }
 
