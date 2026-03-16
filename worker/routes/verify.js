@@ -39,6 +39,35 @@ function evaluateGate(claim) {
 
 const RESPONSE_SCHEMA = '{"verified_status":"VERIFIED HIGH ACCURACY","overall_verdict":"string","overall_score":85,"overall_grade":"A+","verdict_class":"VERIFIED","confidence":0.92,"metrics":{"factual":88,"logic":85,"source_quality":90,"cross_validation":82,"recency":87},"executive_summary":"2-3 sentence summary","layer_analysis":[{"layer":"L1","name":"Origin Tracking","score":88,"summary":"brief","detail":"explanation"},{"layer":"L2","name":"Semantic Context","score":85,"summary":"brief","detail":"explanation"},{"layer":"L3","name":"Cross-Reference","score":90,"summary":"brief","detail":"explanation"},{"layer":"L4","name":"Statistical Analysis","score":82,"summary":"brief","detail":"explanation"},{"layer":"L5","name":"Neural Synthesis","score":87,"summary":"brief","detail":"explanation"},{"layer":"L6","name":"Human Consensus","score":84,"summary":"brief","detail":"explanation"},{"layer":"L7","name":"Final Verdict & Hash","score":89,"summary":"brief","detail":"explanation"}],"claims":[{"sentence":"exact quoted claim","status":"CONFIRMED","verdict":"explanation","evidence_link":""}],"key_evidence":{"supporting":["fact 1","fact 2"],"contradicting":[],"neutral":["context"]},"web_citations":["source 1"],"temporal":{"timeframe":"when","freshness":"current/outdated","expiry_risk":"LOW","recheck_recommended":false},"bisl_hash":"sha256-placeholder","gate_mode":"STANDARD"}';
 
+// Tavily 웹 검색
+async function fetchTavilyResults(query, apiKey) {
+  if (!apiKey) return null;
+  try {
+    const res = await fetch("https://api.tavily.com/search", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        api_key: apiKey,
+        query: query.slice(0, 400),
+        search_depth: "basic",
+        max_results: 5,
+        include_answer: true,
+      }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data.results || data.results.length === 0) return null;
+    let text = "";
+    if (data.answer) text += `Summary: ${data.answer}\n\n`;
+    text += data.results.map((r, i) =>
+      `[${i+1}] ${r.title}\nURL: ${r.url}\n${(r.content || "").slice(0, 500)}`
+    ).join("\n\n");
+    return text;
+  } catch (_) {
+    return null;
+  }
+}
+
 // URL에서 기사 텍스트 추출
 async function fetchArticleText(url) {
   try {
@@ -81,11 +110,14 @@ export async function handleVerify(request, env, cors) {
 
   const { gateMode, gateNote } = evaluateGate(claim);
 
+  // Tavily 웹 검색 (임시 비활성화 - 디버깅)
+  let tavilyContext = "";
+
   const prompt = `You are ANN Verify — a research-grade 7-layer AI fact-checking engine.
 
 CLAIM: "${claim || "(see image)"}"
 Genre: ${body.genre || "general"} | Depth: ${body.depth || "standard"}
-Guide: ${GENRE_GUIDE[body.genre] || GENRE_GUIDE.general}${gateNote}
+Guide: ${GENRE_GUIDE[body.genre] || GENRE_GUIDE.general}${gateNote}${tavilyContext}
 
 VERDICT CLASSES: VERIFIED | LIKELY_TRUE | PARTIALLY_TRUE | UNVERIFIED | CONTEXT_MISSING | MISLEADING | OUTDATED | FALSE | OPINION
 SCORING: A+(93-100) A(82-92) B+(74-81) B(64-73) C(48-63) D(30-47) F(0-29)
@@ -107,16 +139,13 @@ ${RESPONSE_SCHEMA}`;
   }
 
   const anthropicBody = {
-    model:       "claude-sonnet-4-5",
+    model:       "claude-sonnet-4-5-20250929",
     max_tokens:  4000,
     temperature: 0,
     messages,
-    tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 3 }],
   };
 
-  const res  = await callAnthropic(anthropicBody, env.ANTHROPIC_API_KEY, {
-    "anthropic-beta": "web-search-2025-03-05",
-  });
+  const res  = await callAnthropic(anthropicBody, env.ANTHROPIC_API_KEY);
   const data = await res.json();
 
   // Anthropic API 에러 시 상세 메시지 반환
