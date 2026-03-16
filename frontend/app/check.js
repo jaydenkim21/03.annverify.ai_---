@@ -154,6 +154,7 @@ function setLayerDone(n) {
   document.getElementById('progress-bar').style.width = (n/7*85) + '%';
 
   if (n === 7 && _layer7Timer) { clearInterval(_layer7Timer); _layer7Timer = null; }
+  if (n === 7) document.getElementById('loading-status').textContent = 'Finalizing report...';
 }
 
 // ── v4 Engine — 7-Layer 풀 파이프라인 ────────────────────────────────
