@@ -151,21 +151,21 @@ tailwind.config = {
 
       <!-- 드롭다운 메뉴 (카드 아래로 펼쳐짐) -->
       <div id="profile-dropdown" class="overflow-hidden transition-[max-height] duration-300 ease-in-out" style="max-height:0">
-        <button onclick="goPage('profile')" class="nav-link w-full flex items-center gap-3 px-3 py-3 rounded-2xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-          <span class="material-symbols-outlined shrink-0">person</span>
-          <span class="sb-text font-medium whitespace-nowrap">My Page</span>
+        <button onclick="goPage('profile')" class="nav-link w-full flex items-center gap-3 px-3 py-2 rounded-2xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+          <span class="material-symbols-outlined shrink-0 text-[20px]">person</span>
+          <span class="sb-text font-medium whitespace-nowrap text-[0.9em]">My Page</span>
         </button>
-        <button onclick="goPage('verify-history')" class="nav-link w-full flex items-center gap-3 px-3 py-3 rounded-2xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-          <span class="material-symbols-outlined shrink-0">history</span>
-          <span class="sb-text font-medium whitespace-nowrap">Verification History</span>
+        <button onclick="goPage('verify-history')" class="nav-link w-full flex items-center gap-3 px-3 py-2 rounded-2xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+          <span class="material-symbols-outlined shrink-0 text-[20px]">history</span>
+          <span class="sb-text font-medium whitespace-nowrap text-[0.9em]">Verification History</span>
         </button>
-        <button onclick="goPage('subscription'); toggleProfileDropdown()" class="nav-link w-full flex items-center gap-3 px-3 py-3 rounded-2xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-          <span class="material-symbols-outlined shrink-0">workspace_premium</span>
-          <span class="sb-text font-medium whitespace-nowrap">Subscription Plan</span>
+        <button onclick="goPage('subscription'); toggleProfileDropdown()" class="nav-link w-full flex items-center gap-3 px-3 py-2 rounded-2xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+          <span class="material-symbols-outlined shrink-0 text-[20px]">workspace_premium</span>
+          <span class="sb-text font-medium whitespace-nowrap text-[0.9em]">Subscription Plan</span>
         </button>
-        <button onclick="authLogout(); toggleProfileDropdown()" class="nav-link w-full flex items-center gap-3 px-3 py-3 rounded-2xl text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
-          <span class="material-symbols-outlined shrink-0">logout</span>
-          <span class="sb-text font-medium whitespace-nowrap">Sign Out</span>
+        <button onclick="authLogout(); toggleProfileDropdown()" class="nav-link w-full flex items-center gap-3 px-3 py-2 rounded-2xl text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+          <span class="material-symbols-outlined shrink-0 text-[20px]">logout</span>
+          <span class="sb-text font-medium whitespace-nowrap text-[0.9em]">Sign Out</span>
         </button>
       </div>
     </div>
