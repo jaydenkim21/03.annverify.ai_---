@@ -16,5 +16,15 @@ service cloud.firestore {
     match /users/{uid}/history/{docId} {
       allow read, write, delete: if request.auth != null && request.auth.uid == uid;
     }
+
+    // 커뮤니티 댓글 — 본인만 읽기/쓰기 가능
+    match /users/{uid}/communityComments/{docId} {
+      allow read, write, delete: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // 커뮤니티 투표 — 본인만 읽기/쓰기 가능
+    match /users/{uid}/communityVotes/{docId} {
+      allow read, write, delete: if request.auth != null && request.auth.uid == uid;
+    }
   }
 }

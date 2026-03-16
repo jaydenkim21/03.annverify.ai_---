@@ -1342,6 +1342,44 @@ tailwind.config = {
 </script>
 
 <script>
+// ── 커뮤니티 활동 Firestore 로드 ──────────────────────────────────────
+async function loadCommunityActivityFromFirestore() {
+  const user = typeof auth !== 'undefined' && auth.currentUser;
+  if (!user) return;
+  try {
+    // 좋아요 수 (users/{uid}.likesGiven)
+    const userDoc = await db.collection('users').doc(user.uid).get({ source: 'server' });
+    if (userDoc.exists && userDoc.data().likesGiven !== undefined) {
+      state.myActivity.likesGiven = userDoc.data().likesGiven;
+    }
+
+    // 댓글 목록
+    const commentsSnap = await db.collection('users').doc(user.uid)
+      .collection('communityComments')
+      .orderBy('ts', 'desc').limit(50).get({ source: 'server' });
+    state.myActivity.comments = commentsSnap.docs.map(function(d) {
+      var data = d.data();
+      return { itemId: data.itemId, title: data.title, text: data.text, ts: data.ts };
+    });
+
+    // 투표 목록
+    const votesSnap = await db.collection('users').doc(user.uid)
+      .collection('communityVotes')
+      .orderBy('ts', 'desc').limit(50).get({ source: 'server' });
+    state.myActivity.votes = votesSnap.docs.map(function(d) {
+      var data = d.data();
+      return { id: data.itemId, title: data.title, vote: data.vote, ts: data.ts };
+    });
+
+    // My Page가 열려 있으면 즉시 반영
+    if (state.currentPage === 'profile' && typeof renderProfilePage === 'function') {
+      renderProfilePage();
+    }
+  } catch(e) {
+    console.warn('커뮤니티 활동 로드 실패:', e);
+  }
+}
+
 // ── My Page 렌더링 ──────────────────────────────────────────────────
 // ── Verification History 페이지 렌더링 ────────────────────────────────
 function renderVerifyHistoryPage() {
@@ -1706,9 +1744,10 @@ auth.onAuthStateChanged(async function(user) {
         setTimeout(function() { closeMobileSidebar(); }, 2000);
       }
     }
-    // 로그인 시 Firestore에서 히스토리 로드
+    // 로그인 시 Firestore에서 히스토리 + 커뮤니티 활동 로드
     if (_prevUser === null && typeof loadHistoryFromFirestore === 'function') {
       loadHistoryFromFirestore();
+      loadCommunityActivityFromFirestore();
     }
     _prevUser = user;
   } else {

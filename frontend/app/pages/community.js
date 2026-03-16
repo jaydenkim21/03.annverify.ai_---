@@ -324,12 +324,23 @@ function voteCommunity(id, vote, btn) {
   btn.className = btn.className
     .replace('border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300','bg-primary text-white shadow-lg shadow-primary/20');
 
-  // 활동 추적
+  // 활동 추적 (state)
   var existing = state.myActivity.votes.findIndex(v => v.id === id);
   var item = COMMUNITY_MOCK.find(c => c.id === id);
   var entry = { id: id, vote: vote, title: item ? item.title : '', ts: Date.now() };
   if (existing >= 0) state.myActivity.votes.splice(existing, 1, entry);
   else               state.myActivity.votes.unshift(entry);
+
+  // Firestore 저장
+  var user = typeof auth !== 'undefined' && auth.currentUser;
+  if (user) {
+    db.collection('users').doc(user.uid).collection('communityVotes').doc(String(id)).set({
+      itemId: id,
+      title:  entry.title,
+      vote:   vote,
+      ts:     entry.ts,
+    }).catch(function(e) { console.warn('communityVotes 저장 실패:', e); });
+  }
 }
 
 function toggleReplyInput(elId) {
@@ -348,6 +359,15 @@ function likeCommunityComment(itemId, ci, ri, btn) {
   target.likes += target.liked ? 1 : -1;
   state.myActivity.likesGiven += target.liked ? 1 : -1;
   if (state.myActivity.likesGiven < 0) state.myActivity.likesGiven = 0;
+
+  // Firestore 저장
+  var user = typeof auth !== 'undefined' && auth.currentUser;
+  if (user) {
+    db.collection('users').doc(user.uid).set(
+      { likesGiven: state.myActivity.likesGiven },
+      { merge: true }
+    ).catch(function(e) { console.warn('likesGiven 저장 실패:', e); });
+  }
   var iconEl  = btn.querySelector('.material-symbols-outlined');
   var countEl = btn.querySelector('.like-count');
   if (iconEl)  iconEl.textContent  = target.liked ? 'favorite' : 'favorite_border';
@@ -375,8 +395,20 @@ function postCommunityComment() {
   textarea.value = '';
   renderCommunityComments(item.id);
 
-  // 활동 추적
-  state.myActivity.comments.unshift({ itemId: item.id, title: item.title, text: newComment.text, ts: Date.now() });
+  // 활동 추적 (state)
+  var actEntry = { itemId: item.id, title: item.title, text: newComment.text, ts: Date.now() };
+  state.myActivity.comments.unshift(actEntry);
+
+  // Firestore 저장
+  var user = typeof auth !== 'undefined' && auth.currentUser;
+  if (user) {
+    db.collection('users').doc(user.uid).collection('communityComments').add({
+      itemId: actEntry.itemId,
+      title:  actEntry.title,
+      text:   actEntry.text,
+      ts:     actEntry.ts,
+    }).catch(function(e) { console.warn('communityComments 저장 실패:', e); });
+  }
 }
 
 function postCommunityReply(itemId, ci, inputWrapperId) {
