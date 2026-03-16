@@ -1325,7 +1325,7 @@ auth.onAuthStateChanged(async function(user) {
     // Firestore 삭제가 실패할 경우를 대비해 localStorage를 폴백으로 사용
     const reRegKey = 'ann_rereg_' + emailKey;
     try {
-      const doc = await db.collection('deleted_accounts').doc(emailKey).get();
+      const doc = await db.collection('deleted_accounts').doc(emailKey).get({ source: 'server' });
       if (doc.exists) {
         const localReReg = localStorage.getItem(reRegKey) === '1';
         if (_googleAuthIntent === 'signup' || localReReg) {
