@@ -978,6 +978,10 @@ tailwind.config = {
             <span class="material-symbols-outlined text-xs">account_circle</span>
             Email
           </span>
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
+            <span class="material-symbols-outlined text-xs">calendar_today</span>
+            Member since <span id="profile-joined-date" class="ml-1">—</span>
+          </span>
         </div>
       </div>
     </div>
@@ -1199,6 +1203,11 @@ function renderProfilePage() {
   document.getElementById('profile-avatar-large').src = picture;
   document.getElementById('profile-name-display').textContent  = name;
   document.getElementById('profile-email-display').textContent = email;
+
+  const joinedDate = user.metadata && user.metadata.creationTime
+    ? new Date(user.metadata.creationTime).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' })
+    : '—';
+  document.getElementById('profile-joined-date').textContent = joinedDate;
 
   const badge = document.getElementById('profile-provider-badge');
   badge.innerHTML = isGoogle
