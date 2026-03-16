@@ -120,13 +120,13 @@
     var adv=l4&&l4.overall_skepticism||0.2;
     var sys='You are the supreme fact-check adjudicator. Synthesize all layers into a final verdict. Return ONLY valid JSON.';
     var user='Claims: '+JSON.stringify(claims.slice(0,3))+'\nNLI avg score: '+nliAvg.toFixed(1)+'\nAdversarial skepticism: '+adv+'\n\nReturn: {"verdict":"VERIFIED|LIKELY_TRUE|PARTIALLY_TRUE|UNVERIFIED|MISLEADING|FALSE","score":'+Math.round(nliAvg)+',"grade":"A+","confidence":0.9,"verdict_class":"VERIFIED","summary":"2-3 sentence executive summary of findings","claims_analysis":[{"claim_id":"C1","verdict":"CONFIRMED","explanation":"why","status":"CONFIRMED"}]}';
-    var data=await callClaude(baseUrl,sys,user,'claude-opus-4-6',null,2000);
+    var data=await callClaude(baseUrl,sys,user,'claude-sonnet-4-6',null,2000);
     var parsed=pj(extractText(data));
     return parsed||{verdict:'UNVERIFIED',score:50,grade:'C',confidence:0.5,verdict_class:'partial',summary:'Unable to fully verify this claim.',claims_analysis:[]};
   }
 
   // ── L7: BISL Hash & Temporal (로컬 처리 — API 호출 없음) ────────────
-  function L7_BISL(baseUrl, claims, l6, payload, today) {
+  function L7_BISL(l6, today) {
     var score      = l6&&l6.score||50;
     var confidence = l6&&l6.confidence||0.5;
     var verdict    = (l6&&l6.verdict||'').toUpperCase();
@@ -238,8 +238,7 @@
     progress(6,'done',l6);
 
     progress(7,'running');
-    var payload=JSON.stringify({l6,input:inputText.slice(0,200)});
-    l7=L7_BISL(baseUrl,l1.claims,l6,payload,today);
+    l7=L7_BISL(l6,today);
     progress(7,'done',l7);
 
     return mapToANNSchema(l1,l2,l3,l4,l5,l6,l7);
