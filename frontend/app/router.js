@@ -16,6 +16,7 @@ function goPage(page) {
   if (page === 'report')             renderReport();
   if (page === 'profile'            && typeof renderProfilePage         === 'function') renderProfilePage();
   if (page === 'verify-history'     && typeof renderVerifyHistoryPage   === 'function') renderVerifyHistoryPage();
+  if (page === 'subscription'       && typeof renderSubscriptionPage    === 'function') renderSubscriptionPage();
   if (page === 'community-detail'   && state.communityDetail && typeof renderCommunityDetail === 'function') renderCommunityDetail(state.communityDetail);
 
   // 홈으로 이동 시 입력창 초기화

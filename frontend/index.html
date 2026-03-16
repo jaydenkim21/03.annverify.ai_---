@@ -160,9 +160,9 @@ tailwind.config = {
             <span class="material-symbols-outlined text-base text-slate-400">history</span>
             <span class="sb-text">Verification History</span>
           </button>
-          <button class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-            <span class="material-symbols-outlined text-base text-slate-400">settings</span>
-            <span class="sb-text">Settings</span>
+          <button onclick="goPage('subscription'); toggleProfileDropdown()" class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+            <span class="material-symbols-outlined text-base text-slate-400">workspace_premium</span>
+            <span class="sb-text">Subscription Plan</span>
           </button>
           <div class="mx-3 my-1 border-t border-slate-100 dark:border-slate-700"></div>
           <button onclick="authLogout(); toggleProfileDropdown()" class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
@@ -1134,6 +1134,98 @@ tailwind.config = {
   </div>
 </section>
 
+<!-- ═══════════════════════════════════════════════════════════
+     SUBSCRIPTION PLAN PAGE
+═══════════════════════════════════════════════════════════ -->
+<section id="page-subscription" class="page flex-col p-4 sm:p-8 lg:p-16 min-h-screen">
+  <div class="w-full max-w-3xl mx-auto">
+
+    <div class="mb-10">
+      <h1 class="font-display text-3xl font-bold text-slate-900 dark:text-white">Subscription Plan</h1>
+      <p class="text-slate-500 mt-1">Manage your current plan and billing history.</p>
+    </div>
+
+    <!-- 현재 플랜 -->
+    <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 p-6 mb-6 shadow-sm">
+      <h2 class="font-display text-lg font-bold text-slate-900 dark:text-white mb-4">Current Plan</h2>
+      <div class="flex items-center justify-between flex-wrap gap-4">
+        <div class="flex items-center gap-4">
+          <div id="sub-plan-icon" class="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+            <span class="material-symbols-outlined text-primary">workspace_premium</span>
+          </div>
+          <div>
+            <p id="sub-plan-name" class="font-display text-xl font-bold text-slate-900 dark:text-white">—</p>
+            <p id="sub-plan-desc" class="text-sm text-slate-400 mt-0.5">—</p>
+          </div>
+        </div>
+        <div id="sub-plan-price" class="text-2xl font-black text-slate-900 dark:text-white">—</div>
+      </div>
+    </div>
+
+    <!-- 플랜 변경 -->
+    <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 p-6 mb-6 shadow-sm">
+      <h2 class="font-display text-lg font-bold text-slate-900 dark:text-white mb-4">Change Plan</h2>
+      <div class="space-y-3">
+        <div onclick="changePlanInline('developer')" id="sub-card-developer" class="sub-plan-card cursor-pointer flex items-center justify-between p-4 rounded-2xl border-2 border-transparent hover:border-primary/40 hover:bg-primary/5 transition-all">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+              <span class="material-symbols-outlined text-slate-500">code</span>
+            </div>
+            <div>
+              <p class="font-bold text-slate-900 dark:text-white text-sm">Developer</p>
+              <p class="text-xs text-slate-400">1,000 req/mo · Layers 1–3</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <p class="font-black text-slate-900 dark:text-white">$0<span class="text-xs font-normal text-slate-400">/mo</span></p>
+            <span id="sub-check-developer" class="hidden material-symbols-outlined text-primary">check_circle</span>
+          </div>
+        </div>
+        <div onclick="changePlanInline('professional')" id="sub-card-professional" class="sub-plan-card cursor-pointer flex items-center justify-between p-4 rounded-2xl border-2 border-transparent hover:border-primary/40 hover:bg-primary/5 transition-all">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+              <span class="material-symbols-outlined text-primary">workspace_premium</span>
+            </div>
+            <div>
+              <p class="font-bold text-slate-900 dark:text-white text-sm">Professional <span class="ml-1 text-[10px] bg-primary text-white px-1.5 py-0.5 rounded-full font-bold">Popular</span></p>
+              <p class="text-xs text-slate-400">50,000 req/mo · Full 7-Layer · Webhook · Analytics</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <p class="font-black text-slate-900 dark:text-white">$299<span class="text-xs font-normal text-slate-400">/mo</span></p>
+            <span id="sub-check-professional" class="hidden material-symbols-outlined text-primary">check_circle</span>
+          </div>
+        </div>
+        <div onclick="changePlanInline('enterprise')" id="sub-card-enterprise" class="sub-plan-card cursor-pointer flex items-center justify-between p-4 rounded-2xl border-2 border-transparent hover:border-primary/40 hover:bg-primary/5 transition-all">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center">
+              <span class="material-symbols-outlined text-amber-500">diamond</span>
+            </div>
+            <div>
+              <p class="font-bold text-slate-900 dark:text-white text-sm">Enterprise</p>
+              <p class="text-xs text-slate-400">Unlimited · Custom Layers · 24/7 Support · SLA</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <p class="font-black text-slate-900 dark:text-white text-sm">Custom</p>
+            <span id="sub-check-enterprise" class="hidden material-symbols-outlined text-primary">check_circle</span>
+          </div>
+        </div>
+      </div>
+      <p id="sub-change-status" class="text-xs text-center mt-4 hidden"></p>
+    </div>
+
+    <!-- 구독 히스토리 -->
+    <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 p-6 shadow-sm">
+      <h2 class="font-display text-lg font-bold text-slate-900 dark:text-white mb-4">Plan History</h2>
+      <div id="sub-history-list">
+        <p class="text-sm text-slate-400 text-center py-6">No plan changes recorded yet.</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
 </div><!-- end main -->
 </div><!-- end flex -->
 
@@ -1647,6 +1739,92 @@ function signUpWithEmail() {
     errEl.textContent = authErrorMsg(err.code);
     errEl.classList.remove('hidden');
   });
+}
+
+// ── Subscription Plan 페이지 ──────────────────────────────────────────
+const PLAN_META = {
+  developer:    { label:'Developer',    desc:'1,000 req/mo · Layers 1–3',                    price:'$0 / month',  icon:'code',              iconBg:'bg-slate-100 dark:bg-slate-800',    iconColor:'text-slate-500' },
+  professional: { label:'Professional', desc:'50,000 req/mo · Full 7-Layer · Webhook',        price:'$299 / month', icon:'workspace_premium', iconBg:'bg-primary/10',                     iconColor:'text-primary'   },
+  enterprise:   { label:'Enterprise',   desc:'Unlimited · Custom Layers · 24/7 Support · SLA', price:'Custom',      icon:'diamond',           iconBg:'bg-amber-50 dark:bg-amber-900/20', iconColor:'text-amber-500'  },
+};
+
+async function renderSubscriptionPage() {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  try {
+    const doc = await db.collection('users').doc(user.uid).get({ source: 'server' });
+    const data    = doc.exists ? doc.data() : {};
+    const current = data.plan || 'developer';
+    const history = Array.isArray(data.planHistory) ? data.planHistory : [];
+
+    // 현재 플랜 표시
+    const meta = PLAN_META[current] || PLAN_META.developer;
+    document.getElementById('sub-plan-icon').className = `w-12 h-12 rounded-2xl ${meta.iconBg} flex items-center justify-center`;
+    document.getElementById('sub-plan-icon').innerHTML = `<span class="material-symbols-outlined ${meta.iconColor}">${meta.icon}</span>`;
+    document.getElementById('sub-plan-name').textContent = meta.label;
+    document.getElementById('sub-plan-desc').textContent = meta.desc;
+    document.getElementById('sub-plan-price').textContent = meta.price;
+
+    // 플랜 카드 하이라이트
+    ['developer','professional','enterprise'].forEach(function(p) {
+      document.getElementById('sub-card-' + p).classList.remove('border-primary','bg-primary/5');
+      document.getElementById('sub-check-' + p).classList.add('hidden');
+    });
+    document.getElementById('sub-card-' + current).classList.add('border-primary','bg-primary/5');
+    document.getElementById('sub-check-' + current).classList.remove('hidden');
+
+    // 플랜 히스토리
+    const listEl = document.getElementById('sub-history-list');
+    if (!history.length) {
+      listEl.innerHTML = '<p class="text-sm text-slate-400 text-center py-6">No plan changes recorded yet.</p>';
+    } else {
+      listEl.innerHTML = history.slice().reverse().map(function(h) {
+        const m = PLAN_META[h.plan] || PLAN_META.developer;
+        const date = h.ts ? new Date(h.ts).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' }) : '—';
+        return `<div class="flex items-center justify-between py-3 border-b border-slate-100 dark:border-slate-800 last:border-0">
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined ${m.iconColor} text-base">${m.icon}</span>
+            <span class="text-sm font-semibold text-slate-800 dark:text-slate-200">${m.label}</span>
+          </div>
+          <span class="text-xs text-slate-400">${date}</span>
+        </div>`;
+      }).join('');
+    }
+  } catch(e) {
+    console.warn('renderSubscriptionPage error:', e);
+  }
+}
+
+async function changePlanInline(plan) {
+  const user = auth.currentUser;
+  if (!user) return;
+  const statusEl = document.getElementById('sub-change-status');
+  statusEl.classList.add('hidden');
+  try {
+    const doc  = await db.collection('users').doc(user.uid).get();
+    const data = doc.exists ? doc.data() : {};
+    const history = Array.isArray(data.planHistory) ? data.planHistory : [];
+    history.push({ plan: plan, ts: Date.now() });
+
+    await db.collection('users').doc(user.uid).set({
+      plan: plan,
+      planUpdatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      planHistory: history,
+    }, { merge: true });
+
+    updatePlanBadge(plan);
+    await renderSubscriptionPage();
+
+    statusEl.textContent = 'Plan updated to ' + PLAN_META[plan].label + '.';
+    statusEl.className = 'text-xs text-center mt-4 text-emerald-600';
+    statusEl.classList.remove('hidden');
+    setTimeout(function() { statusEl.classList.add('hidden'); }, 2500);
+  } catch(e) {
+    statusEl.textContent = 'Failed to update plan. Please try again.';
+    statusEl.className = 'text-xs text-center mt-4 text-red-500';
+    statusEl.classList.remove('hidden');
+  }
 }
 
 // ── 구독 플랜 ─────────────────────────────────────────────────────────
