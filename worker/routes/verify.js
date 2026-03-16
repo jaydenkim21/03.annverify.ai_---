@@ -114,7 +114,9 @@ ${RESPONSE_SCHEMA}`;
     tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 3 }],
   };
 
-  const res  = await callAnthropic(anthropicBody, env.ANTHROPIC_API_KEY);
+  const res  = await callAnthropic(anthropicBody, env.ANTHROPIC_API_KEY, {
+    "anthropic-beta": "web-search-2025-03-05",
+  });
   const data = await res.json();
 
   // Anthropic API 에러 시 상세 메시지 반환
