@@ -2,7 +2,8 @@
 // verify.js / claude.js / v4/claude.js 중복 제거
 
 export async function callAnthropic(body, apiKey) {
-  return fetch("https://api.anthropic.com/v1/messages", {
+  console.log("[callAnthropic] model:", body.model, "| key prefix:", apiKey ? apiKey.slice(0, 20) : "MISSING");
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
       "Content-Type":      "application/json",
@@ -11,4 +12,6 @@ export async function callAnthropic(body, apiKey) {
     },
     body: JSON.stringify(body),
   });
+  console.log("[callAnthropic] status:", res.status);
+  return res;
 }
