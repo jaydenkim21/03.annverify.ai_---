@@ -241,7 +241,6 @@
 
     progress(7,'running');
     l7=L7_BISL(l6,today);
-    progress(7,'done',l7);
 
     return mapToANNSchema(l1,l2,l3,l4,l5,l6,l7);
   }
