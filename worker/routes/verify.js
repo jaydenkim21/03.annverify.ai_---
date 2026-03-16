@@ -85,7 +85,7 @@ ${RESPONSE_SCHEMA}`;
   // Anthropic API 에러 시 상세 메시지 반환
   if (!res.ok) {
     const errMsg = (data.error && data.error.message) ? data.error.message : JSON.stringify(data);
-    return json({ error: errMsg, status: res.status, raw: data }, res.status, cors);
+    return json({ error: errMsg, status: res.status, raw: data, model: anthropicBody.model }, res.status, cors);
   }
 
   // gate_mode 주입 — web_search 시 tool_use 블록이 먼저 올 수 있으므로 text 블록을 명시적으로 찾음
