@@ -256,6 +256,37 @@ tailwind.config = {
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════
+     CONSENT MODAL (신규 가입 약관 동의)
+═══════════════════════════════════════════════════════════ -->
+<div id="consent-modal" class="fixed inset-0 z-[100] flex items-center justify-center hidden">
+  <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+  <div class="relative bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-sm mx-4 p-8">
+    <div class="flex flex-col items-center text-center mb-6">
+      <div class="w-14 h-14 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center mb-4">
+        <span class="material-symbols-outlined text-blue-500 text-3xl">verified_user</span>
+      </div>
+      <h3 class="font-display text-xl font-bold text-slate-900 dark:text-white mb-2">서비스 이용 동의</h3>
+      <p class="text-sm text-slate-500">ANN Verify를 이용하시려면 아래 약관에 동의해주세요.</p>
+    </div>
+    <div class="space-y-3 mb-6">
+      <label class="flex items-start gap-3 cursor-pointer">
+        <input type="checkbox" id="consent-terms" class="mt-0.5 w-4 h-4 accent-blue-500"/>
+        <span class="text-sm text-slate-700 dark:text-slate-300">(필수) <a href="/terms" target="_blank" class="text-blue-500 underline">이용약관</a>에 동의합니다.</span>
+      </label>
+      <label class="flex items-start gap-3 cursor-pointer">
+        <input type="checkbox" id="consent-privacy" class="mt-0.5 w-4 h-4 accent-blue-500"/>
+        <span class="text-sm text-slate-700 dark:text-slate-300">(필수) <a href="/privacy" target="_blank" class="text-blue-500 underline">개인정보 수집·이용</a>에 동의합니다.</span>
+      </label>
+    </div>
+    <p id="consent-error" class="text-xs text-red-500 mb-3 hidden">모든 필수 항목에 동의해주세요.</p>
+    <div class="flex gap-3">
+      <button onclick="cancelConsent()" class="flex-1 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">취소</button>
+      <button onclick="confirmConsent()" class="flex-1 py-3 rounded-2xl bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold transition-colors">동의하고 시작하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
      DELETE ACCOUNT MODAL
 ═══════════════════════════════════════════════════════════ -->
 <div id="delete-account-modal" class="fixed inset-0 z-[100] flex items-center justify-center hidden">
@@ -1416,10 +1447,11 @@ function signInWithGoogle(intent) {
     // isNewUser를 여기서 안전하게 읽어 토스트 표시
     const isNew = result.additionalUserInfo && result.additionalUserInfo.isNewUser;
     const name  = result.user.displayName || result.user.email.split('@')[0];
-    showToast(
-      isNew ? '🎉 ' + name + ' 님 환영합니다!' : '✓ ' + name + ' 님 로그인되었습니다',
-      'success'
-    );
+    if (isNew) {
+      showConsentModal(result.user, name);
+    } else {
+      showToast('✓ ' + name + ' 님 로그인되었습니다', 'success');
+    }
   }).catch(function(err) {
     _googleAuthIntent = null; // 팝업 취소/오류 시 intent 초기화
     if (err.code === 'auth/popup-blocked' || err.code === 'auth/cancelled-popup-request') {
@@ -1438,10 +1470,11 @@ auth.getRedirectResult().then(function(result) {
   if (result && result.user) {
     const isNew = result.additionalUserInfo && result.additionalUserInfo.isNewUser;
     const name  = result.user.displayName || result.user.email.split('@')[0];
-    showToast(
-      isNew ? '🎉 ' + name + ' 님 환영합니다!' : '✓ ' + name + ' 님 로그인되었습니다',
-      'success'
-    );
+    if (isNew) {
+      showConsentModal(result.user, name);
+    } else {
+      showToast('✓ ' + name + ' 님 로그인되었습니다', 'success');
+    }
   }
 }).catch(function(err) {
   const IGNORE = ['auth/no-auth-event', 'auth/null-user'];
@@ -1483,6 +1516,41 @@ function signUpWithEmail() {
     errEl.textContent = authErrorMsg(err.code);
     errEl.classList.remove('hidden');
   });
+}
+
+// ── 약관 동의 모달 ────────────────────────────────────────────────────
+var _pendingConsentUser = null;
+var _pendingConsentName = null;
+
+function showConsentModal(user, name) {
+  _pendingConsentUser = user;
+  _pendingConsentName = name;
+  document.getElementById('consent-terms').checked = false;
+  document.getElementById('consent-privacy').checked = false;
+  document.getElementById('consent-error').classList.add('hidden');
+  document.getElementById('consent-modal').classList.remove('hidden');
+}
+
+function confirmConsent() {
+  const terms   = document.getElementById('consent-terms').checked;
+  const privacy = document.getElementById('consent-privacy').checked;
+  if (!terms || !privacy) {
+    document.getElementById('consent-error').classList.remove('hidden');
+    return;
+  }
+  document.getElementById('consent-modal').classList.add('hidden');
+  showToast('🎉 ' + _pendingConsentName + ' 님 환영합니다!', 'success');
+  _pendingConsentUser = null;
+  _pendingConsentName = null;
+}
+
+async function cancelConsent() {
+  document.getElementById('consent-modal').classList.add('hidden');
+  const user = _pendingConsentUser;
+  _pendingConsentUser = null;
+  _pendingConsentName = null;
+  if (user) { try { await user.delete(); } catch(e) {} }
+  await auth.signOut();
 }
 
 // ── 로그아웃 ──────────────────────────────────────────────────────────
