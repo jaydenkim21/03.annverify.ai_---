@@ -146,7 +146,7 @@ tailwind.config = {
           <p class="text-sm font-semibold truncate text-slate-900 dark:text-white" id="username-display">User</p>
           <p class="text-xs text-slate-500 dark:text-slate-400 truncate" id="user-email"></p>
         </div>
-        <span class="sb-text material-symbols-outlined text-slate-400 text-base transition-transform duration-300" id="profile-chevron">expand_more</span>
+        <span class="sb-text material-symbols-outlined text-slate-400 text-base transition-transform duration-300" id="profile-chevron">expand_less</span>
       </button>
 
       <!-- 드롭다운 메뉴 (카드 아래로 펼쳐짐) -->
@@ -1592,10 +1592,10 @@ function toggleProfileDropdown() {
   const isOpen   = dropdown.style.maxHeight !== '0px' && dropdown.style.maxHeight !== '';
   if (isOpen) {
     dropdown.style.maxHeight = '0';
-    if (chevron) chevron.style.transform = '';
+    if (chevron) chevron.style.transform = 'rotate(180deg)';
   } else {
     dropdown.style.maxHeight = dropdown.scrollHeight + 'px';
-    if (chevron) chevron.style.transform = 'rotate(180deg)';
+    if (chevron) chevron.style.transform = '';
   }
 }
 
@@ -1605,7 +1605,7 @@ function closeProfileDropdown() {
   const chevron  = document.getElementById('profile-chevron');
   dropdown.style.transition = 'none';
   dropdown.style.maxHeight  = '0';
-  if (chevron) chevron.style.transform = '';
+  if (chevron) chevron.style.transform = 'rotate(180deg)';
   requestAnimationFrame(function() { dropdown.style.transition = ''; });
 }
 
