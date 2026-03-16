@@ -281,6 +281,71 @@ tailwind.config = {
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════
+     SUBSCRIPTION MODAL
+═══════════════════════════════════════════════════════════ -->
+<div id="subscription-modal" class="fixed inset-0 z-[100] flex items-center justify-center hidden">
+  <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeSubscriptionModal()"></div>
+  <div class="relative bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-lg mx-4 p-8">
+    <button onclick="closeSubscriptionModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition-colors">
+      <span class="material-symbols-outlined text-lg">close</span>
+    </button>
+    <h3 class="font-display text-xl font-bold text-slate-900 dark:text-white mb-1">Change Plan</h3>
+    <p class="text-sm text-slate-500 mb-6">Select the plan that fits your needs.</p>
+    <div class="space-y-3" id="subscription-plan-list">
+      <!-- Developer -->
+      <div onclick="selectPlan('developer')" id="plan-card-developer" class="plan-card cursor-pointer flex items-center justify-between p-4 rounded-2xl border-2 border-transparent hover:border-primary/40 hover:bg-primary/5 transition-all">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+            <span class="material-symbols-outlined text-slate-500">code</span>
+          </div>
+          <div>
+            <p class="font-bold text-slate-900 dark:text-white text-sm">Developer</p>
+            <p class="text-xs text-slate-400">1,000 req/mo · Layers 1–3</p>
+          </div>
+        </div>
+        <div class="text-right">
+          <p class="font-black text-slate-900 dark:text-white">$0<span class="text-xs font-normal text-slate-400">/mo</span></p>
+          <span id="plan-check-developer" class="hidden material-symbols-outlined text-primary text-sm">check_circle</span>
+        </div>
+      </div>
+      <!-- Professional -->
+      <div onclick="selectPlan('professional')" id="plan-card-professional" class="plan-card cursor-pointer flex items-center justify-between p-4 rounded-2xl border-2 border-transparent hover:border-primary/40 hover:bg-primary/5 transition-all">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+            <span class="material-symbols-outlined text-primary">workspace_premium</span>
+          </div>
+          <div>
+            <p class="font-bold text-slate-900 dark:text-white text-sm">Professional <span class="ml-1 text-[10px] bg-primary text-white px-1.5 py-0.5 rounded-full font-bold">Popular</span></p>
+            <p class="text-xs text-slate-400">50,000 req/mo · Full 7-Layer</p>
+          </div>
+        </div>
+        <div class="text-right">
+          <p class="font-black text-slate-900 dark:text-white">$299<span class="text-xs font-normal text-slate-400">/mo</span></p>
+          <span id="plan-check-professional" class="hidden material-symbols-outlined text-primary text-sm">check_circle</span>
+        </div>
+      </div>
+      <!-- Enterprise -->
+      <div onclick="selectPlan('enterprise')" id="plan-card-enterprise" class="plan-card cursor-pointer flex items-center justify-between p-4 rounded-2xl border-2 border-transparent hover:border-primary/40 hover:bg-primary/5 transition-all">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center">
+            <span class="material-symbols-outlined text-amber-500">diamond</span>
+          </div>
+          <div>
+            <p class="font-bold text-slate-900 dark:text-white text-sm">Enterprise</p>
+            <p class="text-xs text-slate-400">Unlimited · Custom Layers · SLA</p>
+          </div>
+        </div>
+        <div class="text-right">
+          <p class="font-black text-slate-900 dark:text-white text-sm">Custom</p>
+          <span id="plan-check-enterprise" class="hidden material-symbols-outlined text-primary text-sm">check_circle</span>
+        </div>
+      </div>
+    </div>
+    <p id="subscription-status" class="text-xs text-center mt-4 hidden"></p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
      CONSENT MODAL (신규 가입 약관 동의)
 ═══════════════════════════════════════════════════════════ -->
 <div id="consent-modal" class="fixed inset-0 z-[100] flex items-center justify-center hidden">
@@ -983,6 +1048,17 @@ tailwind.config = {
             Member since <span id="profile-joined-date" class="ml-1">—</span>
           </span>
         </div>
+        <!-- 구독 상태 -->
+        <div class="mt-4 flex flex-wrap items-center gap-3">
+          <span id="profile-plan-badge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary">
+            <span class="material-symbols-outlined text-xs">workspace_premium</span>
+            <span id="profile-plan-name">Developer</span>
+          </span>
+          <button onclick="openSubscriptionModal()" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-primary hover:text-primary transition-colors">
+            <span class="material-symbols-outlined text-xs">swap_horiz</span>
+            Change Plan
+          </button>
+        </div>
       </div>
     </div>
 
@@ -1208,6 +1284,9 @@ function renderProfilePage() {
     ? new Date(user.metadata.creationTime).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' })
     : '—';
   document.getElementById('profile-joined-date').textContent = joinedDate;
+
+  // 구독 플랜 로드
+  loadSubscription();
 
   const badge = document.getElementById('profile-provider-badge');
   badge.innerHTML = isGoogle
@@ -1568,6 +1647,78 @@ function signUpWithEmail() {
     errEl.textContent = authErrorMsg(err.code);
     errEl.classList.remove('hidden');
   });
+}
+
+// ── 구독 플랜 ─────────────────────────────────────────────────────────
+const PLAN_LABELS = { developer: 'Developer', professional: 'Professional', enterprise: 'Enterprise' };
+
+async function loadSubscription() {
+  const user = auth.currentUser;
+  if (!user) return;
+  try {
+    const doc = await db.collection('users').doc(user.uid).get({ source: 'server' });
+    const plan = (doc.exists && doc.data().plan) ? doc.data().plan : 'developer';
+    updatePlanBadge(plan);
+  } catch(e) {
+    updatePlanBadge('developer');
+  }
+}
+
+function updatePlanBadge(plan) {
+  const el = document.getElementById('profile-plan-name');
+  if (el) el.textContent = PLAN_LABELS[plan] || 'Developer';
+}
+
+function openSubscriptionModal() {
+  const user = auth.currentUser;
+  if (!user) return;
+  document.getElementById('subscription-status').classList.add('hidden');
+  // 현재 플랜 표시 초기화
+  ['developer','professional','enterprise'].forEach(function(p) {
+    document.getElementById('plan-card-' + p).classList.remove('border-primary', 'bg-primary/5');
+    document.getElementById('plan-check-' + p).classList.add('hidden');
+  });
+  // 현재 플랜 하이라이트
+  db.collection('users').doc(user.uid).get().then(function(doc) {
+    const current = (doc.exists && doc.data().plan) ? doc.data().plan : 'developer';
+    const card  = document.getElementById('plan-card-' + current);
+    const check = document.getElementById('plan-check-' + current);
+    if (card)  { card.classList.add('border-primary', 'bg-primary/5'); }
+    if (check) { check.classList.remove('hidden'); }
+  }).catch(function() {
+    document.getElementById('plan-card-developer').classList.add('border-primary', 'bg-primary/5');
+    document.getElementById('plan-check-developer').classList.remove('hidden');
+  });
+  document.getElementById('subscription-modal').classList.remove('hidden');
+}
+
+function closeSubscriptionModal() {
+  document.getElementById('subscription-modal').classList.add('hidden');
+}
+
+async function selectPlan(plan) {
+  const user = auth.currentUser;
+  if (!user) return;
+  const statusEl = document.getElementById('subscription-status');
+  try {
+    await db.collection('users').doc(user.uid).set({ plan: plan, planUpdatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+    updatePlanBadge(plan);
+    // 선택된 플랜 하이라이트 업데이트
+    ['developer','professional','enterprise'].forEach(function(p) {
+      document.getElementById('plan-card-' + p).classList.remove('border-primary', 'bg-primary/5');
+      document.getElementById('plan-check-' + p).classList.add('hidden');
+    });
+    document.getElementById('plan-card-' + plan).classList.add('border-primary', 'bg-primary/5');
+    document.getElementById('plan-check-' + plan).classList.remove('hidden');
+    statusEl.textContent = 'Plan updated to ' + PLAN_LABELS[plan] + '.';
+    statusEl.className = 'text-xs text-center mt-4 text-emerald-600';
+    statusEl.classList.remove('hidden');
+    setTimeout(closeSubscriptionModal, 1200);
+  } catch(e) {
+    statusEl.textContent = 'Failed to update plan. Please try again.';
+    statusEl.className = 'text-xs text-center mt-4 text-red-500';
+    statusEl.classList.remove('hidden');
+  }
 }
 
 // ── 약관 동의 모달 ────────────────────────────────────────────────────
