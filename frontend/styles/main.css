@@ -72,10 +72,11 @@ h1,h2,h3,.font-display { font-family:'Space Grotesk',sans-serif; }
 #sidebar > div > button {
   transition: gap 0.3s ease, padding 0.3s ease;
 }
+/* 축소 시 아이콘 중앙 정렬 — 이 위치(pl-[19px]+px-3=31px)가 좌측 고정 기준점 */
 #sidebar.collapsed nav a,
 #sidebar.collapsed nav button,
 #sidebar.collapsed > div > button {
-  justify-content: flex-start;
+  justify-content: center;
   gap: 0;
 }
 
