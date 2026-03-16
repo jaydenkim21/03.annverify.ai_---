@@ -73,28 +73,42 @@ h1,h2,h3,.font-display { font-family:'Space Grotesk',sans-serif; }
   transition: gap 0.3s ease, padding 0.3s ease;
 }
 /*
- * 축소 시 아이콘 좌측 고정 규칙
- * ─ 컨테이너 좌측 패딩(pl-[19px]) 유지 → expanded 와 동일한 X 좌표에 아이콘 고정
- * ─ 우측 패딩만 제거 (공간 절약)
- * ─ justify-content 변경 없음 → 사이드바 열릴 때 아이콘 위치 불변
+ * 축소 시 아이콘 중앙 정렬 규칙
+ * ─ 컨테이너 패딩 0 → 버튼이 사이드바 전체폭(86px) 차지
+ * ─ justify-content:center → 아이콘이 86px 정중앙(43px)에 고정
+ * ─ expanded 시 pl-[19px]+px-3+12px = 43px 동일 → 아이콘 위치 불변
  */
 
-/* 축소 시 컨테이너 우측 패딩만 제거 (좌측 19px 유지) */
+/* 컨테이너 패딩 완전 제거 */
 #sidebar.collapsed > div {
+  padding-left: 0 !important;
   padding-right: 0 !important;
 }
 
-/* 축소 시 New Fact Check 버튼 → 아이콘 원형으로 축소, 좌측 정렬 유지 */
-#sidebar.collapsed div > button.bg-primary {
-  width: auto !important;
-  padding: 0.75rem !important;
-  border-radius: 50% !important;
-}
-
-/* 축소 시 nav · 드롭다운 인라인 padding-right 제거 */
+/* nav · 드롭다운 인라인 padding 제거 */
 #sidebar.collapsed nav,
 #sidebar.collapsed #profile-dropdown > div {
   padding-right: 0 !important;
+}
+
+/* 모든 항목 중앙 정렬 */
+#sidebar.collapsed nav a,
+#sidebar.collapsed nav button,
+#sidebar.collapsed > div > button,
+#sidebar.collapsed #user-guest > button,
+#sidebar.collapsed #user-loggedin > button,
+#sidebar.collapsed #profile-dropdown button {
+  justify-content: center;
+  gap: 0;
+}
+
+/* New Fact Check 버튼 원형 축소 · 중앙 배치 */
+#sidebar.collapsed div > button.bg-primary {
+  width: auto !important;
+  padding: 0.75rem !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  border-radius: 50% !important;
 }
 
 /* ── 페이지 라우팅 ── */
