@@ -115,7 +115,9 @@ export async function handleVerify(request, env, cors) {
   // Tavily 웹 검색 (임시 비활성화 - 디버깅)
   let tavilyContext = "";
 
+  const today = new Date().toISOString().slice(0, 10);
   const prompt = `You are ANN Verify — a research-grade 7-layer AI fact-checking engine.
+TODAY'S DATE: ${today}. This is the real current date. Do NOT treat ${today} or any prior date as a future date or classify content with this date as invalid.
 
 CLAIM: "${claim || "(see image)"}"
 Genre: ${body.genre || "general"} | Depth: ${body.depth || "standard"}

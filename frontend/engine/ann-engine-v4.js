@@ -60,8 +60,8 @@
   }
 
   // ── L1: Claim Parse & SDE ────────────────────────────────────────────
-  async function L1_SDE(baseUrl, inputText) {
-    var sys='You are a precision claim decomposition engine. Extract all verifiable claims from the input. Return ONLY valid JSON.';
+  async function L1_SDE(baseUrl, inputText, today) {
+    var sys='You are a precision claim decomposition engine. Extract all verifiable claims from the input. Return ONLY valid JSON. TODAY\'S DATE: '+today+'. Do NOT treat this date or any date on or before it as a future date.';
     var user='Input: "'+inputText+'"\n\nReturn JSON: {"claims":[{"id":"C1","text":"exact claim","type":"factual|opinion|prediction","verifiable":true}],"input_type":"news|statement|url","language":"en","topic":"string"}';
     var data=await callClaude(baseUrl,sys,user,'claude-sonnet-4-6',null,1500);
     var txt=extractText(data);
@@ -79,11 +79,11 @@
   }
 
   // ── L3: Evidence Collection (Grok → Claude fallback) ─────────────────
-  async function L3_Evidence(baseUrl, claims, l2) {
+  async function L3_Evidence(baseUrl, claims, l2, today) {
     var queries=l2&&l2.search_queries?l2.search_queries:[(claims[0]||{}).text||''];
-    var body={messages:[{role:'user',content:'Research these claims for factual evidence. Return JSON with evidence array.\nClaims: '+JSON.stringify(claims.slice(0,3))+'\nQueries: '+queries.slice(0,2).join(', ')+'\n\nReturn: {"evidence":[{"claim_id":"C1","support":["fact1"],"contradict":[],"sources":["url"],"confidence":0.8}],"web_searched":true}'}],max_tokens:2000};
+    var body={messages:[{role:'user',content:'TODAY\'S DATE: '+today+'. Research these claims for factual evidence. Do NOT treat '+today+' or any prior date as a future date. Return JSON with evidence array.\nClaims: '+JSON.stringify(claims.slice(0,3))+'\nQueries: '+queries.slice(0,2).join(', ')+'\n\nReturn: {"evidence":[{"claim_id":"C1","support":["fact1"],"contradict":[],"sources":["url"],"confidence":0.8}],"web_searched":true}'}],max_tokens:2000};
     return callWithFallback(baseUrl,'/api/v4/grok',body,async()=>{
-      var data=await callClaude(baseUrl,'You are a fact-checker researcher. Return ONLY valid JSON.','Research these claims: '+JSON.stringify(claims.slice(0,2))+'\n\nReturn: {"evidence":[{"claim_id":"C1","support":["fact1"],"contradict":[],"sources":[],"confidence":0.7}],"web_searched":false}','claude-sonnet-4-6',[{type:'web_search_20250305',name:'web_search'}],2000);
+      var data=await callClaude(baseUrl,'You are a fact-checker researcher. TODAY\'S DATE: '+today+'. Do NOT treat this date or any prior date as a future date. Return ONLY valid JSON.','Research these claims: '+JSON.stringify(claims.slice(0,2))+'\n\nReturn: {"evidence":[{"claim_id":"C1","support":["fact1"],"contradict":[],"sources":[],"confidence":0.7}],"web_searched":false}','claude-sonnet-4-6',[{type:'web_search_20250305',name:'web_search'}],2000);
       return pj(extractText(data))||{evidence:[{claim_id:'C1',support:['Unable to retrieve'],contradict:[],sources:[],confidence:0.5}],web_searched:false};
     });
   }
@@ -126,8 +126,8 @@
   }
 
   // ── L7: BISL Hash & Temporal (Claude Haiku 4.5) ───────────────────────
-  async function L7_BISL(baseUrl, claims, l6, payload) {
-    var sys='You are a temporal analyst and hash generator. Return ONLY valid JSON.';
+  async function L7_BISL(baseUrl, claims, l6, payload, today) {
+    var sys='You are a temporal analyst and hash generator. Return ONLY valid JSON. TODAY\'S DATE: '+today+'. This is the real current date. Do NOT classify content dated on or before '+today+' as future-dated or invalid.';
     var user='Verdict: '+JSON.stringify(l6)+'\nPayload: '+payload.slice(0,200)+'\n\nReturn: {"temporal":{"timeframe":"recent","freshness":"current","expiry_risk":"LOW","recheck_recommended":false},"bias_detected":false,"bias_type":null,"bisl_hash":"ann-'+Date.now().toString(36)+'","timestamp":"'+new Date().toISOString()+'"}';
     var data=await callClaude(baseUrl,sys,user,'claude-haiku-4-5-20251001',null,800);
     var parsed=pj(extractText(data));
@@ -193,10 +193,11 @@
       if(typeof onProgress==='function') try{onProgress(layer,status,data);}catch(e){}
     }
 
+    var today=new Date().toISOString().slice(0,10);
     var l1,l2,l3,l4,l5,l6,l7;
 
     progress(1,'running');
-    l1=await L1_SDE(baseUrl,inputText);
+    l1=await L1_SDE(baseUrl,inputText,today);
     if(!l1||!l1.claims||!l1.claims.length) throw new Error('L1 failed: no claims');
     progress(1,'done',l1);
 
@@ -205,7 +206,7 @@
     progress(2,'done',l2);
 
     progress(3,'running');
-    l3=await L3_Evidence(baseUrl,l1.claims,l2);
+    l3=await L3_Evidence(baseUrl,l1.claims,l2,today);
     progress(3,'done',l3);
 
     progress(4,'running');
@@ -222,7 +223,7 @@
 
     progress(7,'running');
     var payload=JSON.stringify({l6,input:inputText.slice(0,200)});
-    l7=await L7_BISL(baseUrl,l1.claims,l6,payload);
+    l7=await L7_BISL(baseUrl,l1.claims,l6,payload,today);
     progress(7,'done',l7);
 
     return mapToANNSchema(l1,l2,l3,l4,l5,l6,l7);
