@@ -30,7 +30,13 @@ export async function handleV4Claude(request, env, cors) {
   if (body.system) anthropicBody.system = body.system;
   if (body.tools)  anthropicBody.tools  = body.tools;
 
-  const res  = await callAnthropic(anthropicBody, env.ANTHROPIC_API_KEY);
+  const hasWebSearch = Array.isArray(anthropicBody.tools) &&
+    anthropicBody.tools.some(t => t.type && t.type.startsWith('web_search'));
+  const extraHeaders = hasWebSearch
+    ? { "anthropic-beta": "web-search-2025-03-05" }
+    : {};
+
+  const res  = await callAnthropic(anthropicBody, env.ANTHROPIC_API_KEY, extraHeaders);
   const data = await res.json();
   return json(data, res.status, cors);
 }
