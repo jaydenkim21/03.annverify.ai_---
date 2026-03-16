@@ -1,6 +1,7 @@
-// ① Client Layer — 히스토리 관리 (로컬 스토리지)
+// ① Client Layer — 히스토리 관리 (Firestore + localStorage 폴백)
 
-function saveHistory(input, result) {
+// ── Firestore 히스토리 저장 ────────────────────────────────────────────
+async function saveHistory(input, result) {
   var item = {
     input:   input.slice(0, 100),
     score:   result.overall_score,
@@ -8,20 +9,93 @@ function saveHistory(input, result) {
     verdict: result.verdict_class,
     ts:      Date.now(),
   };
+
+  // 로컬 state 업데이트
   state.history.unshift(item);
-  state.history = state.history.slice(0, 20);
-  localStorage.setItem('ann_history', JSON.stringify(state.history));
+  state.history = state.history.slice(0, 50);
+
+  const user = typeof auth !== 'undefined' && auth.currentUser;
+  if (user) {
+    // 로그인 상태 → Firestore에 저장
+    try {
+      await db.collection('users').doc(user.uid).collection('history').add({
+        input:     item.input,
+        score:     item.score,
+        grade:     item.grade,
+        verdict:   item.verdict,
+        ts:        firebase.firestore.FieldValue.serverTimestamp(),
+        tsLocal:   item.ts,
+      });
+      // Firestore 저장 성공 시 localStorage는 동기화 불필요 — 빈값으로 초기화
+      localStorage.removeItem('ann_history');
+    } catch(e) {
+      // Firestore 실패 시 localStorage 폴백
+      console.warn('Firestore saveHistory 실패, localStorage 폴백:', e);
+      localStorage.setItem('ann_history', JSON.stringify(state.history));
+    }
+  } else {
+    // 비로그인 → localStorage에만 저장
+    localStorage.setItem('ann_history', JSON.stringify(state.history));
+  }
+
   renderHistory();
 }
 
-function clearHistory() {
+// ── Firestore 히스토리 로드 ────────────────────────────────────────────
+async function loadHistoryFromFirestore() {
+  const user = typeof auth !== 'undefined' && auth.currentUser;
+  if (!user) return;
+  try {
+    const snap = await db.collection('users').doc(user.uid)
+      .collection('history')
+      .orderBy('tsLocal', 'desc')
+      .limit(50)
+      .get({ source: 'server' });
+    state.history = snap.docs.map(function(doc) {
+      var d = doc.data();
+      return {
+        id:      doc.id,
+        input:   d.input,
+        score:   d.score,
+        grade:   d.grade,
+        verdict: d.verdict,
+        ts:      d.tsLocal || (d.ts && d.ts.toMillis ? d.ts.toMillis() : Date.now()),
+      };
+    });
+    localStorage.removeItem('ann_history');
+    renderHistory();
+    if (typeof renderVerifyHistoryPage === 'function') renderVerifyHistoryPage();
+  } catch(e) {
+    console.warn('Firestore loadHistory 실패:', e);
+  }
+}
+
+// ── 히스토리 전체 삭제 ─────────────────────────────────────────────────
+async function clearHistory() {
   state.history = [];
   localStorage.removeItem('ann_history');
+
+  const user = typeof auth !== 'undefined' && auth.currentUser;
+  if (user) {
+    try {
+      const snap = await db.collection('users').doc(user.uid)
+        .collection('history').limit(100).get();
+      const batch = db.batch();
+      snap.docs.forEach(function(doc) { batch.delete(doc.ref); });
+      await batch.commit();
+    } catch(e) {
+      console.warn('Firestore clearHistory 실패:', e);
+    }
+  }
+
   renderHistory();
+  if (typeof renderVerifyHistoryPage === 'function') renderVerifyHistoryPage();
 }
 
+// ── 홈 히스토리 카드 렌더링 ───────────────────────────────────────────
 function renderHistory() {
   var grid = document.getElementById('history-grid');
+  if (!grid) return;
   if (!state.history.length) {
     grid.innerHTML = '<div class="p-5 bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 text-center text-slate-400 text-sm col-span-3 py-10"><span class="material-symbols-outlined text-3xl mb-2 block">search</span>Your recent fact-checks will appear here</div>';
     return;
@@ -42,7 +116,6 @@ function renderHistory() {
     </div>`;
   });
   grid.innerHTML = cards.join('');
-  // data-* 기반 클릭 — innerHTML onclick XSS 방지
   grid.querySelectorAll('.hist-card').forEach(function(el) {
     el.addEventListener('click', function() {
       var h = state.history[parseInt(el.dataset.histIdx, 10)];
@@ -51,6 +124,7 @@ function renderHistory() {
   });
 }
 
+// ── 히스토리 재실행 ───────────────────────────────────────────────────
 function rerunHistory(input) {
   state.lastInput = input;
   var inputEl = document.getElementById('home-input');

@@ -1445,9 +1445,16 @@ auth.onAuthStateChanged(async function(user) {
         setTimeout(function() { closeMobileSidebar(); }, 2000);
       }
     }
+    // 로그인 시 Firestore에서 히스토리 로드
+    if (_prevUser === null && typeof loadHistoryFromFirestore === 'function') {
+      loadHistoryFromFirestore();
+    }
     _prevUser = user;
   } else {
     _prevUser = null;
+    // 로그아웃 시 localStorage 히스토리로 복원
+    state.history = JSON.parse(localStorage.getItem('ann_history') || '[]');
+    if (typeof renderHistory === 'function') renderHistory();
     document.getElementById('user-guest').classList.remove('hidden');
     document.getElementById('user-loggedin').classList.add('hidden');
   }

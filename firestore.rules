@@ -1,0 +1,15 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 탈퇴 계정 기록 — 클라이언트 읽기/쓰기 허용 (서버에서 관리)
+    match /deleted_accounts/{docId} {
+      allow read, write: if true;
+    }
+
+    // 사용자 히스토리 — 본인만 읽기/쓰기 가능
+    match /users/{uid}/history/{docId} {
+      allow read, write, delete: if request.auth != null && request.auth.uid == uid;
+    }
+  }
+}
