@@ -1322,12 +1322,23 @@ auth.onAuthStateChanged(async function(user) {
   if (user) {
     // 탈퇴 계정 차단 체크
     const emailKey = (user.email || '').toLowerCase().replace(/\./g, '_').replace(/@/g, '__at__');
+    // Firestore 삭제가 실패할 경우를 대비해 localStorage를 폴백으로 사용
+    const reRegKey = 'ann_rereg_' + emailKey;
     try {
       const doc = await db.collection('deleted_accounts').doc(emailKey).get();
       if (doc.exists) {
-        if (_googleAuthIntent === 'signup') {
-          // Sign Up 탭에서 시도한 경우: 차단 목록 제거 후 재가입 허용
-          await db.collection('deleted_accounts').doc(emailKey).delete();
+        const localReReg = localStorage.getItem(reRegKey) === '1';
+        if (_googleAuthIntent === 'signup' || localReReg) {
+          // Sign Up 탭에서 시도하거나 localStorage에 재가입 기록이 있는 경우: 허용
+          try {
+            await db.collection('deleted_accounts').doc(emailKey).delete();
+            localStorage.removeItem(reRegKey); // Firestore 삭제 성공 시 localStorage 정리
+          } catch(delErr) {
+            // Firestore 삭제 실패(규칙 등) → localStorage에 재가입 기록을 남겨 다음 sign-in도 허용
+            localStorage.setItem(reRegKey, '1');
+            console.warn('deleted_accounts 삭제 실패, localStorage 폴백 사용:', delErr.code);
+          }
+          // 로그인 진행 (return 없이 fall-through)
         } else {
           // Sign In 탭이거나 일반 세션 복구: 차단
           _googleAuthIntent = null;
@@ -1338,7 +1349,7 @@ auth.onAuthStateChanged(async function(user) {
           return;
         }
       }
-    } catch(e) { /* Firestore 오류 시 차단하지 않음 */ }
+    } catch(e) { /* Firestore 읽기 오류 시 차단하지 않음 */ }
     _googleAuthIntent = null; // 경로에 관계없이 항상 초기화
 
     // 이메일 신규 가입: updateProfile()이 onAuthStateChanged보다 늦게 실행되므로
@@ -1518,12 +1529,20 @@ async function deleteAccount() {
     }
 
     // Firestore에 탈퇴 이메일 기록 (재로그인 차단용)
+    // ※ user.delete() 성공 후에는 인증 토큰이 무효화되므로 Firestore 쓰기를 먼저 수행.
+    //   단, user.delete()가 실패하면 Firestore 기록을 반드시 롤백해야 함.
     const emailKey = (user.email || '').toLowerCase().replace(/\./g, '_').replace(/@/g, '__at__');
     await db.collection('deleted_accounts').doc(emailKey).set({
       email: user.email,
       deletedAt: firebase.firestore.FieldValue.serverTimestamp()
     });
-    await user.delete();
+    try {
+      await user.delete();
+    } catch (deleteErr) {
+      // user.delete() 실패 → Firestore 기록 롤백 (남아있으면 이후 sign-in이 영구 차단됨)
+      try { await db.collection('deleted_accounts').doc(emailKey).delete(); } catch(e) {}
+      throw deleteErr; // 외부 catch로 전달해 에러 메시지 표시
+    }
     // 로컬 히스토리 초기화
     if (typeof clearHistory === 'function') clearHistory();
     localStorage.removeItem('ann_history');
