@@ -314,7 +314,7 @@ function renderCommunityComments(id) {
     </div>`).join('') || '<p class="text-sm text-slate-400 text-center py-8">Be the first to share your perspective!</p>';
 }
 
-function voteCommunity(_id, _vote, btn) {
+function voteCommunity(id, vote, btn) {
   var container = btn.closest('#cd-poll');
   var btns = container.querySelectorAll('button');
   btns.forEach(b => {
@@ -323,6 +323,13 @@ function voteCommunity(_id, _vote, btn) {
   });
   btn.className = btn.className
     .replace('border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300','bg-primary text-white shadow-lg shadow-primary/20');
+
+  // 활동 추적
+  var existing = state.myActivity.votes.findIndex(v => v.id === id);
+  var item = COMMUNITY_MOCK.find(c => c.id === id);
+  var entry = { id: id, vote: vote, title: item ? item.title : '', ts: Date.now() };
+  if (existing >= 0) state.myActivity.votes.splice(existing, 1, entry);
+  else               state.myActivity.votes.unshift(entry);
 }
 
 function toggleReplyInput(elId) {
@@ -339,6 +346,8 @@ function likeCommunityComment(itemId, ci, ri, btn) {
   if (!target) return;
   target.liked = !target.liked;
   target.likes += target.liked ? 1 : -1;
+  state.myActivity.likesGiven += target.liked ? 1 : -1;
+  if (state.myActivity.likesGiven < 0) state.myActivity.likesGiven = 0;
   var iconEl  = btn.querySelector('.material-symbols-outlined');
   var countEl = btn.querySelector('.like-count');
   if (iconEl)  iconEl.textContent  = target.liked ? 'favorite' : 'favorite_border';
@@ -365,6 +374,9 @@ function postCommunityComment() {
   state.communityComments[item.id].unshift(newComment);
   textarea.value = '';
   renderCommunityComments(item.id);
+
+  // 활동 추적
+  state.myActivity.comments.unshift({ itemId: item.id, title: item.title, text: newComment.text, ts: Date.now() });
 }
 
 function postCommunityReply(itemId, ci, inputWrapperId) {

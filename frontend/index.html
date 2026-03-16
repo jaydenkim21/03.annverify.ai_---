@@ -1091,6 +1091,46 @@ tailwind.config = {
       </div>
     </div>
 
+    <!-- 커뮤니티 활동 -->
+    <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-6 sm:p-8">
+      <h3 class="font-display text-lg font-bold text-slate-900 dark:text-white mb-6">Community Activity</h3>
+
+      <!-- 커뮤니티 통계 3개 -->
+      <div class="grid grid-cols-3 gap-4 mb-8">
+        <div class="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 flex flex-col items-center">
+          <span class="material-symbols-outlined text-primary text-2xl mb-1">forum</span>
+          <p class="text-2xl font-black text-slate-900 dark:text-white" id="stat-community-posts">0</p>
+          <p class="text-xs text-slate-500 mt-1 text-center">Posts</p>
+        </div>
+        <div class="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 flex flex-col items-center">
+          <span class="material-symbols-outlined text-rose-500 text-2xl mb-1">favorite</span>
+          <p class="text-2xl font-black text-slate-900 dark:text-white" id="stat-community-likes">0</p>
+          <p class="text-xs text-slate-500 mt-1 text-center">Likes Given</p>
+        </div>
+        <div class="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 flex flex-col items-center">
+          <span class="material-symbols-outlined text-violet-500 text-2xl mb-1">how_to_vote</span>
+          <p class="text-2xl font-black text-slate-900 dark:text-white" id="stat-community-votes">0</p>
+          <p class="text-xs text-slate-500 mt-1 text-center">Votes Cast</p>
+        </div>
+      </div>
+
+      <!-- 최근 댓글 -->
+      <div>
+        <p class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Recent Comments</p>
+        <div id="profile-community-comments">
+          <p class="text-sm text-slate-400 text-center py-6">No community comments yet. Join a discussion!</p>
+        </div>
+      </div>
+
+      <!-- 최근 투표 -->
+      <div class="mt-6">
+        <p class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Recent Votes</p>
+        <div id="profile-community-votes">
+          <p class="text-sm text-slate-400 text-center py-6">No votes cast yet.</p>
+        </div>
+      </div>
+    </div>
+
   </div>
 </section>
 
@@ -1404,6 +1444,43 @@ function renderProfilePage() {
   } else {
     document.getElementById('stat-avg').textContent = '—';
     document.getElementById('stat-top-grade').textContent = '—';
+  }
+
+  // 커뮤니티 활동
+  const act = state.myActivity || { comments: [], likesGiven: 0, votes: [] };
+  document.getElementById('stat-community-posts').textContent = act.comments.length;
+  document.getElementById('stat-community-likes').textContent = act.likesGiven;
+  document.getElementById('stat-community-votes').textContent = act.votes.length;
+
+  const commentsEl = document.getElementById('profile-community-comments');
+  if (act.comments.length) {
+    commentsEl.innerHTML = act.comments.slice(0, 5).map(c => `
+      <div class="flex gap-3 py-3 border-b border-slate-100 dark:border-slate-800 last:border-0">
+        <span class="material-symbols-outlined text-primary text-base mt-0.5 shrink-0">chat_bubble</span>
+        <div class="flex-1 min-w-0">
+          <p class="text-xs text-slate-400 mb-0.5 truncate">${escHtml(c.title)}</p>
+          <p class="text-sm text-slate-700 dark:text-slate-300 line-clamp-2">${escHtml(c.text)}</p>
+          <p class="text-[11px] text-slate-400 mt-1">${new Date(c.ts).toLocaleDateString()}</p>
+        </div>
+      </div>`).join('');
+  } else {
+    commentsEl.innerHTML = '<p class="text-sm text-slate-400 text-center py-6">No community comments yet. Join a discussion!</p>';
+  }
+
+  const votesEl = document.getElementById('profile-community-votes');
+  if (act.votes.length) {
+    votesEl.innerHTML = act.votes.slice(0, 5).map(v => `
+      <div class="flex items-center gap-3 py-3 border-b border-slate-100 dark:border-slate-800 last:border-0">
+        <span class="material-symbols-outlined shrink-0 text-base ${v.vote === 'yes' ? 'text-primary' : 'text-slate-400'}">
+          ${v.vote === 'yes' ? 'thumb_up' : 'thumb_down'}
+        </span>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm text-slate-700 dark:text-slate-300 truncate">${escHtml(v.title)}</p>
+          <p class="text-[11px] text-slate-400 mt-0.5">${new Date(v.ts).toLocaleDateString()} · ${v.vote === 'yes' ? 'Yes, Verified' : 'No, Skeptical'}</p>
+        </div>
+      </div>`).join('');
+  } else {
+    votesEl.innerHTML = '<p class="text-sm text-slate-400 text-center py-6">No votes cast yet.</p>';
   }
 }
 
