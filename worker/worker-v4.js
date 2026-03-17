@@ -59,13 +59,13 @@ export default {
       if (request.method !== "POST")
         return json({ error: "Method not allowed" }, 405, cors);
 
-      if (url.pathname === "/api/verify")      return handleVerify(request, env, cors);
-      if (url.pathname === "/api/claude")      return handleClaude(request, env, cors);
-      if (url.pathname === "/api/analyze")     return handleAnalyze(request, env, cors);
-      if (url.pathname === "/api/v4/claude")   return handleV4Claude(request, env, cors);
-      if (url.pathname === "/api/v4/openai")   return handleV4OpenAI(request, env, cors);
-      if (url.pathname === "/api/v4/grok")     return handleV4Grok(request, env, cors);
-      if (url.pathname === "/api/v4/deberta")  return handleV4DeBERTa(request, env, cors);
+      if (url.pathname === "/api/verify")      return await handleVerify(request, env, cors);
+      if (url.pathname === "/api/claude")      return await handleClaude(request, env, cors);
+      if (url.pathname === "/api/analyze")     return await handleAnalyze(request, env, cors);
+      if (url.pathname === "/api/v4/claude")   return await handleV4Claude(request, env, cors);
+      if (url.pathname === "/api/v4/openai")   return await handleV4OpenAI(request, env, cors);
+      if (url.pathname === "/api/v4/grok")     return await handleV4Grok(request, env, cors);
+      if (url.pathname === "/api/v4/deberta")  return await handleV4DeBERTa(request, env, cors);
 
       return json({ error: "Not found" }, 404, cors);
 
