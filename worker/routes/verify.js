@@ -146,7 +146,7 @@ ${RESPONSE_SCHEMA}`;
   try {
     res  = await callAnthropic({
       model:      "claude-sonnet-4-5",
-      max_tokens: 8192,
+      max_tokens: 12000,
       temperature: 0,
       messages:   buildMessages(buildPrompt(tavilyCtx)),
     }, env.ANTHROPIC_API_KEY);
