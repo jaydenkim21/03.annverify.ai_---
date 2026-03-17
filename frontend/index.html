@@ -537,7 +537,7 @@ tailwind.config = {
             <option value="C">C (Caution)</option>
             <option value="F">F (False)</option>
           </select>
-          <select id="news-cat-filter" onchange="filterNews()" class="min-w-0 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full px-3 sm:px-4 py-2 font-semibold text-slate-700 dark:text-slate-300 focus:ring-primary truncate">
+          <select id="news-cat-filter" onchange="filterNews()" class="min-w-0 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full pl-4 pr-8 py-2 font-semibold text-slate-700 dark:text-slate-300 focus:ring-primary appearance-auto">
             <option value="">All Categories</option>
             <option value="World">World</option>
             <option value="Tech">Tech</option>
@@ -546,20 +546,6 @@ tailwind.config = {
             <option value="Politics">Politics</option>
             <option value="Health">Health</option>
           </select>
-        </div>
-        <div class="hidden sm:block h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
-        <!-- 태그 필터: min-w-0으로 부모 폭 제한, overflow-x-auto로 내부 스크롤 -->
-        <div class="min-w-0 overflow-hidden flex-1 sm:flex-none">
-          <div id="news-tag-filters" class="flex gap-2 overflow-x-auto hide-scroll pb-0.5">
-            <button data-tag="Trending"  onclick="setNewsTag('Trending')"  class="px-4 py-1.5 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold whitespace-nowrap">Trending</button>
-            <button data-tag="AI Ethics" onclick="setNewsTag('AI Ethics')" class="px-4 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-slate-50 whitespace-nowrap">AI Ethics</button>
-            <button data-tag="LLM"       onclick="setNewsTag('LLM')"       class="px-4 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-slate-50 whitespace-nowrap">LLM</button>
-            <button data-tag="Deepfakes" onclick="setNewsTag('Deepfakes')" class="px-4 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-slate-50 whitespace-nowrap">Deepfakes</button>
-            <button data-tag="Policy"    onclick="setNewsTag('Policy')"    class="px-4 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-slate-50 whitespace-nowrap">Policy</button>
-            <button data-tag="Finance"   onclick="setNewsTag('Finance')"   class="px-4 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-slate-50 whitespace-nowrap">Finance</button>
-            <button data-tag="Science"   onclick="setNewsTag('Science')"   class="px-4 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-slate-50 whitespace-nowrap">Science</button>
-            <button data-tag="Politics"  onclick="setNewsTag('Politics')"  class="px-4 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-slate-50 whitespace-nowrap">Politics</button>
-          </div>
         </div>
       </div>
     </div>

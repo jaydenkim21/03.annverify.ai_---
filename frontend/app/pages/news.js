@@ -81,16 +81,6 @@ async function loadNews() {
 
 function filterNews() { renderNews(); }
 
-function setNewsTag(tag) {
-  state.newsTag = (state.newsTag === tag) ? '' : tag;
-  document.querySelectorAll('#news-tag-filters button').forEach(b => {
-    const active = b.dataset.tag === state.newsTag;
-    b.className = active
-      ? 'px-4 py-1.5 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold whitespace-nowrap'
-      : 'px-4 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-slate-50 whitespace-nowrap';
-  });
-  renderNews();
-}
 
 function loadMoreNews() {
   alert('Full archive coming in v2.0!');
@@ -100,11 +90,9 @@ function loadMoreNews() {
 function renderNews() {
   var sf    = (document.getElementById('news-score-filter') || {}).value || '';
   var cf    = (document.getElementById('news-cat-filter')   || {}).value || '';
-  var tag   = state.newsTag || '';
   var items = (state.newsData || []).filter(n => {
     if (sf && !(n.grade || '').startsWith(sf)) return false;
     if (cf && n.cat !== cf)                    return false;
-    if (tag && n.tag !== tag)                  return false;
     return true;
   });
 
