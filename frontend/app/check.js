@@ -201,7 +201,8 @@ async function runV1Engine(input) {
     if (!res.ok || data.error) {
       var errObj = data.error;
       var errMsg = (errObj && errObj.message) ? errObj.message : (typeof errObj === 'string' ? errObj : JSON.stringify(errObj));
-      throw new Error('HTTP ' + res.status + ': ' + (errMsg || data.detail || 'Unknown error'));
+      var detail = data.detail ? ' (' + data.detail + ')' : '';
+      throw new Error('HTTP ' + res.status + ': ' + (errMsg || 'Unknown error') + detail);
     }
     var txt    = data && data.content && data.content.filter(b => b.type === 'text').map(b => b.text).join('') || '';
     var clean  = txt.replace(/```json|```/g, '').trim();

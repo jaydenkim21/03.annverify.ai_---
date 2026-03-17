@@ -142,14 +142,18 @@ ${RESPONSE_SCHEMA}`;
   const tavilyCtx = tavilyResult
     ? `\n\nWEB SEARCH RESULTS:\n${tavilyResult}` : "";
 
-  const res = await callAnthropic({
-    model:      "claude-sonnet-4-5",
-    max_tokens: 10000,
-    temperature: 0,
-    messages:   buildMessages(buildPrompt(tavilyCtx)),
-  }, env.ANTHROPIC_API_KEY);
-
-  const data = await res.json();
+  let res, data;
+  try {
+    res  = await callAnthropic({
+      model:      "claude-sonnet-4-5",
+      max_tokens: 8192,
+      temperature: 0,
+      messages:   buildMessages(buildPrompt(tavilyCtx)),
+    }, env.ANTHROPIC_API_KEY);
+    data = await res.json();
+  } catch (fetchErr) {
+    return json({ error: "Anthropic fetch failed", detail: fetchErr.message, model: "claude-sonnet-4-5" }, 502, cors);
+  }
 
   // Anthropic API 에러 시 상세 메시지 반환
   if (!res.ok) {
