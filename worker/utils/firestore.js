@@ -126,6 +126,32 @@ export class FirestoreClient {
     return res.ok;
   }
 
+  // 배치 저장 (단일 HTTP 요청으로 최대 500건)
+  async batchSet(collection, docsMap) {
+    // docsMap: { [docId]: data }
+    const baseName = `projects/${this.projectId}/databases/(default)/documents`;
+    const writes = Object.entries(docsMap).map(([docId, data]) => ({
+      update: {
+        name:   `${baseName}/${collection}/${encodeURIComponent(docId)}`,
+        fields: toFields(data),
+      },
+    }));
+    if (!writes.length) return 0;
+    const commitUrl = `https://firestore.googleapis.com/v1/projects/${this.projectId}/databases/(default)/documents:commit`;
+    const res = await fetch(commitUrl, {
+      method:  'POST',
+      headers: this._headers(),
+      body:    JSON.stringify({ writes }),
+    });
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error('[Firestore] commit failed', res.status, errText.slice(0, 200));
+      return 0;
+    }
+    const result = await res.json();
+    return (result.writeResults || []).length;
+  }
+
   // 구조화 쿼리 (복합 필터 + 정렬)
   async query(collection, filters = [], orderByField = null, limit = 100) {
     const sq = { from: [{ collectionId: collection }], limit };
@@ -133,13 +159,17 @@ export class FirestoreClient {
     else if (filters.length > 1)   sq.where = { compositeFilter: { op: 'AND', filters } };
     if (orderByField) sq.orderBy = [{ field: { fieldPath: orderByField }, direction: 'DESCENDING' }];
 
-    const runUrl = `https://firestore.googleapis.com/v1/projects/${this.projectId}/databases/(default):runQuery`;
+    const runUrl = `https://firestore.googleapis.com/v1/projects/${this.projectId}/databases/(default)/documents:runQuery`;
     const res = await fetch(runUrl, {
       method:  'POST',
       headers: this._headers(),
       body:    JSON.stringify({ structuredQuery: sq }),
     });
-    if (!res.ok) return [];
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error('[Firestore] query failed', res.status, errText.slice(0, 300));
+      return [];
+    }
     const rows = await res.json();
     return rows.filter(r => r.document).map(r => fromDoc(r.document));
   }

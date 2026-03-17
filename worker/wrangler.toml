@@ -20,6 +20,9 @@ custom_domain = true
 [triggers]
 crons = ["0 0 * * *", "0 1 * * *", "0 14 * * *", "0 15 * * *"]
 
+[limits]
+max_subrequests = 1000
+
 # Secrets (wrangler secret put 명령으로 등록):
 #   ANTHROPIC_API_KEY
 #   OPENAI_API_KEY

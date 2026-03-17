@@ -143,9 +143,9 @@ Return ONLY JSON array: [{"i":1,"score":88,"grade":"A","verdict_class":"LIKELY_T
 // Firestore 클라이언트 초기화 헬퍼
 async function getDb(env) {
   const saJson = env.FIREBASE_SA_JSON;
-  if (!saJson) { console.warn('[News] FIREBASE_SA_JSON not set'); return null; }
+  if (!saJson) { console.warn('[News] FIREBASE_SA_JSON not set'); return { error: 'SA_JSON_MISSING' }; }
   const token = await getAccessToken(saJson);
-  if (!token) { console.warn('[News] Failed to get access token'); return null; }
+  if (!token || typeof token !== 'string') { console.warn('[News] Failed to get access token'); return { error: 'TOKEN_FAILED' }; }
   return new FirestoreClient(PROJECT_ID, token);
 }
 
@@ -184,7 +184,7 @@ export async function generateNews(country, env) {
   articles = await batchScore(articles, env.ANTHROPIC_API_KEY);
 
   // 기본값 채우기
-  articles = articles.map((a, i) => ({
+  articles = articles.map((a) => ({
     ...a,
     country,
     date,
@@ -197,11 +197,10 @@ export async function generateNews(country, env) {
     deployedAt:    null,
   }));
 
-  if (db) {
-    // 기사 저장 (newsQueue 컬렉션)
-    await Promise.allSettled(articles.map((a, idx) =>
-      db.set('newsQueue', `${country}_${date}_${idx}`, a)
-    ));
+  if (db && !db.error) {
+    // 기사 배치 저장 (newsQueue 컬렉션) — 단일 HTTP 요청
+    const docsMap = Object.fromEntries(articles.map((a, idx) => [`${country}_${date}_${idx}`, a]));
+    await db.batchSet('newsQueue', docsMap);
 
     // 실패 로그 저장
     if (failures.length > 0) {
@@ -227,25 +226,22 @@ export async function deployNews(country, env) {
   const db = await getDb(env);
   if (!db) return { deployed: 0 };
 
-  // newsQueue에서 오늘 생성된 해당 국가 기사 조회
-  const articles = await db.query('newsQueue', [
-    fsFilter('country',  '==', country),
-    fsFilter('date',     '==', date),
-    fsFilter('deployed', '==', false),
-  ]);
+  // newsQueue에서 해당 국가 기사 조회 (단일 필터 → 날짜는 JS 필터)
+  const all = await db.query('newsQueue', [fsFilter('country', '==', country)], null, 200);
+  const articles = all.filter(a => a.date === date);
 
   let deployed = 0;
   const now = new Date().toISOString();
 
-  // aiNews 컬렉션으로 이동 (배포됨)
-  await Promise.allSettled(articles.map(async (a) => {
+  // aiNews 컬렉션으로 배치 이동 (배포됨) — 단일 HTTP 요청
+  const deployMap = {};
+  articles.forEach(a => {
     const docId = a._id;
     const deployedArticle = { ...a, deployed: true, deployedAt: now };
     delete deployedArticle._id;
-
-    const ok = await db.set('aiNews', docId, deployedArticle);
-    if (ok) deployed++;
-  }));
+    deployMap[docId] = deployedArticle;
+  });
+  deployed = await db.batchSet('aiNews', deployMap);
 
   // 배포 로그
   await db.set('newsLogs', `deploy_${country}_${date}`, {
@@ -265,7 +261,7 @@ export async function handleV4NewsFeed(request, env, cors) {
   const limit   = Math.min(parseInt(url.searchParams.get('limit') || '60'), 100);
 
   const db = await getDb(env);
-  if (!db) {
+  if (!db || db.error) {
     return json({ error: 'Firestore not configured', articles: [] }, 500, cors);
   }
 
@@ -274,6 +270,7 @@ export async function handleV4NewsFeed(request, env, cors) {
 
   return json({ articles, count: articles.length, ts: Date.now() }, 200, cors);
 }
+
 
 // ── HTTP: POST /api/v4/news/generate — 수동 트리거 (관리자용) ─────────
 export async function handleV4NewsGenerate(request, env, cors) {
