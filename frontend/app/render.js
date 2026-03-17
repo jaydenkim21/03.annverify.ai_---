@@ -32,10 +32,16 @@ function renderReport() {
 
   // Title + Meta
   document.getElementById('result-title').textContent = state.lastInput.slice(0, 200) + (state.lastInput.length > 200 ? '…' : '');
+  var engineLabel = r._engine === 'ai_news'
+    ? 'AI News Pre-Verified'
+    : (r._engine === 'v4.0' ? '7-Layer v4 Engine' : 'Standard Engine');
+  var sourceLabel = r._engine === 'ai_news' && r._source
+    ? ' &nbsp;·&nbsp; <span class="material-symbols-outlined text-sm">newsmode</span>' + escHtml(r._source)
+    : ' &nbsp;·&nbsp; <span class="font-mono text-xs bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">' + escHtml(r.bisl_hash || '').slice(0, 18) + '</span>';
   document.getElementById('result-meta').innerHTML =
     '<span class="material-symbols-outlined text-sm">event</span>' + new Date().toLocaleString() +
-    ' &nbsp;·&nbsp; <span class="material-symbols-outlined text-sm">bolt</span>' + (r._engine === 'v4.0' ? '7-Layer v4 Engine' : 'Standard Engine') +
-    ' &nbsp;·&nbsp; <span class="font-mono text-xs bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">' + escHtml(r.bisl_hash || '').slice(0, 18) + '</span>';
+    ' &nbsp;·&nbsp; <span class="material-symbols-outlined text-sm">bolt</span>' + engineLabel +
+    sourceLabel;
 
   // Trust Score Ring
   var score    = r.overall_score || 50;

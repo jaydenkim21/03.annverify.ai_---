@@ -166,16 +166,46 @@ function renderNews() {
 }
 
 // ── 썸네일 클릭 → 7-Layer 팩트체크 실행 ──────────────────────────────
+// verdict_class 를 renderReport() 의 badgeMap 키로 변환
+function _toVc(raw) {
+  var v = (raw || '').toLowerCase();
+  if (v === 'verified')                         return 'verified';
+  if (v === 'likely_true' || v === 'likely')    return 'likely';
+  if (v === 'partially_true' || v === 'partial') return 'partial';
+  if (v === 'misleading')                       return 'misleading';
+  if (v === 'false')                            return 'false';
+  return 'partial';
+}
+
 function runNewsCheck(articleId) {
   var article = (state.newsData || []).find(a => a.id === articleId);
   if (!article) return;
-  var inputEl = document.getElementById('home-input');
-  if (inputEl) inputEl.value = article.url;
-  state.lastInput = article.url;
+
+  var vc    = _toVc(article.verdict_class);
+  var score = article.score || 72;
+
+  state.lastInput = article.title || article.url;
   state.imageB64  = null;
+  state.lastResult = {
+    overall_score:     score,
+    overall_grade:     article.grade || 'B',
+    verdict_class:     vc,
+    executive_summary: article.summary || '',
+    layer_analysis:    [],
+    metrics:           {},
+    claims:            [],
+    key_evidence:      {},
+    temporal:          article.pubDate ? {
+      freshness:   'recent',
+      timeframe:   newsTimeAgo(article.pubDate) || article.pubDate,
+      expiry_risk: 'LOW',
+    } : null,
+    web_citations:     article.url ? [article.url] : [],
+    _engine:           'ai_news',
+    _source:           article.source,
+  };
+
   goPage('report');
-  startLoading(article.url);
-  runV1Engine(article.url);
 }
 
 // ── Discuss 버튼 → Community 디테일 ──────────────────────────────────
