@@ -38,20 +38,34 @@ function newsTimeAgo(dateStr) {
   } catch (_) { return ''; }
 }
 
-// ── 데이터 로드 ──────────────────────────────────────────────────────
+// ── 데이터 로드 — Firebase Firestore (aiNews 컬렉션, deployedAt 내림차순) ──
 async function loadNews() {
   if (_newsLoading) return;
   _newsLoading = true;
 
-  // 스켈레톤
   document.getElementById('news-grid').innerHTML =
     Array(6).fill('<div class="skeleton rounded-3xl h-80"></div>').join('');
 
   try {
-    const res  = await fetch(API_URL + '/api/v4/news/feed');
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json();
-    state.newsData = data.articles || [];
+    // Firebase Web SDK (db는 index.html에서 초기화된 전역 Firestore 인스턴스)
+    var snap = await db.collection('aiNews')
+      .orderBy('deployedAt', 'desc')
+      .limit(60)
+      .get();
+
+    state.newsData = snap.docs.map(function(d) {
+      return Object.assign({ id: d.id }, d.data());
+    });
+
+    // 오늘 데이터가 없으면 Worker API 폴백 (초기 구동 전)
+    if (state.newsData.length === 0) {
+      var res  = await fetch(API_URL + '/api/v4/news/feed');
+      if (res.ok) {
+        var data = await res.json();
+        state.newsData = data.articles || [];
+      }
+    }
+
     renderNews();
   } catch (err) {
     document.getElementById('news-grid').innerHTML = `

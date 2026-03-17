@@ -12,9 +12,18 @@ account_id = "2b10ac43a3fe8ddb0d93bd28f06338b2"
 pattern = "api.annverify.ai"
 custom_domain = true
 
+# ── Cron Triggers ────────────────────────────────────────────────────
+# KR 09:00 KST = 00:00 UTC  → 생성
+# KR 10:00 KST = 01:00 UTC  → 배포
+# US 09:00 EST = 14:00 UTC  → 생성
+# US 10:00 EST = 15:00 UTC  → 배포
+[triggers]
+crons = ["0 0 * * *", "0 1 * * *", "0 14 * * *", "0 15 * * *"]
+
 # Secrets (wrangler secret put 명령으로 등록):
 #   ANTHROPIC_API_KEY
 #   OPENAI_API_KEY
 #   XAI_API_KEY
 #   HF_API_KEY
 #   CMC_API_KEY
+#   FIREBASE_SA_JSON   ← Firebase Service Account JSON (전체 JSON 문자열)

@@ -1,10 +1,16 @@
 // ③ ML Core Layer — v4 News Route
-// GET /api/v4/news/feed — 20개 RSS 피드 파싱 + Claude 배치 스코어링 (15분 캐시)
+// GET  /api/v4/news/feed          — Firebase에서 배포된 뉴스 조회
+// POST /api/v4/news/generate      — 수동 생성 트리거 (테스트용)
+// Scheduled: 09:00 각국 기준 생성, 10:00 배포
 
-import { json }           from '../../utils/cors.js';
-import { callAnthropic } from '../../utils/anthropic.js';
+import { json }                                from '../../utils/cors.js';
+import { callAnthropic }                       from '../../utils/anthropic.js';
+import { getAccessToken, FirestoreClient, fsFilter } from '../../utils/firestore.js';
 
-const RSS_SOURCES = [
+const PROJECT_ID = 'annverify-8d680';
+
+// ── 미국 RSS 20개 ────────────────────────────────────────────────────
+const RSS_US = [
   { name: 'BBC News',        url: 'https://feeds.bbci.co.uk/news/rss.xml',                    cat: 'World'   },
   { name: 'Reuters',         url: 'https://feeds.reuters.com/reuters/topNews',                  cat: 'World'   },
   { name: 'AP News',         url: 'https://feeds.apnews.com/rss/apf-topnews',                  cat: 'World'   },
@@ -27,14 +33,37 @@ const RSS_SOURCES = [
   { name: 'Wash. Post',      url: 'https://feeds.washingtonpost.com/rss/world',                 cat: 'World'   },
 ];
 
-// CDATA 또는 일반 텍스트에서 XML 태그 값 추출
+// ── 한국 RSS 20개 ────────────────────────────────────────────────────
+const RSS_KR = [
+  { name: '연합뉴스',   url: 'https://www.yonhapnewstv.co.kr/browse/feed/',                     cat: 'World'   },
+  { name: 'KBS 뉴스',   url: 'https://news.kbs.co.kr/rss/rss.xml',                             cat: 'World'   },
+  { name: 'MBC 뉴스',   url: 'https://imnews.imbc.com/rss/news/news_00.xml',                   cat: 'World'   },
+  { name: 'SBS 뉴스',   url: 'https://news.sbs.co.kr/news/SectionRssFeed.do?sectionId=01',     cat: 'World'   },
+  { name: 'YTN',        url: 'https://www.ytn.co.kr/rss/0101.xml',                             cat: 'World'   },
+  { name: 'JTBC',       url: 'https://fs.jtbc.co.kr/RSS/newsflash.xml',                        cat: 'World'   },
+  { name: '조선일보',   url: 'https://www.chosun.com/arc/outboundfeeds/rss/',                   cat: 'World'   },
+  { name: '중앙일보',   url: 'https://rss.joins.com/joins_news_list.xml',                       cat: 'World'   },
+  { name: '동아일보',   url: 'https://rss.donga.com/total.xml',                                 cat: 'World'   },
+  { name: '한겨레',     url: 'https://www.hani.co.kr/rss/',                                     cat: 'World'   },
+  { name: '경향신문',   url: 'https://www.khan.co.kr/rss/rssdata/total_news.xml',               cat: 'World'   },
+  { name: '한국경제',   url: 'https://www.hankyung.com/feed/all-news',                          cat: 'Finance' },
+  { name: '매일경제',   url: 'https://www.mk.co.kr/rss/40300001/',                              cat: 'Finance' },
+  { name: '서울경제',   url: 'https://www.sedaily.com/RSSFeed/RSS_Itnews.asp',                  cat: 'Tech'    },
+  { name: '아시아경제', url: 'https://www.asiae.co.kr/rss/all.htm',                             cat: 'Finance' },
+  { name: '뉴시스',     url: 'https://www.newsis.com/RSS/',                                     cat: 'World'   },
+  { name: '뉴스1',      url: 'https://www.news1.kr/rss/allnews.xml',                            cat: 'World'   },
+  { name: '머니투데이', url: 'https://rss.mt.co.kr/mt_news2.xml',                               cat: 'Finance' },
+  { name: '이데일리',   url: 'https://www.edaily.co.kr/RSS/NEWS/Edaily_News_RSS.asp',           cat: 'Finance' },
+  { name: '파이낸셜뉴스', url: 'https://www.fnnews.com/rss/fn_realnews.xml',                  cat: 'Finance' },
+];
+
+// ── RSS XML 파싱 유틸 ────────────────────────────────────────────────
 function extractXML(tag, xml) {
   const re = new RegExp(`<${tag}[^>]*>(?:<!\\[CDATA\\[([\\s\\S]*?)\\]\\]>|([\\s\\S]*?))<\\/${tag}>`, 'i');
   const m  = re.exec(xml);
   return (m ? (m[1] || m[2] || '') : '').trim();
 }
 
-// 썸네일 URL 추출 (media:content → enclosure → description img)
 function extractThumb(itemXml) {
   let m = /media:(?:content|thumbnail)[^>]+url="([^"]+)"/.exec(itemXml)
        || /<enclosure[^>]+type="image[^"]*"[^>]+url="([^"]+)"/.exec(itemXml)
@@ -45,7 +74,6 @@ function extractThumb(itemXml) {
   return (m && m[1].startsWith('http')) ? m[1] : null;
 }
 
-// RSS XML에서 기사 파싱 (최대 limit개)
 function parseRSS(xml, source, limit = 2) {
   const items = [];
   const re    = /<item>([\s\S]*?)<\/item>/g;
@@ -53,31 +81,19 @@ function parseRSS(xml, source, limit = 2) {
   while ((m = re.exec(xml)) !== null && items.length < limit) {
     const item    = m[1];
     const title   = extractXML('title', item)
-      .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#039;/g, "'");
+      .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#039;/g,"'");
     const link    = extractXML('link', item) || extractXML('guid', item);
     const desc    = extractXML('description', item)
-      .replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&[a-z]+;/gi, ' ')
-      .replace(/\s+/g, ' ').trim().slice(0, 250);
+      .replace(/<[^>]+>/g,' ').replace(/&nbsp;/g,' ').replace(/&[a-z]+;/gi,' ').replace(/\s+/g,' ').trim().slice(0,250);
     const pubDate = extractXML('pubDate', item) || extractXML('dc:date', item) || extractXML('published', item);
-    const thumb   = extractThumb(item);
     if (title && link && link.startsWith('http')) {
-      items.push({
-        id:      `${source.name.replace(/\W/g, '_')}_${items.length}`,
-        title:   title.slice(0, 200),
-        url:     link.trim(),
-        summary: desc,
-        thumb,
-        source:  source.name,
-        cat:     source.cat,
-        pubDate,
-        score: null, grade: null, verdict_class: null, tag: null,
-      });
+      items.push({ title: title.slice(0,200), url: link.trim(), summary: desc, thumb: extractThumb(item), source: source.name, cat: source.cat, pubDate });
     }
   }
   return items;
 }
 
-// 단일 RSS 피드 fetch (8초 타임아웃)
+// 단일 RSS fetch (8초 타임아웃)
 async function fetchFeed(source) {
   const ctrl = new AbortController();
   const tid  = setTimeout(() => ctrl.abort(), 8000);
@@ -87,33 +103,28 @@ async function fetchFeed(source) {
       signal: ctrl.signal,
     });
     clearTimeout(tid);
-    if (!res.ok) return [];
-    return parseRSS(await res.text(), source, 2);
-  } catch (_) {
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return { articles: parseRSS(await res.text(), source, 2), error: null };
+  } catch (err) {
     clearTimeout(tid);
-    return [];
+    return { articles: [], error: err.message };
   }
 }
 
-// Claude 배치 스코어링 — 헤드라인 전체를 단일 API 호출로 평가
+// Claude 배치 스코어링 (단일 API 호출)
 async function batchScore(articles, apiKey) {
   if (!articles.length || !apiKey) return articles;
   const headlines = articles.map((a, i) => `${i + 1}. [${a.source}] ${a.title}`).join('\n');
-  const prompt = `You are a rapid news fact-checker. Assess these ${articles.length} news headlines.
-For each provide: score(0-100), grade(A+/A/B+/B/C/D/F), verdict_class(VERIFIED|LIKELY_TRUE|PARTIALLY_TRUE|UNVERIFIED|MISLEADING|FALSE), tag(one of: Trending|AI Ethics|LLM|Policy|Deepfakes|Science|Finance|Politics|Health|World).
-Headlines:
-${headlines}
-Return ONLY a JSON array (no markdown): [{"i":1,"score":88,"grade":"A","verdict_class":"LIKELY_TRUE","tag":"World"},...]`;
-
+  const prompt = `Rapidly assess these ${articles.length} news headlines for factual accuracy.
+For each: score(0-100), grade(A+/A/B+/B/C/D/F), verdict_class(VERIFIED|LIKELY_TRUE|PARTIALLY_TRUE|UNVERIFIED|MISLEADING|FALSE), tag(Trending|AI Ethics|LLM|Policy|Deepfakes|Science|Finance|Politics|Health|World).
+Headlines:\n${headlines}
+Return ONLY JSON array: [{"i":1,"score":88,"grade":"A","verdict_class":"LIKELY_TRUE","tag":"World"},...]`;
   try {
-    const res  = await callAnthropic({
-      model: 'claude-sonnet-4-5', max_tokens: 3000, temperature: 0,
-      messages: [{ role: 'user', content: prompt }],
-    }, apiKey, {}, 25000);
+    const res  = await callAnthropic({ model:'claude-sonnet-4-5', max_tokens:3000, temperature:0, messages:[{role:'user',content:prompt}] }, apiKey, {}, 25000);
     const data = await res.json();
     if (!res.ok) return articles;
     const block  = Array.isArray(data.content) && data.content.find(b => b.type === 'text');
-    const scores = JSON.parse((block?.text || '').replace(/```json|```/g, '').trim());
+    const scores = JSON.parse((block?.text || '').replace(/```json|```/g,'').trim());
     if (Array.isArray(scores)) {
       scores.forEach(s => {
         const idx = (s.i || 0) - 1;
@@ -129,40 +140,152 @@ Return ONLY a JSON array (no markdown): [{"i":1,"score":88,"grade":"A","verdict_
   return articles;
 }
 
-export async function handleV4NewsFeed(request, env, cors) {
-  // 캐시 확인 (15분)
-  const cache    = caches.default;
-  const cacheKey = new Request('https://cache.annverify.internal/news-v4-feed-v2');
-  try {
-    const cached = await cache.match(cacheKey);
-    if (cached) return json(await cached.json(), 200, cors);
-  } catch (_) {}
+// Firestore 클라이언트 초기화 헬퍼
+async function getDb(env) {
+  const saJson = env.FIREBASE_SA_JSON;
+  if (!saJson) { console.warn('[News] FIREBASE_SA_JSON not set'); return null; }
+  const token = await getAccessToken(saJson);
+  if (!token) { console.warn('[News] Failed to get access token'); return null; }
+  return new FirestoreClient(PROJECT_ID, token);
+}
 
-  // 20개 RSS 피드 병렬 fetch
-  const settled = await Promise.allSettled(RSS_SOURCES.map(s => fetchFeed(s)));
-  let articles  = settled.flatMap(r => r.status === 'fulfilled' ? r.value : []);
+// 국가별 오늘 날짜 문자열 (UTC 기준)
+function todayStr() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+// ── Scheduled: 09:00 — AI News 생성 ──────────────────────────────────
+export async function generateNews(country, env) {
+  const sources = country === 'KR' ? RSS_KR : RSS_US;
+  const date    = todayStr();
+  console.log(`[News] Generating ${country} news for ${date}`);
+
+  const db = await getDb(env);
+
+  // RSS 병렬 fetch
+  const settled = await Promise.allSettled(sources.map(s => fetchFeed(s)));
+  let articles  = [];
+  const failures = [];
+
+  settled.forEach((r, i) => {
+    const source = sources[i];
+    if (r.status === 'fulfilled') {
+      if (r.value.articles.length > 0) {
+        articles.push(...r.value.articles);
+      } else if (r.value.error) {
+        failures.push({ source: source.name, url: source.url, error: r.value.error });
+      }
+    } else {
+      failures.push({ source: source.name, url: source.url, error: r.reason?.message || 'Unknown error' });
+    }
+  });
 
   // Claude 배치 스코어링
   articles = await batchScore(articles, env.ANTHROPIC_API_KEY);
 
-  // 스코어 없는 항목 기본값 채우기
+  // 기본값 채우기
   articles = articles.map((a, i) => ({
     ...a,
-    id:            `art_${i}`,
+    country,
+    date,
     score:         a.score         ?? 72,
     grade:         a.grade         ?? 'B',
     verdict_class: a.verdict_class ?? 'UNVERIFIED',
     tag:           a.tag           ?? a.cat,
+    generatedAt:   new Date().toISOString(),
+    deployed:      false,
+    deployedAt:    null,
   }));
 
-  const payload = { articles, ts: Date.now(), count: articles.length };
+  if (db) {
+    // 기사 저장 (newsQueue 컬렉션)
+    await Promise.allSettled(articles.map((a, idx) =>
+      db.set('newsQueue', `${country}_${date}_${idx}`, a)
+    ));
 
-  // 캐시 저장
-  try {
-    await cache.put(cacheKey, new Response(JSON.stringify(payload), {
-      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=900' },
-    }));
-  } catch (_) {}
+    // 실패 로그 저장
+    if (failures.length > 0) {
+      await db.set('newsLogs', `gen_${country}_${date}`, {
+        type: 'generate', country, date,
+        fetchedCount:  articles.length,
+        failedCount:   failures.length,
+        failedSources: JSON.stringify(failures),
+        generatedAt:   new Date().toISOString(),
+      });
+      console.warn(`[News] ${country} generation: ${articles.length} ok, ${failures.length} failed`);
+    }
+  }
 
-  return json(payload, 200, cors);
+  return { country, date, count: articles.length, failures: failures.length };
+}
+
+// ── Scheduled: 10:00 — AI News 배포 ──────────────────────────────────
+export async function deployNews(country, env) {
+  const date = todayStr();
+  console.log(`[News] Deploying ${country} news for ${date}`);
+
+  const db = await getDb(env);
+  if (!db) return { deployed: 0 };
+
+  // newsQueue에서 오늘 생성된 해당 국가 기사 조회
+  const articles = await db.query('newsQueue', [
+    fsFilter('country',  '==', country),
+    fsFilter('date',     '==', date),
+    fsFilter('deployed', '==', false),
+  ]);
+
+  let deployed = 0;
+  const now = new Date().toISOString();
+
+  // aiNews 컬렉션으로 이동 (배포됨)
+  await Promise.allSettled(articles.map(async (a) => {
+    const docId = a._id;
+    const deployedArticle = { ...a, deployed: true, deployedAt: now };
+    delete deployedArticle._id;
+
+    const ok = await db.set('aiNews', docId, deployedArticle);
+    if (ok) deployed++;
+  }));
+
+  // 배포 로그
+  await db.set('newsLogs', `deploy_${country}_${date}`, {
+    type: 'deploy', country, date,
+    deployedCount: deployed,
+    deployedAt: now,
+  });
+
+  console.log(`[News] ${country} deployed ${deployed} articles`);
+  return { country, date, deployed };
+}
+
+// ── HTTP: GET /api/v4/news/feed — 배포된 뉴스 조회 ──────────────────
+export async function handleV4NewsFeed(request, env, cors) {
+  const url     = new URL(request.url);
+  const country = url.searchParams.get('country') || '';   // 'US' | 'KR' | '' (전체)
+  const limit   = Math.min(parseInt(url.searchParams.get('limit') || '60'), 100);
+
+  const db = await getDb(env);
+  if (!db) {
+    return json({ error: 'Firestore not configured', articles: [] }, 500, cors);
+  }
+
+  const filters = country ? [fsFilter('country', '==', country)] : [];
+  const articles = await db.query('aiNews', filters, 'deployedAt', limit);
+
+  return json({ articles, count: articles.length, ts: Date.now() }, 200, cors);
+}
+
+// ── HTTP: POST /api/v4/news/generate — 수동 트리거 (관리자용) ─────────
+export async function handleV4NewsGenerate(request, env, cors) {
+  const body    = await request.json().catch(() => ({}));
+  const country = body.country || 'US';
+  const action  = body.action  || 'generate'; // 'generate' | 'deploy'
+
+  if (action === 'deploy') {
+    const result = await deployNews(country, env);
+    return json(result, 200, cors);
+  } else {
+    const result = await generateNews(country, env);
+    return json(result, 200, cors);
+  }
 }

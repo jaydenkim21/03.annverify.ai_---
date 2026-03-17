@@ -14,5 +14,5 @@ var state = {
   myActivity:       { comments: [], likesGiven: 0, votes: [] },
   history:          JSON.parse(localStorage.getItem('ann_history') || '[]'),
   activePartner:    'all',
-  newsTag:          'Trending',
+  newsTag:          '',
 };
