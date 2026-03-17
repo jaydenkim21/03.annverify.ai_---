@@ -115,12 +115,13 @@ async function fetchFeed(source) {
 async function batchScore(articles, apiKey) {
   if (!articles.length || !apiKey) return articles;
   const headlines = articles.map((a, i) => `${i + 1}. [${a.source}] ${a.title}`).join('\n');
-  const prompt = `Rapidly assess these ${articles.length} news headlines for factual accuracy.
-For each: score(0-100), grade(A+/A/B+/B/C/D/F), verdict_class(VERIFIED|LIKELY_TRUE|PARTIALLY_TRUE|UNVERIFIED|MISLEADING|FALSE), tag(Trending|AI Ethics|LLM|Policy|Deepfakes|Science|Finance|Politics|Health|World).
+  // 컴팩트 필드명으로 토큰 절약: s=score,g=grade,v=verdict_class,t=tag,f=factual,l=logic,sq=source_quality,cv=cross_validation,re=recency
+  const prompt = `Score these ${articles.length} news headlines. For each return compact JSON with fields:
+s(0-100 overall), g(A+/A/B+/B/C/D/F), v(VERIFIED|LIKELY_TRUE|PARTIALLY_TRUE|UNVERIFIED|MISLEADING|FALSE), t(Trending|AI Ethics|LLM|Policy|Deepfakes|Science|Finance|Politics|Health|World), f(factual 0-100), l(logic 0-100), sq(source quality 0-100), cv(cross-validation 0-100), re(recency 0-100).
 Headlines:\n${headlines}
-Return ONLY JSON array: [{"i":1,"score":88,"grade":"A","verdict_class":"LIKELY_TRUE","tag":"World"},...]`;
+Return ONLY: [{"i":1,"s":88,"g":"A","v":"LIKELY_TRUE","t":"World","f":90,"l":85,"sq":88,"cv":80,"re":95},...]`;
   try {
-    const res  = await callAnthropic({ model:'claude-sonnet-4-5', max_tokens:3000, temperature:0, messages:[{role:'user',content:prompt}] }, apiKey, {}, 25000);
+    const res  = await callAnthropic({ model:'claude-sonnet-4-5', max_tokens:5000, temperature:0, messages:[{role:'user',content:prompt}] }, apiKey, {}, 30000);
     const data = await res.json();
     if (!res.ok) return articles;
     const block  = Array.isArray(data.content) && data.content.find(b => b.type === 'text');
@@ -129,10 +130,15 @@ Return ONLY JSON array: [{"i":1,"score":88,"grade":"A","verdict_class":"LIKELY_T
       scores.forEach(s => {
         const idx = (s.i || 0) - 1;
         if (idx >= 0 && idx < articles.length) {
-          articles[idx].score         = s.score;
-          articles[idx].grade         = s.grade;
-          articles[idx].verdict_class = s.verdict_class;
-          articles[idx].tag           = s.tag;
+          articles[idx].score            = s.s;
+          articles[idx].grade            = s.g;
+          articles[idx].verdict_class    = s.v;
+          articles[idx].tag              = s.t;
+          articles[idx].m_factual        = s.f;
+          articles[idx].m_logic          = s.l;
+          articles[idx].m_source_quality = s.sq;
+          articles[idx].m_cross_val      = s.cv;
+          articles[idx].m_recency        = s.re;
         }
       });
     }
