@@ -11,7 +11,7 @@ function goPage(page) {
   state.currentPage = page;
 
   if (page === 'news'      && !state.newsData.length)      loadNews();
-  if (page === 'partner'   && !state.partnerData.length)   loadPartner();
+  if (page === 'partner'   && !state.partnerArticles.length) loadPartner();
   if (page === 'community' && !state.communityData.length) loadCommunity();
   if (page === 'report')             renderReport();
   if (page === 'profile'            && typeof renderProfilePage         === 'function') renderProfilePage();

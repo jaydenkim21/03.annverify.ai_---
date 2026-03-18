@@ -37,9 +37,10 @@ import { handleV4OpenAI }                      from './routes/v4/openai.js';
 import { handleV4Grok }                        from './routes/v4/grok.js';
 import { handleV4DeBERTa }                     from './routes/v4/deberta.js';
 import { handleV4NewsFeed, handleV4NewsGenerate, generateNews, deployNews } from './routes/v4/news.js';
+import { handleV4PartnerFeed }                                              from './routes/v4/partner.js';
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const origin = request.headers.get("Origin") || "";
     const cors   = corsHeaders(origin);
 
@@ -63,7 +64,8 @@ export default {
       if (url.pathname === "/api/health")        return handleHealth(cors);
       if (url.pathname === "/api/v4/health")     return handleV4Health(env, cors);
       if (url.pathname === "/api/cmc")           return handleCMC(url, env, cors);
-      if (url.pathname === "/api/v4/news/feed")  return await handleV4NewsFeed(request, env, cors);
+      if (url.pathname === "/api/v4/news/feed")     return await handleV4NewsFeed(request, env, cors);
+      if (url.pathname === "/api/v4/partner/feed") return await handleV4PartnerFeed(request, env, cors);
 
       // ── POST 전용 이하 ────────────────────────────────────────────
       if (request.method !== "POST")
@@ -76,7 +78,7 @@ export default {
       if (url.pathname === "/api/v4/openai")   return await handleV4OpenAI(request, env, cors);
       if (url.pathname === "/api/v4/grok")     return await handleV4Grok(request, env, cors);
       if (url.pathname === "/api/v4/deberta")       return await handleV4DeBERTa(request, env, cors);
-      if (url.pathname === "/api/v4/news/generate") return await handleV4NewsGenerate(request, env, cors);
+      if (url.pathname === "/api/v4/news/generate") return await handleV4NewsGenerate(request, env, cors, ctx);
 
       return json({ error: "Not found" }, 404, cors);
 

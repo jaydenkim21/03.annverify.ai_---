@@ -575,11 +575,11 @@ tailwind.config = {
       <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-4 sm:mb-6">
         <div>
           <h2 class="font-display text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">Partner News Feed</h2>
-          <p class="text-slate-500 dark:text-slate-400 mt-1 text-xs sm:text-sm font-medium hidden sm:block">Verified articles from trusted ANN partner networks.</p>
+          <p class="text-slate-500 dark:text-slate-400 mt-1 text-xs sm:text-sm font-medium hidden sm:block">Real-time RSS articles from trusted partner networks. Click <strong>ANN Verify</strong> to fact-check any article.</p>
         </div>
         <div class="relative">
           <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
-          <input class="pl-10 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm w-full sm:w-64 focus:ring-2 focus:ring-primary outline-none" placeholder="Search partner articles..." id="partner-search"/>
+          <input class="pl-10 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm w-full sm:w-64 focus:ring-2 focus:ring-primary outline-none" placeholder="Search partner articles..." id="partner-search" oninput="renderPartnerArticles()"/>
         </div>
       </div>
     </div>
@@ -595,7 +595,6 @@ tailwind.config = {
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-4 border-y border-slate-200 dark:border-slate-800">
       <div class="flex items-center gap-3">
         <button onclick="setPartnerFilter('all')" id="pf-all" class="px-4 py-1.5 bg-primary text-white text-sm font-semibold rounded-full shadow-lg shadow-primary/20">All Partners</button>
-        <button onclick="setPartnerFilter('score')" id="pf-score" class="px-4 py-1.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-sm font-medium rounded-full hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors">By Trust Score</button>
         <button onclick="setPartnerFilter('recent')" id="pf-recent" class="px-4 py-1.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-sm font-medium rounded-full hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors">Recents</button>
       </div>
       <label class="flex items-center gap-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-2 rounded-xl cursor-pointer">
@@ -612,11 +611,6 @@ tailwind.config = {
     <div id="partner-articles" class="grid grid-cols-1 gap-6">
       <div class="skeleton rounded-xl h-48"></div>
       <div class="skeleton rounded-xl h-48"></div>
-    </div>
-    <div class="flex justify-center py-6">
-      <button class="flex items-center gap-2 px-8 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all">
-        <span class="material-symbols-outlined">keyboard_arrow_down</span>Load More Partner News
-      </button>
     </div>
   </div>
   </div>
