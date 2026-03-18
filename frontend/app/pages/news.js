@@ -186,29 +186,54 @@ function runNewsCheck(articleId) {
 
   state.lastInput = article.title || article.url;
   state.imageB64  = null;
+  // d_claims: [{t, s, v}] → [{sentence, status, verdict}]
+  var claims = (article.d_claims || []).map(function(c) {
+    return { sentence: c.t || '', status: c.s || 'PARTIAL', verdict: c.v || '' };
+  });
+
+  // layer_analysis: 메트릭 → L1-L7 파생 (상세 분석 없을 때 fallback)
+  var f  = article.m_factual        || 0;
+  var l  = article.m_logic          || 0;
+  var sq = article.m_source_quality || 0;
+  var cv = article.m_cross_val      || 0;
+  var re = article.m_recency        || 0;
+  var layers = f ? [
+    { layer: 'L1', name: 'Source Verification',  score: sq, summary: 'Source credibility assessment' },
+    { layer: 'L2', name: 'Cross Reference',       score: cv, summary: 'Cross-source corroboration' },
+    { layer: 'L3', name: 'Factual Database',      score: f,  summary: 'Factual accuracy check' },
+    { layer: 'L4', name: 'Logic Analysis',        score: l,  summary: 'Logical consistency review' },
+    { layer: 'L5', name: 'ML Pattern',            score: Math.round((f + l) / 2), summary: 'AI pattern recognition' },
+    { layer: 'L6', name: 'Fact Check',            score: score, summary: 'Overall fact-check score' },
+    { layer: 'L7', name: 'Final Verdict',         score: score, summary: 'Final verification verdict' },
+  ] : [];
+
   state.lastResult = {
     overall_score:     score,
     overall_grade:     article.grade || 'B',
     verdict_class:     vc,
-    executive_summary: article.summary || '',
-    layer_analysis:    [],
+    executive_summary: article.d_sum || article.summary || '',
+    layer_analysis:    layers,
     metrics: {
-      factual:          article.m_factual        || 0,
-      logic:            article.m_logic          || 0,
-      source_quality:   article.m_source_quality || 0,
-      cross_validation: article.m_cross_val      || 0,
-      recency:          article.m_recency        || 0,
+      factual:          f,
+      logic:            l,
+      source_quality:   sq,
+      cross_validation: cv,
+      recency:          re,
     },
-    claims:            [],
-    key_evidence:      {},
-    temporal:          article.pubDate ? {
-      freshness:   (article.m_recency || 0) >= 90 ? 'current' : 'recent',
-      timeframe:   newsTimeAgo(article.pubDate) || article.pubDate,
-      expiry_risk: (article.m_recency || 0) >= 80 ? 'LOW' : 'MEDIUM',
+    claims:      claims,
+    key_evidence: {
+      supporting:    article.d_sup || [],
+      contradicting: article.d_con || [],
+    },
+    temporal: (article.d_fresh || article.pubDate) ? {
+      freshness:            article.d_fresh || 'recent',
+      timeframe:            article.d_tf   || newsTimeAgo(article.pubDate) || '',
+      expiry_risk:          article.d_er   || 'LOW',
+      recheck_recommended:  article.d_rc   || false,
     } : null,
-    web_citations:     article.url ? [article.url] : [],
-    _engine:           'ai_news',
-    _source:           article.source,
+    web_citations: (article.d_cit || []).concat(article.url ? [article.url] : []),
+    _engine:  'ai_news',
+    _source:  article.source,
   };
 
   goPage('report');

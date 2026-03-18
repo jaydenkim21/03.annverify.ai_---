@@ -146,6 +146,64 @@ Return ONLY: [{"i":1,"s":88,"g":"A","v":"LIKELY_TRUE","t":"World","f":90,"l":85,
   return articles;
 }
 
+// 10개씩 병렬로 상세 팩트체크 분석
+async function batchDetail(articles, apiKey) {
+  if (!articles.length || !apiKey) return articles;
+  const BATCH = 10;
+  const batches = [];
+  for (let i = 0; i < articles.length; i += BATCH) batches.push({ start: i, items: articles.slice(i, i + BATCH) });
+
+  await Promise.all(batches.map(async ({ start, items }) => {
+    const lines = items.map((a, j) => `${j + 1}. [${a.source}] ${a.title}`).join('\n');
+    const prompt = `Fact-check these ${items.length} news headlines in detail.
+For each return JSON with:
+- i: index (1-based)
+- sum: executive summary (2-3 sentences analyzing factual accuracy)
+- claims: array of 3 key claims [{t:"claim text",s:"CONFIRMED|PARTIAL|DISPUTED",v:"one sentence verdict"}]
+- sup: array of 2-3 supporting evidence strings
+- con: array of 1-2 contradicting evidence strings (empty array if none)
+- fresh: "current"|"recent"|"dated"
+- tf: timeframe description (e.g. "Article from March 2026")
+- er: "LOW"|"MEDIUM"|"HIGH" (expiry risk)
+- rc: true|false (recheck recommended)
+- cit: array of 2-3 relevant source/reference descriptions
+
+Headlines:
+${lines}
+
+Return ONLY JSON array: [{"i":1,"sum":"...","claims":[...],"sup":[...],"con":[...],"fresh":"recent","tf":"...","er":"LOW","rc":false,"cit":["..."]},...]`;
+
+    try {
+      const res  = await callAnthropic({ model: 'claude-sonnet-4-5', max_tokens: 5000, temperature: 0, messages: [{ role: 'user', content: prompt }] }, apiKey, {}, 35000);
+      const data = await res.json();
+      if (!res.ok) { console.error('[Detail] API error', res.status, JSON.stringify(data).slice(0, 200)); return; }
+      const block   = Array.isArray(data.content) && data.content.find(b => b.type === 'text');
+      const raw     = (block?.text || '').replace(/```json|```/g, '').trim();
+      console.log('[Detail] raw start=' + start, raw.slice(0, 200));
+      const parsed  = JSON.parse(raw);
+      const details = Array.isArray(parsed) ? parsed : (Object.values(parsed).find(v => Array.isArray(v)) || []);
+      console.log('[Detail] details.length=' + details.length + ' start=' + start);
+      if (details.length > 0) {
+        details.forEach(d => {
+          const idx = start + (d.i || 0) - 1;
+          if (idx >= 0 && idx < articles.length) {
+            articles[idx].d_sum    = d.sum;
+            articles[idx].d_claims = d.claims;
+            articles[idx].d_sup    = d.sup;
+            articles[idx].d_con    = d.con;
+            articles[idx].d_fresh  = d.fresh;
+            articles[idx].d_tf     = d.tf;
+            articles[idx].d_er     = d.er;
+            articles[idx].d_rc     = d.rc;
+            articles[idx].d_cit    = d.cit;
+          }
+        });
+      }
+    } catch (e) { console.error('[Detail] batch error start=' + start, e.message, e.stack?.slice(0, 300)); }
+  }));
+  return articles;
+}
+
 // Firestore 클라이언트 초기화 헬퍼
 async function getDb(env) {
   const saJson = env.FIREBASE_SA_JSON;
@@ -186,8 +244,11 @@ export async function generateNews(country, env) {
     }
   });
 
-  // Claude 배치 스코어링
+  // Claude 배치 스코어링 (점수/등급/메트릭)
   articles = await batchScore(articles, env.ANTHROPIC_API_KEY);
+
+  // Claude 배치 상세 분석 (요약/클레임/증거/시간/인용) — 10개씩 병렬
+  articles = await batchDetail(articles, env.ANTHROPIC_API_KEY);
 
   // 기본값 채우기
   articles = articles.map((a) => ({
@@ -221,7 +282,8 @@ export async function generateNews(country, env) {
     }
   }
 
-  return { country, date, count: articles.length, failures: failures.length };
+  const detailCount = articles.filter(a => a.d_sum).length;
+  return { country, date, count: articles.length, detail_count: detailCount, failures: failures.length };
 }
 
 // ── Scheduled: 10:00 — AI News 배포 ──────────────────────────────────
@@ -271,23 +333,34 @@ export async function handleV4NewsFeed(request, env, cors) {
     return json({ error: 'Firestore not configured', articles: [] }, 500, cors);
   }
 
-  const filters = country ? [fsFilter('country', '==', country)] : [];
-  const articles = await db.query('aiNews', filters, 'deployedAt', limit);
+  // Firestore runQuery에서 country filter + deployedAt orderBy 복합 인덱스 불필요하도록
+  // 전체를 deployedAt 내림차순으로 조회 후 JS에서 country 필터
+  const fetchLimit = country ? Math.min(limit * 3, 200) : limit;
+  let articles = await db.query('aiNews', [], 'deployedAt', fetchLimit);
+  if (country) articles = articles.filter(a => a.country === country).slice(0, limit);
 
   return json({ articles, count: articles.length, ts: Date.now() }, 200, cors);
 }
 
 
 // ── HTTP: POST /api/v4/news/generate — 수동 트리거 (관리자용) ─────────
-export async function handleV4NewsGenerate(request, env, cors) {
+export async function handleV4NewsGenerate(request, env, cors, ctx) {
   const body    = await request.json().catch(() => ({}));
   const country = body.country || 'US';
   const action  = body.action  || 'generate'; // 'generate' | 'deploy'
 
   if (action === 'deploy') {
+    // deploy는 빠르므로 직접 실행
     const result = await deployNews(country, env);
     return json(result, 200, cors);
   } else {
+    // generate는 오래 걸리므로 waitUntil로 백그라운드 실행 후 즉시 202 반환
+    const date = new Date().toISOString().slice(0, 10);
+    if (ctx && ctx.waitUntil) {
+      ctx.waitUntil(generateNews(country, env));
+      return json({ status: 'started', country, date, message: 'Generation running in background. Check Firestore in ~60s.' }, 202, cors);
+    }
+    // ctx 없는 경우 (로컬 개발 등) 직접 실행
     const result = await generateNews(country, env);
     return json(result, 200, cors);
   }
