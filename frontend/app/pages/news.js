@@ -225,6 +225,8 @@ function runNewsCheck(articleId) {
       _engine:        'ai_news',
       _source:        article.source_label || 'AI Synthesized',
       _topic:         article.topic || '',
+      _thumb:         article.thumb || null,
+      _title:         article.title || '',
       _is_synth:      true,
     };
   } else {

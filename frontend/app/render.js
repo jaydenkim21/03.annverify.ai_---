@@ -101,7 +101,19 @@ function renderReport() {
   if (bodySection && bodyEl) {
     if (r._body) {
       bodySection.classList.remove('hidden');
-      bodyEl.innerHTML = r._body; // Claude가 생성한 HTML — <p> 태그만 포함
+      bodyEl.innerHTML = r._body;
+      // Hero 이미지 (DALL-E 생성 썸네일)
+      var heroDiv = document.getElementById('ai-news-hero-image');
+      var heroImg = document.getElementById('ai-news-hero-img');
+      if (heroDiv && heroImg) {
+        if (r._thumb) {
+          heroImg.src = r._thumb;
+          heroImg.alt = r._title || '';
+          heroDiv.classList.remove('hidden');
+        } else {
+          heroDiv.classList.add('hidden');
+        }
+      }
     } else {
       bodySection.classList.add('hidden');
       bodyEl.innerHTML = '';

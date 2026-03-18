@@ -11,7 +11,7 @@ function b64urlBuf(buf) {
 }
 
 // Service Account JSON → Google OAuth2 Access Token
-export async function getAccessToken(saJson) {
+export async function getAccessToken(saJson, scope = 'https://www.googleapis.com/auth/datastore') {
   let sa;
   try { sa = JSON.parse(saJson); } catch (_) { return null; }
 
@@ -20,7 +20,7 @@ export async function getAccessToken(saJson) {
   const payload = b64url(JSON.stringify({
     iss:   sa.client_email,
     sub:   sa.client_email,
-    scope: 'https://www.googleapis.com/auth/datastore',
+    scope,
     aud:   'https://oauth2.googleapis.com/token',
     iat:   now,
     exp:   now + 3600,

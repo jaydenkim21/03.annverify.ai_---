@@ -78,6 +78,62 @@ async function logEvent(db, date, type, data) {
   } catch (_) {}
 }
 
+const STORAGE_BUCKET = 'annverify-8d680.appspot.com';
+
+// ── Step 0: DALL-E 3 이미지 생성 → Firebase Storage 저장 ─────────────
+async function generateAndStoreImage(topic, imageId, env) {
+  if (!env.OPENAI_API_KEY || !env.FIREBASE_SA_JSON) return null;
+
+  try {
+    // 1. DALL-E 3 이미지 생성
+    const prompt =
+      `Editorial news photograph for: "${topic.name}" (${topic.cat}). ` +
+      `Professional photojournalism style, dramatic natural lighting, high resolution, ` +
+      `no text or labels, no specific real people's faces. Suitable for a news platform.`;
+
+    const genRes = await fetch('https://api.openai.com/v1/images/generations', {
+      method:  'POST',
+      headers: { 'Authorization': `Bearer ${env.OPENAI_API_KEY}`, 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ model: 'dall-e-3', prompt, n: 1, size: '1024x1024', quality: 'standard', response_format: 'url' }),
+    });
+    if (!genRes.ok) throw new Error(`DALL-E ${genRes.status}`);
+    const genData  = await genRes.json();
+    const imageUrl = genData.data?.[0]?.url;
+    if (!imageUrl) throw new Error('No image URL');
+
+    // 2. 생성된 이미지 다운로드
+    const imgRes = await fetch(imageUrl);
+    if (!imgRes.ok) throw new Error('Image download failed');
+    const imgBytes = await imgRes.arrayBuffer();
+
+    // 3. Firebase Storage 업로드 (Storage scope 토큰 별도 발급)
+    const storageToken = await getAccessToken(env.FIREBASE_SA_JSON, 'https://www.googleapis.com/auth/devstorage.read_write');
+    if (!storageToken) throw new Error('Storage token failed');
+
+    const storagePath   = `ai-news/${imageId}.jpg`;
+    const encodedPath   = encodeURIComponent(storagePath);
+    const uploadRes     = await fetch(
+      `https://storage.googleapis.com/upload/storage/v1/b/${STORAGE_BUCKET}/o?uploadType=media&name=${encodedPath}`,
+      {
+        method:  'POST',
+        headers: { 'Authorization': `Bearer ${storageToken}`, 'Content-Type': 'image/jpeg' },
+        body:    imgBytes,
+      }
+    );
+    if (!uploadRes.ok) throw new Error(`Storage upload ${uploadRes.status}`);
+    const uploadData = await uploadRes.json();
+    const dlToken    = (uploadData.downloadTokens || '').split(',')[0];
+
+    const thumbUrl = `https://firebasestorage.googleapis.com/v0/b/${STORAGE_BUCKET}/o/${encodedPath}?alt=media${dlToken ? '&token=' + dlToken : ''}`;
+    console.log(`[Pipeline] Image stored: ${imageId}`);
+    return thumbUrl;
+
+  } catch (e) {
+    console.warn('[Pipeline] Image generation skipped:', e.message);
+    return null;
+  }
+}
+
 // ── Step 1: Claude 기사 합성 ─────────────────────────────────────────
 async function synthesizeArticle(topic, apiKey) {
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY not set');
@@ -144,11 +200,15 @@ export async function runNewsPipeline(env, topicOverride = null) {
 
   const db = await getDb(env);
 
-  // ── 1. 기사 합성 ─────────────────────────────────────────────────
-  let article;
+  // ── 1. 기사 합성 + 이미지 생성 병렬 실행 ─────────────────────────
+  const imageId = `ainews_${date}_${topic.id}_${Date.now()}`;
+  let article, thumbUrl;
   try {
-    article = await synthesizeArticle(topic, env.ANTHROPIC_API_KEY);
-    console.log(`[Pipeline] Synthesized | "${article.title}" | score=${article.trust_score}`);
+    [article, thumbUrl] = await Promise.all([
+      synthesizeArticle(topic, env.ANTHROPIC_API_KEY),
+      generateAndStoreImage(topic, imageId, env),
+    ]);
+    console.log(`[Pipeline] Synthesized | "${article.title}" | score=${article.trust_score} | thumb=${!!thumbUrl}`);
   } catch (e) {
     console.error('[Pipeline] Synthesis failed:', e.message);
     await logEvent(db, date, 'error', { reason: 'synthesis_failed', topic: topic.name, error: e.message });
@@ -199,6 +259,7 @@ export async function runNewsPipeline(env, topicOverride = null) {
   const docId = `ainews_${date}_${hash}`;
   const doc   = {
     ...article,
+    thumb:       thumbUrl || null,
     topic:       topic.name,
     topicId:     topic.id,
     date,
