@@ -152,6 +152,28 @@ export class FirestoreClient {
     return (result.writeResults || []).length;
   }
 
+  // 배치 삭제 (docId 배열, 최대 500건)
+  async batchDelete(collection, docIds) {
+    if (!docIds.length) return 0;
+    const baseName = `projects/${this.projectId}/databases/(default)/documents`;
+    const writes = docIds.map(id => ({
+      delete: `${baseName}/${collection}/${encodeURIComponent(id)}`,
+    }));
+    const commitUrl = `https://firestore.googleapis.com/v1/projects/${this.projectId}/databases/(default)/documents:commit`;
+    const res = await fetch(commitUrl, {
+      method:  'POST',
+      headers: this._headers(),
+      body:    JSON.stringify({ writes }),
+    });
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error('[Firestore] batchDelete failed', res.status, errText.slice(0, 200));
+      return 0;
+    }
+    const result = await res.json();
+    return (result.writeResults || []).length;
+  }
+
   // 구조화 쿼리 (복합 필터 + 정렬)
   async query(collection, filters = [], orderByField = null, limit = 100) {
     const sq = { from: [{ collectionId: collection }], limit };

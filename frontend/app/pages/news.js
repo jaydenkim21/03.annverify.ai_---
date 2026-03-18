@@ -51,10 +51,13 @@ async function loadNews() {
     Array(6).fill('<div class="skeleton rounded-3xl h-80"></div>').join('');
 
   try {
-    var snap = await db.collection('aiNews')
-      .orderBy('publishedAt', 'desc')
-      .limit(60)
-      .get();
+    // deployedAt: 구형·신형 기사 모두 보유한 필드 (publishedAt은 신형만 존재 → 인덱스 행 유발)
+    // Promise.race: Firebase SDK 기본 타임아웃 없음 → 10초 초과 시 강제 에러 처리
+    var fsQuery = db.collection('aiNews').orderBy('deployedAt', 'desc').limit(60).get();
+    var fsTimeout = new Promise(function(_, reject) {
+      setTimeout(function() { reject(new Error('Firestore timeout')); }, 10000);
+    });
+    var snap = await Promise.race([fsQuery, fsTimeout]);
 
     state.newsData = snap.docs.map(function(d) {
       return Object.assign({ id: d.id }, d.data());

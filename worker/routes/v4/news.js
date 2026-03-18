@@ -332,6 +332,39 @@ export async function handleV4NewsFeed(_request, env, cors) {
   return json({ articles, count: articles.length, ts: Date.now() }, 200, cors);
 }
 
+// ── HTTP: POST /api/v4/news/cleanup — 구형 RSS 기사 일괄 삭제 ─────────
+// _engine !== 'ai_synthesized' 인 문서를 모두 삭제 (500건씩 배치)
+export async function handleV4NewsCleanup(_request, env, cors) {
+  const db = await getDb(env);
+  if (!db) return json({ error: 'Firestore not configured' }, 500, cors);
+
+  let totalDeleted = 0;
+  let round = 0;
+
+  while (true) {
+    // 전체 문서 100건씩 스캔 (정렬 없이)
+    const docs = await db.query('aiNews', [], null, 100);
+    if (!docs.length) break;
+
+    // ai_synthesized 가 아닌 것만 추출
+    const toDelete = docs
+      .filter(d => d._engine !== 'ai_synthesized')
+      .map(d => d._id)
+      .filter(Boolean);
+
+    if (!toDelete.length) break;  // 더 이상 구형 기사 없음
+
+    const deleted = await db.batchDelete('aiNews', toDelete);
+    totalDeleted += deleted;
+    round++;
+    console.log(`[Cleanup] Round ${round}: deleted ${deleted}`);
+
+    if (toDelete.length < 100) break; // 마지막 배치
+  }
+
+  return json({ status: 'done', deleted: totalDeleted }, 200, cors);
+}
+
 // ── HTTP: POST /api/v4/news/generate — 관리자 수동 트리거 (동기 실행) ─
 // Body (optional): { "topicId": 0-11 }  — 미지정 시 시간 기반 자동 선택
 export async function handleV4NewsGenerate(request, env, cors, _ctx) {
