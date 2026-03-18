@@ -125,7 +125,7 @@ Return ONLY valid JSON. No markdown, no explanation, no code block:
     max_tokens:  3000,
     temperature: 0.4,
     messages:    [{ role: 'user', content: prompt }],
-  }, apiKey, {}, 45000);
+  }, apiKey, {}, 25000);
 
   const data = await res.json();
   if (!res.ok) throw new Error(`Claude ${res.status}: ${JSON.stringify(data).slice(0, 200)}`);
@@ -248,16 +248,8 @@ export async function handleV4NewsFeed(_request, env, cors) {
   return json({ articles, count: articles.length, ts: Date.now() }, 200, cors);
 }
 
-// ── HTTP: POST /api/v4/news/generate — 관리자 수동 트리거 ─────────────
-export async function handleV4NewsGenerate(request, env, cors, ctx) {
-  if (ctx && ctx.waitUntil) {
-    ctx.waitUntil(runNewsPipeline(env));
-    return json({
-      status:  'started',
-      message: 'Pipeline running in background. Check Firestore in ~30s.',
-      topic:   selectTopic().name,
-    }, 202, cors);
-  }
+// ── HTTP: POST /api/v4/news/generate — 관리자 수동 트리거 (동기 실행) ─
+export async function handleV4NewsGenerate(request, env, cors, _ctx) {
   const result = await runNewsPipeline(env);
   return json(result, 200, cors);
 }
