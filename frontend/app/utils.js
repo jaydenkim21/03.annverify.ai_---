@@ -24,12 +24,35 @@ function shareReport() {
 
 function downloadReport() {
   if (!state.lastResult) { alert('No report to download.'); return; }
-  var json = JSON.stringify(state.lastResult, null, 2);
-  var blob = new Blob([json], { type: 'application/json' });
-  var a    = document.createElement('a');
-  var url  = URL.createObjectURL(blob);
-  a.href     = url;
-  a.download = 'ann-report-' + Date.now() + '.json';
-  a.click();
-  URL.revokeObjectURL(url);
+
+  // Determine which report view is currently visible
+  var el = document.getElementById('partner-report-view');
+  if (el && !el.classList.contains('hidden')) {
+    _downloadElementAsPdf(el, 'ann-partner-report-' + Date.now() + '.pdf');
+    return;
+  }
+  el = document.getElementById('ai-news-article-view');
+  if (el && !el.classList.contains('hidden')) {
+    _downloadElementAsPdf(el, 'ann-news-report-' + Date.now() + '.pdf');
+    return;
+  }
+  el = document.getElementById('report-result');
+  if (el && !el.classList.contains('hidden')) {
+    _downloadElementAsPdf(el, 'ann-report-' + Date.now() + '.pdf');
+    return;
+  }
+  // fallback: entire page-report section
+  el = document.getElementById('page-report');
+  _downloadElementAsPdf(el, 'ann-report-' + Date.now() + '.pdf');
+}
+
+function _downloadElementAsPdf(el, filename) {
+  var opt = {
+    margin:      [10, 10, 10, 10],
+    filename:    filename,
+    image:       { type: 'jpeg', quality: 0.95 },
+    html2canvas: { scale: 2, useCORS: true, logging: false },
+    jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+  html2pdf().set(opt).from(el).save();
 }
