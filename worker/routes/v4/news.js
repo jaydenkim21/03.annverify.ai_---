@@ -80,20 +80,19 @@ async function logEvent(db, date, type, data) {
 
 const STORAGE_BUCKET = 'annverify-8d680.firebasestorage.app';
 
-// ── Step 0: Cloudflare Workers AI (SDXL) 이미지 생성 → Firebase Storage ─
+// ── Step 0: Cloudflare Workers AI (SDXL Lightning) 이미지 생성 → Firebase Storage ─
 async function generateAndStoreImage(topic, imageId, env) {
   if (!env.AI || !env.FIREBASE_SA_JSON) return null;
 
   try {
-    // 1. Cloudflare Workers AI SDXL 이미지 생성 (추가 비용 없음)
+    // 1. Cloudflare Workers AI — SDXL-Lightning (few-step, fast)
     const prompt =
-      `Editorial news photograph for: "${topic.name}" (${topic.cat}). ` +
-      `Professional photojournalism style, dramatic natural lighting, high resolution, ` +
-      `no text or labels, no specific real people's faces. Suitable for a news platform.`;
+      `Editorial news photograph: "${topic.name}" (${topic.cat}). ` +
+      `Photojournalism style, dramatic lighting, high resolution, no text, no real faces.`;
 
-    const imgStream = await env.AI.run('@cf/stabilityai/stable-diffusion-xl-base-1.0', {
+    const imgStream = await env.AI.run('@cf/bytedance/stable-diffusion-xl-lightning', {
       prompt,
-      num_steps: 20,
+      num_steps: 4,
     });
     const imgBytes = await new Response(imgStream).arrayBuffer();
     if (!imgBytes || imgBytes.byteLength === 0) throw new Error('Empty image response');
