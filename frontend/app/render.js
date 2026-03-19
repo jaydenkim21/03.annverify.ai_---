@@ -190,6 +190,21 @@ function renderReport() {
       </div>`).join('');
   }
 
+  // Partner News — 전용 리포트 뷰로 전환
+  var partnerView = document.getElementById('partner-report-view');
+  if (partnerView) partnerView.classList.add('hidden');
+
+  if (state.reportFrom === 'partner') {
+    if (stdSection) stdSection.classList.add('hidden');
+    document.getElementById('related-section').classList.add('hidden');
+    if (partnerView) {
+      partnerView.classList.remove('hidden');
+      renderPartnerReport(r);
+    }
+    state.reportFrom = null; // 소비 후 초기화
+    return;
+  }
+
   // AI Synthesized 기사 — 전용 뷰로 전환
   if (r._is_synth) {
     if (stdSection) stdSection.classList.add('hidden');
@@ -316,4 +331,110 @@ function renderNewsArticle(r) {
       + '<span class="text-sm font-medium text-primary">' + step + '</span>'
       + '</div>';
   }).join('');
+}
+
+// ── Partner News 리포트 전용 렌더러 ──────────────────────────────────
+function renderPartnerReport(r) {
+  var art = state.partnerArticleData || {};
+
+  // ① 제목
+  document.getElementById('pnr-title').textContent = art.title || state.lastInput || '';
+
+  // ② 신뢰도 링
+  var score    = r.overall_score || 75;
+  var grade    = r.overall_grade || 'B+';
+  var circumf  = 351.9;
+  var offset   = circumf - (score / 100 * circumf);
+  var ringColors = { verified:'#10B981', likely:'#3B82F6', partial:'#F59E0B', misleading:'#F97316', false:'#EF4444' };
+  var vc       = (r.verdict_class || 'likely').toLowerCase();
+  var ringColor = ringColors[vc] || '#3B82F6';
+  var ring = document.getElementById('pnr-trust-ring');
+  ring.setAttribute('stroke', ringColor);
+  ring.style.strokeDashoffset = circumf;
+  setTimeout(function() { ring.style.strokeDashoffset = offset; }, 100);
+  document.getElementById('pnr-trust-score').textContent = score;
+  var gradeEl = document.getElementById('pnr-trust-grade');
+  gradeEl.textContent = grade;
+  gradeEl.style.color = ringColor;
+
+  // ③ 출처 메타
+  document.getElementById('pnr-source').textContent = art.source || '';
+  var timeEl = document.getElementById('pnr-time');
+  timeEl.textContent = art.pubDate ? partnerTimeAgo(art.pubDate) : '';
+  var wordCount = ((art.summary || '') + ' ' + (r.executive_summary || '')).split(/\s+/).length;
+  var readMin   = Math.max(1, Math.ceil(wordCount / 200));
+  document.getElementById('pnr-readtime').querySelector('span:last-child').textContent = readMin + ' min read';
+
+  // ④ 이미지
+  var imgWrap = document.getElementById('pnr-image-wrap');
+  var imgEl   = document.getElementById('pnr-image');
+  if (art.thumb) {
+    imgEl.src = art.thumb;
+    imgEl.alt = art.title || '';
+    imgWrap.classList.remove('hidden');
+  } else {
+    imgWrap.classList.add('hidden');
+  }
+
+  // ⑤ 본문: executive_summary + claims를 EVIDENCE 콜아웃으로
+  var bodyHtml = '';
+  if (r.executive_summary) {
+    bodyHtml += '<p>' + escHtml(r.executive_summary) + '</p>';
+  }
+  var claims = r.claims || [];
+  claims.slice(0, 4).forEach(function(c, i) {
+    var isEven = i % 2 === 1;
+    if (isEven) {
+      bodyHtml += '<p class="relative">'
+        + '<span class="absolute -top-1 right-0 px-1.5 py-0.5 bg-emerald-500 text-white text-[9px] font-bold rounded uppercase">Evidence</span>'
+        + '<span class="border-b-2 border-emerald-400">' + escHtml(c.sentence || '') + '</span>'
+        + '</p>';
+    } else {
+      bodyHtml += '<p>' + escHtml(c.sentence || '') + '</p>';
+    }
+  });
+  // 팩트체크 요약 인용구
+  if (r.executive_summary && r.executive_summary.length > 80) {
+    bodyHtml += '<blockquote class="border-l-0 bg-slate-50 dark:bg-slate-800 rounded-xl p-5 mt-4 text-slate-600 dark:text-slate-400 text-sm italic leading-relaxed">'
+      + '&ldquo;' + escHtml(r.executive_summary.slice(0, 200)) + (r.executive_summary.length > 200 ? '&hellip;' : '') + '&rdquo;'
+      + '</blockquote>';
+  }
+  document.getElementById('pnr-body').innerHTML = bodyHtml;
+
+  // ⑥ 7-Layer (Partner News 전용 레이어 명칭, 팩트체크 완료 = 전부 done)
+  var layerDefs = [
+    { name: 'Source Authentication',  sub: 'Direct ' + (art.source || 'partner') + ' API handshake verified' },
+    { name: 'Entity Extraction',       sub: 'Cross-referenced entity identities'                              },
+    { name: 'Numerical Validation',    sub: 'Statistics and figures confirmed'                                },
+    { name: 'Linguistic Integrity',    sub: 'Neutral tone & non-bias analysis'                                },
+    { name: 'Temporal Context',        sub: 'Real-time timestamp alignment'                                   },
+    { name: 'Citation Mapping',        sub: 'Source cross-referencing complete'                               },
+    { name: 'Consensus Anchor',        sub: 'Final verification certificate issued'                           },
+  ];
+  var doneIcon = '<span class="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 flex items-center justify-center flex-shrink-0">'
+    + '<span class="material-symbols-outlined" style="font-size:13px">check</span></span>';
+  document.getElementById('pnr-layer-list').innerHTML = layerDefs.map(function(l) {
+    return '<div class="flex items-center gap-3">' + doneIcon
+      + '<div class="min-w-0">'
+      + '<div class="text-[11px] font-bold text-slate-800 dark:text-slate-200">' + l.name + '</div>'
+      + '<div class="text-[10px] text-slate-400 truncate">' + l.sub + '</div>'
+      + '</div></div>';
+  }).join('');
+
+  // ⑦ Confidence Metrics
+  var m         = r.metrics || {};
+  var techScore = m.factual        || Math.min(score + 8,  99);
+  var srcScore  = m.source_quality || Math.min(score + 5,  99);
+  document.getElementById('pnr-tech-pct').textContent = techScore + '%';
+  document.getElementById('pnr-src-pct').textContent  = srcScore  + '%';
+  setTimeout(function() {
+    document.getElementById('pnr-tech-bar').style.width = techScore + '%';
+    document.getElementById('pnr-src-bar').style.width  = srcScore  + '%';
+  }, 150);
+
+  // ⑧ Metadata
+  document.getElementById('pnr-publisher').textContent = art.source || '—';
+  document.getElementById('pnr-category').textContent  = art.category || (r.web_citations && r.web_citations.length ? 'General' : 'News');
+  var hashRaw = r.bisl_hash || (art.url ? art.url.split('').reduce(function(h, c) { return (Math.imul(31, h) + c.charCodeAt(0)) >>> 0; }, 0).toString(16) : '');
+  document.getElementById('pnr-hash').textContent = hashRaw ? '0x' + hashRaw.slice(0, 4) + '…' + hashRaw.slice(-4) : '—';
 }

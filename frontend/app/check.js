@@ -93,8 +93,10 @@ function runCheck() {
   var depth = document.getElementById('home-depth').value;
   var useV4 = depth === 'deep';
 
-  state.lastInput  = input;
-  state.lastResult = null;
+  state.lastInput         = input;
+  state.lastResult        = null;
+  state.reportFrom        = state.reportFrom || null; // partner.js에서 설정한 경우 유지, 그 외 초기화
+  if (state.reportFrom !== 'partner') state.reportFrom = null;
 
   goPage('report');
   startLoading(input);

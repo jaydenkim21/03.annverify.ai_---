@@ -187,6 +187,12 @@ function renderPartnerArticles() {
 
 // ── ANN Verify 버튼 → 실시간 팩트체크 실행 ────────────────────────────
 function annVerifyPartner(title, url) {
+  // Partner News 리포트 뷰 전환용 컨텍스트 저장
+  state.reportFrom = 'partner';
+  state.partnerArticleData = (state.partnerArticles || []).find(function(a) {
+    return a.url === url || a.title === title;
+  }) || { title: title, url: url };
+
   var input = url || title;
   state.lastInput = input;
   state.imageB64  = null;

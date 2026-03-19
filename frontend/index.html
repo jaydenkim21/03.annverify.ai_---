@@ -107,14 +107,6 @@ tailwind.config = {
         <span class="sb-text font-medium whitespace-nowrap">Partner News</span>
       </a>
 
-      <!-- ── 중간 버튼 ── -->
-      <div class="py-1">
-        <button onclick="goPage('report')" data-page="report" class="nav-link w-full flex items-center gap-3 px-3 py-3 rounded-2xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors overflow-hidden">
-          <span class="material-symbols-outlined shrink-0">fact_check</span>
-          <span class="sb-text font-bold whitespace-nowrap">Verify Report</span>
-        </button>
-      </div>
-
       <a onclick="goPage('community')" data-page="community" class="nav-link flex items-center gap-3 px-3 py-3 rounded-2xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer">
         <span class="material-symbols-outlined shrink-0">groups</span>
         <span class="sb-text font-medium whitespace-nowrap">Community</span>
@@ -965,6 +957,131 @@ tailwind.config = {
       </div>
       <!-- ══ /AI News Article View ══ -->
 
+      <!-- ══ Partner News Report View (ANN Verify 결과 전용) ══ -->
+      <div id="partner-report-view" class="hidden space-y-6">
+
+        <!-- Page Header -->
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <h1 class="font-display text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">Partner News Feed</h1>
+            <p class="text-slate-500 dark:text-slate-400 mt-1 text-sm">Real-time RSS articles from trusted partner networks. Click ANN Verify to fact-check.</p>
+          </div>
+          <button onclick="goPage('partner')" class="flex-shrink-0 px-5 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl font-bold text-sm flex items-center gap-1.5 hover:border-primary hover:text-primary transition-all text-slate-600 dark:text-slate-300">
+            <span class="material-symbols-outlined text-base">chevron_left</span>Back to List
+          </button>
+        </div>
+
+        <!-- Two-Column: Article Content + Sidebar -->
+        <div class="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6">
+
+          <!-- Left: Article Content -->
+          <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+            <div class="p-6 sm:p-8">
+              <!-- Title + Trust Ring -->
+              <div class="flex flex-col sm:flex-row justify-between items-start gap-6 mb-5">
+                <h2 id="pnr-title" class="font-display text-xl sm:text-2xl font-bold text-slate-900 dark:text-white leading-tight flex-1 min-w-0"></h2>
+                <div class="flex-shrink-0 flex flex-col items-center gap-1">
+                  <div class="relative">
+                    <svg class="w-24 h-24 transform -rotate-90" viewBox="0 0 128 128">
+                      <circle class="text-slate-100 dark:text-slate-800" cx="64" cy="64" fill="transparent" r="56" stroke="currentColor" stroke-width="10"/>
+                      <circle id="pnr-trust-ring" cx="64" cy="64" fill="transparent" r="56" stroke="#10B981" stroke-dasharray="351.9" stroke-dashoffset="351.9" stroke-width="10" stroke-linecap="round" style="transition:stroke-dashoffset 1s ease;"/>
+                    </svg>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center">
+                      <span id="pnr-trust-score" class="text-2xl font-black text-slate-900 dark:text-white"></span>
+                      <span id="pnr-trust-grade" class="text-[11px] font-bold"></span>
+                    </div>
+                  </div>
+                  <span class="text-[10px] text-slate-400 uppercase tracking-wide font-bold">TRUST SCORE</span>
+                </div>
+              </div>
+              <!-- Source meta -->
+              <div class="flex flex-wrap items-center gap-3 mb-5 text-sm text-slate-500">
+                <span id="pnr-source" class="font-bold text-slate-700 dark:text-slate-300"></span>
+                <span>·</span>
+                <span id="pnr-time"></span>
+                <span>·</span>
+                <span id="pnr-readtime" class="flex items-center gap-1"><span class="material-symbols-outlined text-base">schedule</span><span></span></span>
+                <span id="pnr-verified-badge" class="ml-auto px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 text-xs font-bold flex items-center gap-1.5">
+                  <span class="material-symbols-outlined" style="font-size:13px">verified</span>PARTNER VERIFIED
+                </span>
+              </div>
+              <!-- Article Image -->
+              <div id="pnr-image-wrap" class="hidden mb-6 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800">
+                <img id="pnr-image" src="" alt="" class="w-full object-cover max-h-72" loading="lazy"/>
+              </div>
+              <!-- Article Body -->
+              <div id="pnr-body" class="text-slate-700 dark:text-slate-300 leading-relaxed text-sm sm:text-base space-y-4"></div>
+            </div>
+          </div>
+
+          <!-- Right Sidebar -->
+          <div class="space-y-4">
+            <!-- 7-Layer Fact Engine -->
+            <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5">
+              <div class="flex items-center justify-between mb-5">
+                <div class="flex items-center gap-2">
+                  <span class="material-symbols-outlined text-primary text-xl">shield</span>
+                  <span class="text-[11px] font-bold uppercase tracking-widest text-slate-600 dark:text-slate-400">7-Layer Fact Engine</span>
+                </div>
+                <span class="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold">Live Status</span>
+              </div>
+              <div id="pnr-layer-list" class="space-y-4"></div>
+            </div>
+            <!-- Confidence Metrics -->
+            <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5">
+              <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200 mb-4">Confidence Metrics</h3>
+              <div class="space-y-4">
+                <div>
+                  <div class="flex justify-between text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+                    <span class="uppercase tracking-wide">Technical Accuracy</span>
+                    <span id="pnr-tech-pct" class="text-slate-900 dark:text-white font-bold"></span>
+                  </div>
+                  <div class="h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                    <div id="pnr-tech-bar" class="h-full bg-primary rounded-full transition-all duration-700" style="width:0%"></div>
+                  </div>
+                </div>
+                <div>
+                  <div class="flex justify-between text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+                    <span class="uppercase tracking-wide">Source Authority</span>
+                    <span id="pnr-src-pct" class="text-slate-900 dark:text-white font-bold"></span>
+                  </div>
+                  <div class="h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                    <div id="pnr-src-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-700" style="width:0%"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Metadata -->
+            <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5">
+              <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200 mb-4">Metadata</h3>
+              <dl class="space-y-3 text-sm">
+                <div class="flex justify-between gap-2">
+                  <dt class="text-slate-400 shrink-0">Publisher</dt>
+                  <dd id="pnr-publisher" class="font-semibold text-slate-700 dark:text-slate-300 text-right truncate"></dd>
+                </div>
+                <div class="flex justify-between gap-2">
+                  <dt class="text-slate-400 shrink-0">Category</dt>
+                  <dd id="pnr-category" class="font-semibold text-slate-700 dark:text-slate-300 text-right"></dd>
+                </div>
+                <div class="flex justify-between gap-2">
+                  <dt class="text-slate-400 shrink-0">Hash</dt>
+                  <dd id="pnr-hash" class="font-mono text-xs text-slate-400 text-right truncate"></dd>
+                </div>
+              </dl>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Back to List (bottom) -->
+        <div class="flex justify-end pb-2">
+          <button onclick="goPage('partner')" class="px-6 py-3 border border-slate-200 dark:border-slate-700 rounded-xl font-bold text-sm flex items-center gap-2 hover:border-primary hover:text-primary transition-all text-slate-600 dark:text-slate-300">
+            <span class="material-symbols-outlined text-base">chevron_left</span>Back to List
+          </button>
+        </div>
+      </div>
+      <!-- ══ /Partner News Report View ══ -->
+
       <section id="related-section" class="space-y-4 hidden">
         <h3 class="font-display text-2xl font-bold text-slate-900 dark:text-white">Related Verification Context</h3>
         <div id="related-cards" class="grid grid-cols-1 gap-4"></div>
@@ -1429,11 +1546,11 @@ tailwind.config = {
 <script src="/app/router.js?v=2"></script>
 <script src="/app/history.js"></script>
 <script src="/app/check.js"></script>
-<script src="/app/render.js?v=4"></script>
+<script src="/app/render.js?v=5"></script>
 
 <!-- ① Client Layer — 페이지별 스크립트 -->
 <script src="/app/pages/news.js?v=3"></script>
-<script src="/app/pages/partner.js?v=2"></script>
+<script src="/app/pages/partner.js?v=3"></script>
 <script src="/app/pages/community.js"></script>
 
 <!-- 앱 초기화 -->
