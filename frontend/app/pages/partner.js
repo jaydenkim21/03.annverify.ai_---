@@ -25,9 +25,19 @@ function _isLiked(url)       { return localStorage.getItem('pn_ld_' + _pnHash(ur
 function _getCommentCount(url) { return parseInt(localStorage.getItem('pn_cc_' + _pnHash(url)) || '0', 10); }
 
 // ── 로드 ─────────────────────────────────────────────────────────────
+function _restoreVerified() {
+  // localStorage에 저장된 팩트체크 결과 복원
+  try {
+    var stored = JSON.parse(localStorage.getItem('pn_verified') || '{}');
+    if (!state.verifiedArticles) state.verifiedArticles = {};
+    Object.assign(state.verifiedArticles, stored);
+  } catch (_) {}
+}
+
 function loadPartner() {
   if (_partnerLoading) return;
   _partnerLoading = true;
+  _restoreVerified();
 
   document.getElementById('partner-articles').innerHTML =
     Array(6).fill('<div class="skeleton rounded-3xl h-72"></div>').join('');
@@ -128,6 +138,18 @@ function renderPartnerArticles(items) {
     // 필터 없이 전체 렌더링
     items = (state.partnerArticles || []).slice();
   }
+
+  // VERIFIED 기사 먼저 정렬 (팩트체크 완료 시간 기준 내림차순, 나머지는 pubDate 기준)
+  items.sort(function(a, b) {
+    var va = state.verifiedArticles && state.verifiedArticles[a.url];
+    var vb = state.verifiedArticles && state.verifiedArticles[b.url];
+    if (va && !vb) return -1;
+    if (!va && vb) return 1;
+    if (va && vb) {
+      return new Date(vb.verifiedAt) - new Date(va.verifiedAt);
+    }
+    return new Date(b.pubDate || 0) - new Date(a.pubDate || 0);
+  });
 
   if (!items.length) {
     document.getElementById('partner-articles').innerHTML = `

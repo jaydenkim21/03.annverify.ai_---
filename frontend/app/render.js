@@ -337,6 +337,23 @@ function renderNewsArticle(r) {
 function renderPartnerReport(r) {
   var art = state.partnerArticleData || {};
 
+  // ── 팩트체크 결과 저장 (VERIFIED 배지 반영용) ─────────────────────
+  if (art.url) {
+    if (!state.verifiedArticles) state.verifiedArticles = {};
+    var saved = {
+      grade:        r.overall_grade || 'B+',
+      score:        r.overall_score || 75,
+      verdict_class: r.verdict_class || 'likely',
+      verifiedAt:   new Date().toISOString(),
+    };
+    state.verifiedArticles[art.url] = saved;
+    try {
+      var stored = JSON.parse(localStorage.getItem('pn_verified') || '{}');
+      stored[art.url] = saved;
+      localStorage.setItem('pn_verified', JSON.stringify(stored));
+    } catch (_) {}
+  }
+
   // ① 제목
   document.getElementById('pnr-title').textContent = art.title || state.lastInput || '';
 

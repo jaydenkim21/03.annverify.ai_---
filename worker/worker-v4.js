@@ -91,11 +91,12 @@ export default {
   },
 
   // ── Cron Scheduled Handler ───────────────────────────────────────
-  // Beta (~2026-04-14): 매시간 1건 AI 기사 합성 파이프라인
+  // AI News: 매시간 1건 합성 파이프라인
+  // Partner News: UTC 00:00 / 13:00 2회 RSS 갱신
   async scheduled(_event, env) {
-    await Promise.allSettled([
-      runNewsPipeline(env),
-      runPartnerPipeline(env),
-    ]);
+    const hour = new Date().getUTCHours();
+    const tasks = [runNewsPipeline(env)];
+    if (hour === 0 || hour === 13) tasks.push(runPartnerPipeline(env));
+    await Promise.allSettled(tasks);
   },
 };
