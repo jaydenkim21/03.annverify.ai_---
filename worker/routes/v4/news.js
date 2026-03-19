@@ -200,7 +200,7 @@ Return ONLY valid JSON. No markdown, no explanation, no code block:
 }`;
 
   const res  = await callAnthropic({
-    model:       'claude-sonnet-4-5',
+    model:       'claude-sonnet-4-6',
     max_tokens:  3000,
     temperature: 0.4,
     messages:    [{ role: 'user', content: prompt }],
@@ -317,6 +317,7 @@ export async function runNewsPipeline(env, topicOverride = null) {
     title:  article.title,
     score:  article.trust_score,
     grade:  article.trust_grade,
+    thumb:  doc.thumb || null,
   };
 }
 
