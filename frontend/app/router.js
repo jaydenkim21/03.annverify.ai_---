@@ -1,6 +1,6 @@
 // ① Client Layer — 페이지 라우터 (SPA Navigation)
 
-function goPage(page) {
+function goPage(page, pushHistory) {
   document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
   document.getElementById('page-' + page).classList.add('active');
 
@@ -9,6 +9,11 @@ function goPage(page) {
   });
 
   state.currentPage = page;
+
+  // 브라우저 히스토리 기록 (popstate 복원 시에는 pushHistory=false)
+  if (pushHistory !== false) {
+    history.pushState({ page: page }, '', '#' + page);
+  }
 
   if (page === 'news'      && !state.newsData.length)      loadNews();
   if (page === 'partner'   && !state.partnerArticles.length) loadPartner();
@@ -47,4 +52,18 @@ function toggleDark() {
     document.getElementById('dark-icon').textContent  = 'light_mode';
     document.getElementById('dark-label').textContent = 'Light Mode';
   }
+})();
+
+// 브라우저 뒤로가기/앞으로가기 처리
+window.addEventListener('popstate', function(e) {
+  var page = (e.state && e.state.page) || 'home';
+  goPage(page, false);
+});
+
+// 초기 진입 시 현재 페이지를 히스토리에 등록
+(function initHistory() {
+  var hash = location.hash.replace('#', '');
+  var validPages = ['home','news','partner','community','report','profile','verify-history','subscription','community-detail','about'];
+  var startPage = validPages.includes(hash) ? hash : 'home';
+  history.replaceState({ page: startPage }, '', '#' + startPage);
 })();
