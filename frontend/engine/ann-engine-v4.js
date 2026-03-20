@@ -54,7 +54,8 @@
     try {
       var res=await fetch(baseUrl+endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
       var data=await res.json();
-      if(data.fallback||res.status===503) return fallbackFn();
+      if(data.fallback||res.status===503||res.status===500||res.status===529) return fallbackFn();
+      if(res.status===429){ await new Promise(function(r){setTimeout(r,1000);}); return fallbackFn(); }
       return data;
     } catch(e) { return fallbackFn(); }
   }
@@ -219,16 +220,15 @@
 
     progress(2,'running');
     progress(3,'running');
-    var l2l3=await Promise.all([
+    progress(4,'running');
+    var l2l3l4=await Promise.all([
       L2_SourceStrategy(baseUrl,l1.claims),
       L3_Evidence(baseUrl,l1.claims,null,today),
+      L4_Adversarial(baseUrl,l1.claims,null),
     ]);
-    l2=l2l3[0]; l3=l2l3[1];
+    l2=l2l3l4[0]; l3=l2l3l4[1]; l4=l2l3l4[2];
     progress(2,'done',l2);
     progress(3,'done',l3);
-
-    progress(4,'running');
-    l4=await L4_Adversarial(baseUrl,l1.claims,l3);
     progress(4,'done',l4);
 
     progress(5,'running');

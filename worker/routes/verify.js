@@ -39,9 +39,11 @@ function evaluateGate(claim) {
 
 const RESPONSE_SCHEMA = '{"verified_status":"VERIFIED HIGH ACCURACY","overall_verdict":"string","overall_score":85,"overall_grade":"A+","verdict_class":"VERIFIED","confidence":0.92,"metrics":{"factual":88,"logic":85,"source_quality":90,"cross_validation":82,"recency":87},"executive_summary":"2-3 sentence summary","layer_analysis":[{"layer":"L1","name":"Origin Tracking","score":88,"summary":"brief","detail":"explanation"},{"layer":"L2","name":"Semantic Context","score":85,"summary":"brief","detail":"explanation"},{"layer":"L3","name":"Cross-Reference","score":90,"summary":"brief","detail":"explanation"},{"layer":"L4","name":"Statistical Analysis","score":82,"summary":"brief","detail":"explanation"},{"layer":"L5","name":"Neural Synthesis","score":87,"summary":"brief","detail":"explanation"},{"layer":"L6","name":"Human Consensus","score":84,"summary":"brief","detail":"explanation"},{"layer":"L7","name":"Final Verdict & Hash","score":89,"summary":"brief","detail":"explanation"}],"claims":[{"sentence":"exact quoted claim","status":"CONFIRMED","verdict":"explanation","evidence_link":""}],"key_evidence":{"supporting":["fact 1","fact 2"],"contradicting":[],"neutral":["context"]},"web_citations":["source 1"],"temporal":{"timeframe":"when","freshness":"current/outdated","expiry_risk":"LOW","recheck_recommended":false},"bisl_hash":"sha256-placeholder","gate_mode":"STANDARD"}';
 
-// Tavily 웹 검색
+// Tavily 웹 검색 (5초 타임아웃)
 async function fetchTavilyResults(query, apiKey) {
   if (!apiKey) return null;
+  const ctrl  = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 5000);
   try {
     const res = await fetch("https://api.tavily.com/search", {
       method: "POST",
@@ -53,7 +55,9 @@ async function fetchTavilyResults(query, apiKey) {
         max_results: 5,
         include_answer: true,
       }),
+      signal: ctrl.signal,
     });
+    clearTimeout(timer);
     if (!res.ok) return null;
     const data = await res.json();
     if (!data.results || data.results.length === 0) return null;
@@ -64,17 +68,22 @@ async function fetchTavilyResults(query, apiKey) {
     ).join("\n\n");
     return text;
   } catch (_) {
+    clearTimeout(timer);
     return null;
   }
 }
 
-// URL에서 기사 텍스트 추출
+// URL에서 기사 텍스트 추출 (6초 타임아웃)
 async function fetchArticleText(url) {
+  const ctrl  = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 6000);
   try {
     const res = await fetch(url, {
       headers: { "User-Agent": "Mozilla/5.0 (compatible; ANNVerify/1.0)" },
-      cf: { timeout: 8000 },
+      cf: { timeout: 6000 },
+      signal: ctrl.signal,
     });
+    clearTimeout(timer);
     if (!res.ok) return null;
     const html = await res.text();
     // HTML 태그 제거 후 공백 정리
@@ -88,6 +97,7 @@ async function fetchArticleText(url) {
       .trim();
     return text.slice(0, 4000);
   } catch (_) {
+    clearTimeout(timer);
     return null;
   }
 }
@@ -145,20 +155,20 @@ ${RESPONSE_SCHEMA}`;
   let res, data;
   try {
     res  = await callAnthropic({
-      model:      "claude-sonnet-4-5-20250929",
+      model:      "claude-sonnet-4-6",
       max_tokens: 12000,
       temperature: 0,
       messages:   buildMessages(buildPrompt(tavilyCtx)),
-    }, env.ANTHROPIC_API_KEY);
+    }, env.ANTHROPIC_API_KEY, {}, 25000);
     data = await res.json();
   } catch (fetchErr) {
-    return json({ error: "Anthropic fetch failed", detail: fetchErr.message, model: "claude-sonnet-4-5-20250929" }, 502, cors);
+    return json({ error: "Anthropic fetch failed", detail: fetchErr.message, model: "claude-sonnet-4-6" }, 502, cors);
   }
 
   // Anthropic API 에러 시 상세 메시지 반환
   if (!res.ok) {
     const errMsg = (data.error && data.error.message) ? data.error.message : JSON.stringify(data);
-    return json({ error: errMsg, status: res.status, raw: data, model: "claude-sonnet-4-5-20250929" }, res.status, cors);
+    return json({ error: errMsg, status: res.status, raw: data, model: "claude-sonnet-4-6" }, res.status, cors);
   }
 
   // gate_mode 주입 — web_search 시 tool_use 블록이 먼저 올 수 있으므로 text 블록을 명시적으로 찾음
