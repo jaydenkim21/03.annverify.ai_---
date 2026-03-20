@@ -2045,12 +2045,18 @@ function signInWithGoogle(intent) {
 
   // COOP 정책 충돌로 signInWithPopup 불가 → redirect 방식으로 전환
   sessionStorage.setItem('_googleAuthIntent', intent);
-  auth.signInWithRedirect(provider).catch(showErr);
+  console.log('[AUTH] signInWithRedirect 시작, intent:', intent);
+  auth.signInWithRedirect(provider).catch(function(err) {
+    console.error('[AUTH] signInWithRedirect 오류:', err.code, err.message);
+    showErr(err);
+  });
 }
 
 // ── redirect 복귀 후 결과 처리 (signInWithRedirect 폴백용) ───────────────
 // 페이지 리로드 후 실행. onAuthStateChanged는 이미 발동했으므로 토스트만 처리.
+console.log('[AUTH] getRedirectResult 호출');
 auth.getRedirectResult().then(function(result) {
+  console.log('[AUTH] getRedirectResult 결과:', result && result.user ? result.user.email : 'no user');
   if (result && result.user) {
     const isNew = result.additionalUserInfo && result.additionalUserInfo.isNewUser;
     const name  = result.user.displayName || result.user.email.split('@')[0];
@@ -2061,9 +2067,9 @@ auth.getRedirectResult().then(function(result) {
     }
   }
 }).catch(function(err) {
+  console.error('[AUTH] getRedirectResult 오류:', err.code, err.message);
   const IGNORE = ['auth/no-auth-event', 'auth/null-user'];
   if (err && err.code && !IGNORE.includes(err.code)) {
-    console.error('Redirect result error:', err.code, err.message);
     const errLogin = document.getElementById('login-error');
     if (errLogin) { errLogin.textContent = authErrorMsg(err.code); errLogin.classList.remove('hidden'); }
     openAuthModal();
