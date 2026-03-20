@@ -1951,35 +1951,9 @@ sessionStorage.removeItem('_googleAuthIntent');
 
 // ── 로그인 상태 감지 ───────────────────────────────────────────────────
 var _prevUser = undefined;
-auth.onAuthStateChanged(async function(user) {
+auth.onAuthStateChanged(function(user) {
   if (user) {
-    // 탈퇴 계정 차단 체크
-    const emailKey = (user.email || '').toLowerCase().replace(/\./g, '_').replace(/@/g, '__at__');
-    const reRegKey = 'ann_rereg_' + emailKey;
-    try {
-      const doc = await db.collection('deleted_accounts').doc(emailKey).get({ source: 'server' });
-      if (doc.exists) {
-        const localReReg = localStorage.getItem(reRegKey) === '1';
-        if (_googleAuthIntent === 'signup' || localReReg) {
-          try {
-            await db.collection('deleted_accounts').doc(emailKey).delete();
-            localStorage.removeItem(reRegKey);
-          } catch(delErr) {
-            localStorage.setItem(reRegKey, '1');
-            console.warn('deleted_accounts 삭제 실패, localStorage 폴백 사용:', delErr.code);
-          }
-        } else {
-          _googleAuthIntent = null;
-          await auth.signOut();
-          showToast('탈퇴된 계정입니다. 재가입하려면 Sign Up 탭에서 가입해주세요.', 'error');
-          document.getElementById('auth-modal').classList.remove('hidden');
-          switchAuthTab('signup');
-          return;
-        }
-      }
-    } catch(e) { /* Firestore 읽기 오류 시 차단하지 않음 */ }
-    _googleAuthIntent = null;
-
+    // ── UI 즉시 업데이트 ────────────────────────────────────────────────
     const name    = window._pendingEmailName || user.displayName || user.email.split('@')[0];
     const email   = user.email || '';
     const picture = user.photoURL || '';
@@ -2015,6 +1989,31 @@ auth.onAuthStateChanged(async function(user) {
       saveUserProfile(user);
     }
     _prevUser = user;
+
+    // ── 탈퇴 계정 차단 체크 (백그라운드, 3초 타임아웃) ────────────────────
+    const emailKey  = (user.email || '').toLowerCase().replace(/\./g, '_').replace(/@/g, '__at__');
+    const reRegKey  = 'ann_rereg_' + emailKey;
+    const intentSnap = _googleAuthIntent;
+    _googleAuthIntent = null;
+    const timeout = new Promise(function(_, reject) { setTimeout(function() { reject(new Error('timeout')); }, 3000); });
+    Promise.race([
+      db.collection('deleted_accounts').doc(emailKey).get({ source: 'server' }),
+      timeout,
+    ]).then(function(doc) {
+      if (!doc.exists) return;
+      const localReReg = localStorage.getItem(reRegKey) === '1';
+      if (intentSnap === 'signup' || localReReg) {
+        db.collection('deleted_accounts').doc(emailKey).delete()
+          .then(function() { localStorage.removeItem(reRegKey); })
+          .catch(function(e) { localStorage.setItem(reRegKey, '1'); });
+      } else {
+        auth.signOut().then(function() {
+          showToast('탈퇴된 계정입니다. 재가입하려면 Sign Up 탭에서 가입해주세요.', 'error');
+          document.getElementById('auth-modal').classList.remove('hidden');
+          switchAuthTab('signup');
+        });
+      }
+    }).catch(function() { /* 타임아웃 또는 오류 시 차단하지 않음 */ });
   } else {
     _prevUser = null;
     // 로그아웃 시 localStorage 히스토리로 복원
