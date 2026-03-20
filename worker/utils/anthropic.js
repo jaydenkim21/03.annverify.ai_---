@@ -10,7 +10,7 @@ export async function callAnthropic(body, apiKey, extraHeaders = {}, timeoutMs =
   };
 
   const doFetch = (signal) =>
-    fetch("https://api.anthropic.com/v1/messages", {
+    fetch("https://gateway.ai.cloudflare.com/v1/2b10ac43a3fe8ddb0d93bd28f06338b2/ann-verify/anthropic/v1/messages", {
       method:  "POST",
       headers,
       body:    JSON.stringify(body),

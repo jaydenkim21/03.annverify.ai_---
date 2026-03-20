@@ -83,14 +83,8 @@ tailwind.config = {
   <!-- pl-[19px]: 아이콘 좌측 고정 기준 (축소폭 86px 중앙=31px, 버튼 px-3=12px → 19+12=31px) -->
   <div class="flex flex-col flex-1 overflow-hidden pl-[19px] pr-[33px] pb-5 pt-[6.5rem] sm:pt-5">
     <!-- Logo -->
-    <button onclick="goPage('home')" class="hidden sm:flex items-center gap-3 mb-24 cursor-pointer hover:opacity-80 transition-opacity text-left">
-      <div class="logo-icon-box shrink-0 bg-primary rounded-2xl flex items-center justify-center text-white shadow-lg shadow-primary/20">
-        <span class="material-symbols-outlined logo-icon-symbol">verified_user</span>
-      </div>
-      <div class="sb-text flex-1">
-        <h1 class="font-display text-[26px] font-bold tracking-tight text-slate-900 dark:text-white leading-tight whitespace-nowrap">ANN Verify</h1>
-        <p class="text-slate-500 font-bold uppercase tracking-widest" style="font-size:10px;">AI Verification Hub</p>
-      </div>
+    <button onclick="goPage('home')" class="hidden sm:flex items-center mb-24 cursor-pointer hover:opacity-80 transition-opacity text-left">
+      <img src="assets/ann-logo.svg" alt="ANN Verify" class="sb-text h-10 w-auto" style="max-width:220px;">
     </button>
 
     <!-- New Fact Check CTA -->

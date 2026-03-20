@@ -41,6 +41,9 @@ function _restoreVerified() {
     var stored = JSON.parse(localStorage.getItem('pn_verified') || '{}');
     if (!state.verifiedArticles) state.verifiedArticles = {};
     Object.assign(state.verifiedArticles, stored);
+    var full = JSON.parse(localStorage.getItem('pn_verified_full') || '{}');
+    if (!state.verifiedFull) state.verifiedFull = {};
+    Object.assign(state.verifiedFull, full);
   } catch (_) {}
 }
 
@@ -382,12 +385,22 @@ function sharePartnerArticle(url, title, btnEl) {
   }, 10);
 }
 
-// ── ANN Verify → 실시간 팩트체크 실행 ────────────────────────────────
+// ── ANN Verify → 실시간 팩트체크 실행 (이미 검증된 기사는 캐시 결과 즉시 표시) ──
 function annVerifyPartner(title, url) {
   state.reportFrom = 'partner';
   state.partnerArticleData = (state.partnerArticles || []).find(function(a) {
     return a.url === url || a.title === title;
   }) || { title: title, url: url };
+
+  // 이미 검증된 기사: 캐시된 전체 결과 즉시 표시 (API 재호출 없음)
+  var cachedFull = (state.verifiedFull && state.verifiedFull[url]);
+  if (cachedFull) {
+    state.lastResult = cachedFull;
+    state.lastInput  = url || title;
+    if (typeof renderPartnerReport === 'function') renderPartnerReport(cachedFull);
+    goPage('partner-report');
+    return;
+  }
 
   var input = url || title;
   state.lastInput = input;

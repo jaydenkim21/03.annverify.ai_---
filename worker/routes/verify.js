@@ -37,7 +37,6 @@ function evaluateGate(claim) {
   return { gateMode, gateNote };
 }
 
-const RESPONSE_SCHEMA = '{"verified_status":"VERIFIED HIGH ACCURACY","overall_verdict":"string","overall_score":85,"overall_grade":"A+","verdict_class":"VERIFIED","confidence":0.92,"metrics":{"factual":88,"logic":85,"source_quality":90,"cross_validation":82,"recency":87},"executive_summary":"2-3 sentence summary","layer_analysis":[{"layer":"L1","name":"Origin Tracking","score":88,"summary":"brief","detail":"explanation"},{"layer":"L2","name":"Semantic Context","score":85,"summary":"brief","detail":"explanation"},{"layer":"L3","name":"Cross-Reference","score":90,"summary":"brief","detail":"explanation"},{"layer":"L4","name":"Statistical Analysis","score":82,"summary":"brief","detail":"explanation"},{"layer":"L5","name":"Neural Synthesis","score":87,"summary":"brief","detail":"explanation"},{"layer":"L6","name":"Human Consensus","score":84,"summary":"brief","detail":"explanation"},{"layer":"L7","name":"Final Verdict & Hash","score":89,"summary":"brief","detail":"explanation"}],"claims":[{"sentence":"exact quoted claim","status":"CONFIRMED","verdict":"explanation","evidence_link":""}],"key_evidence":{"supporting":["fact 1","fact 2"],"contradicting":[],"neutral":["context"]},"web_citations":["source 1"],"temporal":{"timeframe":"when","freshness":"current/outdated","expiry_risk":"LOW","recheck_recommended":false},"bisl_hash":"sha256-placeholder","gate_mode":"STANDARD"}';
 
 // Tavily 웹 검색 (5초 타임아웃)
 async function fetchTavilyResults(query, apiKey) {
@@ -104,9 +103,6 @@ async function fetchArticleText(url) {
 
 export async function handleVerify(request, env, cors) {
   const body = await request.json();
-  const k = env.ANTHROPIC_API_KEY || "";
-  console.log(`[KEY] len=${k.length} prefix=${k.slice(0,10)} last4=${k.slice(-4)}`);
-
   if (!body.claim && !body.image_b64)
     return json({ error: "claim or image_b64 required" }, 400, cors);
 
@@ -123,27 +119,22 @@ export async function handleVerify(request, env, cors) {
   const { gateMode, gateNote } = evaluateGate(claim);
   const today = new Date().toISOString().slice(0, 10);
 
-  // 프롬프트 빌더 (tavilyContext 주입 가능)
-  const buildPrompt = (tavilyCtx = "") =>
-    `You are ANN Verify — a research-grade 7-layer AI fact-checking engine.
-TODAY'S DATE: ${today}. This is the real current date. Do NOT treat ${today} or any prior date as a future date or classify content with this date as invalid.
+  // 시스템 프롬프트 — RESPONSE_SCHEMA 제거 (cloud IP 403 방지), 어시스턴트 프리필로 JSON 강제
+  const buildSystem = () =>
+    `Fact-checking assistant. Today: ${today}. Analyze the claim and output a JSON object with these fields: verified_status, overall_verdict, overall_score (0-100), overall_grade, verdict_class (one of: VERIFIED LIKELY_TRUE PARTIALLY_TRUE UNVERIFIED CONTEXT_MISSING MISLEADING OUTDATED FALSE OPINION), confidence (0-1), metrics (factual logic source_quality cross_validation recency each 0-100), executive_summary, layer_analysis (7 objects L1-L7 with layer name score summary detail), claims (array with sentence status verdict evidence_link), key_evidence (supporting contradicting neutral arrays), web_citations (array), temporal (timeframe freshness expiry_risk recheck_recommended), bisl_hash, gate_mode.`;
 
-CLAIM: "${claim || "(see image)"}"
+  // 유저 메시지 — 클레임 + 컨텍스트만 포함
+  const buildUserMsg = (tavilyCtx = "") =>
+    `CLAIM: "${claim || "(see image)"}"
 Genre: ${body.genre || "general"} | Depth: ${body.depth || "standard"}
-Guide: ${GENRE_GUIDE[body.genre] || GENRE_GUIDE.general}${gateNote}${tavilyCtx}
+Guide: ${GENRE_GUIDE[body.genre] || GENRE_GUIDE.general}${gateNote}${tavilyCtx}`;
 
-VERDICT CLASSES: VERIFIED | LIKELY_TRUE | PARTIALLY_TRUE | UNVERIFIED | CONTEXT_MISSING | MISLEADING | OUTDATED | FALSE | OPINION
-SCORING: A+(93-100) A(82-92) B+(74-81) B(64-73) C(48-63) D(30-47) F(0-29)
-
-Respond ONLY with valid JSON:
-${RESPONSE_SCHEMA}`;
-
-  const buildMessages = (prompt) => body.image_b64
+  const buildMessages = (userMsg) => body.image_b64
     ? [{ role: "user", content: [
         { type: "image", source: { type: "base64", media_type: body.image_mime || "image/jpeg", data: body.image_b64 } },
-        { type: "text", text: prompt },
+        { type: "text", text: userMsg },
       ]}]
-    : [{ role: "user", content: prompt }];
+    : [{ role: "user", content: userMsg }];
 
   // ── Tavily 웹 검색으로 최신 컨텍스트 보강 ─────────────────────────
   const tavilyResult = await fetchTavilyResults(
@@ -156,10 +147,10 @@ ${RESPONSE_SCHEMA}`;
   try {
     res  = await callAnthropic({
       model:      "claude-sonnet-4-6",
-      max_tokens: 12000,
-      temperature: 0,
-      messages:   buildMessages(buildPrompt(tavilyCtx)),
-    }, env.ANTHROPIC_API_KEY, {}, 25000);
+      max_tokens: 6000,
+      system:     buildSystem(),
+      messages:   buildMessages(buildUserMsg(tavilyCtx)),
+    }, env.ANTHROPIC_API_KEY);
     data = await res.json();
   } catch (fetchErr) {
     return json({ error: "Anthropic fetch failed", detail: fetchErr.message, model: "claude-sonnet-4-6" }, 502, cors);

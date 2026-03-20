@@ -57,16 +57,19 @@ function _downloadElementAsPdf(el, filename) {
   style.textContent = [
     'p, h1, h2, h3, h4, li, td, th, .pdf-no-break { page-break-inside: avoid !important; }',
     'img { page-break-inside: avoid !important; max-width: 100% !important; height: auto !important; }',
-    '* { box-sizing: border-box !important; }',
-    '.grid, .flex { page-break-inside: avoid !important; }'
+    '* { box-sizing: border-box !important; max-width: 100% !important; }',
+    '.grid { display: block !important; }',
+    '.grid > * { width: 100% !important; margin-bottom: 16px !important; }',
+    '.flex { flex-wrap: wrap !important; }',
+    'pre, code { white-space: pre-wrap !important; word-break: break-all !important; }'
   ].join('\n');
   document.head.appendChild(style);
 
   var opt = {
-    margin:      [12, 10, 12, 10],
+    margin:      [10, 10, 10, 10],
     filename:    filename,
     image:       { type: 'jpeg', quality: 0.97 },
-    html2canvas: { scale: 2, useCORS: true, logging: false, windowWidth: 1200 },
+    html2canvas: { scale: 2, useCORS: true, logging: false, windowWidth: 794 },
     jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' },
     pagebreak:   { mode: ['avoid-all', 'css', 'legacy'], before: '.pdf-page-break' }
   };

@@ -28,7 +28,7 @@ export function handleV4Health(env, cors) {
 
 export async function handleV4Diagnose(env, cors) {
   const key = env.ANTHROPIC_API_KEY || '';
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+  const res = await fetch('https://gateway.ai.cloudflare.com/v1/2b10ac43a3fe8ddb0d93bd28f06338b2/ann-verify/anthropic/v1/messages', {
     method: 'POST',
     headers: {
       'Content-Type':      'application/json',
@@ -36,7 +36,7 @@ export async function handleV4Diagnose(env, cors) {
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-5-20250929',
+      model: 'claude-sonnet-4-6',
       max_tokens: 10,
       messages: [{ role: 'user', content: 'hi' }],
     }),

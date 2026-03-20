@@ -60,10 +60,14 @@ window.addEventListener('popstate', function(e) {
   goPage(page, false);
 });
 
-// 초기 진입 시 현재 페이지를 히스토리에 등록
+// 초기 진입 시 현재 페이지를 히스토리에 등록 + 새로고침 시 해당 페이지 복원
 (function initHistory() {
   var hash = location.hash.replace('#', '');
   var validPages = ['home','news','partner','community','report','profile','verify-history','subscription','community-detail','about'];
+  // 상태 데이터가 필요한 페이지는 상위 페이지로 폴백
+  var fallbacks = { 'partner-report': 'partner', 'report': 'home', 'community-detail': 'community' };
+  if (fallbacks[hash]) hash = fallbacks[hash];
   var startPage = validPages.includes(hash) ? hash : 'home';
   history.replaceState({ page: startPage }, '', '#' + startPage);
+  if (startPage !== 'home') goPage(startPage, false);
 })();

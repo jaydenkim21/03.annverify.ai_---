@@ -337,20 +337,26 @@ function renderNewsArticle(r) {
 function renderPartnerReport(r) {
   var art = state.partnerArticleData || {};
 
-  // ── 팩트체크 결과 저장 (VERIFIED 배지 반영용) ─────────────────────
+  // ── 팩트체크 결과 저장 (배지용 요약 + 전체 결과) ────────────────────
   if (art.url) {
     if (!state.verifiedArticles) state.verifiedArticles = {};
     var saved = {
-      grade:        r.overall_grade || 'B+',
-      score:        r.overall_score || 75,
-      verdict_class: r.verdict_class || 'likely',
-      verifiedAt:   new Date().toISOString(),
+      grade:         r.overall_grade  || 'B+',
+      score:         r.overall_score  || 75,
+      verdict_class: r.verdict_class  || 'likely',
+      verifiedAt:    new Date().toISOString(),
     };
     state.verifiedArticles[art.url] = saved;
+    // 전체 결과도 저장 (재클릭 시 API 호출 없이 즉시 표시)
+    if (!state.verifiedFull) state.verifiedFull = {};
+    state.verifiedFull[art.url] = r;
     try {
       var stored = JSON.parse(localStorage.getItem('pn_verified') || '{}');
       stored[art.url] = saved;
       localStorage.setItem('pn_verified', JSON.stringify(stored));
+      var full = JSON.parse(localStorage.getItem('pn_verified_full') || '{}');
+      full[art.url] = r;
+      localStorage.setItem('pn_verified_full', JSON.stringify(full));
     } catch (_) {}
   }
 
