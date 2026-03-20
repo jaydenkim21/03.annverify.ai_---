@@ -358,6 +358,17 @@ function renderPartnerReport(r) {
       full[art.url] = r;
       localStorage.setItem('pn_verified_full', JSON.stringify(full));
     } catch (_) {}
+
+    // Firestore에 공유 저장 (다른 사용자도 VERIFIED 상태 볼 수 있도록)
+    try {
+      var urlHash = _pnHash(art.url);
+      // _summary 문서: 배지 맵 업데이트 (merge)
+      var summaryUpdate = {};
+      summaryUpdate[urlHash] = Object.assign({ url: art.url }, saved);
+      db.collection('partnerVerified').doc('_summary').set(summaryUpdate, { merge: true }).catch(function() {});
+      // 개별 문서: 전체 결과 저장
+      db.collection('partnerVerified').doc(urlHash).set({ url: art.url, fullResult: r, verifiedAt: saved.verifiedAt }).catch(function() {});
+    } catch (_) {}
   }
 
   // ① 제목

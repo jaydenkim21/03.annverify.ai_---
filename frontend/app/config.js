@@ -1,4 +1,4 @@
-// ① Client Layer — API 설정
+// ① Client Layer — API Configuration
 // Cloudflare Worker 주소를 실제 배포 URL로 업데이트하세요
 
 var API_URL = 'https://api.annverify.ai';

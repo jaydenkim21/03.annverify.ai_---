@@ -93,12 +93,40 @@ function _setupPartnerEvents() {
   });
 }
 
+// ── Firestore _summary에서 verified 상태 가져오기 ──────────────────────
+function _fetchFirestoreVerified() {
+  try {
+    db.collection('partnerVerified').doc('_summary').get().then(function(snap) {
+      if (!snap.exists) return;
+      var data = snap.data() || {};
+      if (!state.verifiedArticles) state.verifiedArticles = {};
+      var changed = false;
+      Object.keys(data).forEach(function(hash) {
+        var item = data[hash];
+        if (item && item.url && !state.verifiedArticles[item.url]) {
+          state.verifiedArticles[item.url] = {
+            grade:         item.grade,
+            score:         item.score,
+            verdict_class: item.verdict_class,
+            verifiedAt:    item.verifiedAt,
+          };
+          changed = true;
+        }
+      });
+      if (changed && state.partnerArticles && state.partnerArticles.length) {
+        renderPartnerArticles();
+      }
+    }).catch(function() {});
+  } catch (_) {}
+}
+
 // ── 로드 ─────────────────────────────────────────────────────────────
 function loadPartner() {
   if (_partnerLoading) return;
   _partnerLoading = true;
   _restoreVerified();
   _setupPartnerEvents();
+  _fetchFirestoreVerified();
 
   document.getElementById('partner-articles').innerHTML =
     Array(6).fill('<div class="skeleton rounded-3xl h-72"></div>').join('');
@@ -402,6 +430,32 @@ function annVerifyPartner(title, url) {
     return;
   }
 
+  // VERIFIED 배지는 있지만 전체 결과가 없으면 → Firestore에서 가져오기 시도
+  var isVerified = state.verifiedArticles && state.verifiedArticles[url];
+  if (isVerified) {
+    try {
+      var urlHash = _pnHash(url);
+      db.collection('partnerVerified').doc(urlHash).get().then(function(snap) {
+        if (snap.exists && snap.data().fullResult) {
+          var full = snap.data().fullResult;
+          if (!state.verifiedFull) state.verifiedFull = {};
+          state.verifiedFull[url] = full;
+          state.lastResult = full;
+          state.lastInput  = url || title;
+          if (typeof renderPartnerReport === 'function') renderPartnerReport(full);
+          goPage('partner-report');
+        } else {
+          _runVerifyAPI(url, title);
+        }
+      }).catch(function() { _runVerifyAPI(url, title); });
+    } catch (_) { _runVerifyAPI(url, title); }
+    return;
+  }
+
+  _runVerifyAPI(url, title);
+}
+
+function _runVerifyAPI(url, title) {
   var input = url || title;
   state.lastInput = input;
   state.imageB64  = null;
