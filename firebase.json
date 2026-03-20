@@ -3,41 +3,82 @@
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
   },
-  "hosting": {
-    "public": "frontend",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ],
-    "rewrites": [
-      {
-        "source": "**",
-        "destination": "/index.html"
-      }
-    ],
-    "headers": [
-      {
-        "source": "**",
-        "headers": [
-          { "key": "Cross-Origin-Opener-Policy",   "value": "same-origin-allow-popups" },
-          { "key": "Cross-Origin-Embedder-Policy",  "value": "unsafe-none" },
-          { "key": "X-Content-Type-Options",        "value": "nosniff" },
-          { "key": "X-Frame-Options",               "value": "SAMEORIGIN" }
-        ]
-      },
-      {
-        "source": "**/*.@(js|css)",
-        "headers": [
-          { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
-        ]
-      },
-      {
-        "source": "index.html",
-        "headers": [
-          { "key": "Cache-Control", "value": "no-cache" }
-        ]
-      }
-    ]
-  }
+  "hosting": [
+    {
+      "target": "annverify-8d680",
+      "public": "frontend",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "rewrites": [
+        {
+          "source": "**",
+          "destination": "/index.html"
+        }
+      ],
+      "headers": [
+        {
+          "source": "**",
+          "headers": [
+            { "key": "Cross-Origin-Opener-Policy",   "value": "same-origin-allow-popups" },
+            { "key": "Cross-Origin-Embedder-Policy",  "value": "unsafe-none" },
+            { "key": "X-Content-Type-Options",        "value": "nosniff" },
+            { "key": "X-Frame-Options",               "value": "SAMEORIGIN" }
+          ]
+        },
+        {
+          "source": "**/*.@(js|css)",
+          "headers": [
+            { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+          ]
+        },
+        {
+          "source": "index.html",
+          "headers": [
+            { "key": "Cache-Control", "value": "no-cache" }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "annverify-admin",
+      "public": "frontend",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "rewrites": [
+        {
+          "source": "**",
+          "destination": "/index.html"
+        }
+      ],
+      "headers": [
+        {
+          "source": "**",
+          "headers": [
+            { "key": "Cross-Origin-Opener-Policy",   "value": "same-origin-allow-popups" },
+            { "key": "Cross-Origin-Embedder-Policy",  "value": "unsafe-none" },
+            { "key": "X-Content-Type-Options",        "value": "nosniff" },
+            { "key": "X-Frame-Options",               "value": "SAMEORIGIN" }
+          ]
+        },
+        {
+          "source": "**/*.@(js|css)",
+          "headers": [
+            { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+          ]
+        },
+        {
+          "source": "index.html",
+          "headers": [
+            { "key": "Cache-Control", "value": "no-cache" }
+          ]
+        }
+      ]
+    }
+  ]
 }

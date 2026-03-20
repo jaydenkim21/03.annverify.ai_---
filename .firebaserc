@@ -1,5 +1,18 @@
 {
   "projects": {
     "default": "annverify-8d680"
-  }
+  },
+  "targets": {
+    "annverify-8d680": {
+      "hosting": {
+        "annverify-admin": [
+          "annverify-admin"
+        ],
+        "annverify-8d680": [
+          "annverify-8d680"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }
