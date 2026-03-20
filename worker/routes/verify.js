@@ -122,7 +122,7 @@ export async function handleVerify(request, env, cors) {
   // 응답 언어 지시문
   const LANG_NAMES = { ko: 'Korean (한국어)', ja: 'Japanese (日本語)', zh: 'Chinese (中文)', de: 'German', fr: 'French', es: 'Spanish', ar: 'Arabic' };
   const langNote = (body.response_lang && body.response_lang !== 'en' && LANG_NAMES[body.response_lang])
-    ? ` IMPORTANT: Write ALL descriptive text values (executive_summary, claims[].sentence, key_evidence items, layer_analysis summaries/details, overall_verdict) in ${LANG_NAMES[body.response_lang]}. Keep all JSON field names in English.`
+    ? ` CRITICAL LANGUAGE RULE: Every single descriptive string value in the JSON response MUST be written in ${LANG_NAMES[body.response_lang]}. This includes: executive_summary, overall_verdict, claims[].sentence, claims[].verdict, claims[].evidence_link, key_evidence.supporting[] items, key_evidence.contradicting[] items, key_evidence.neutral[] items, layer_analysis[].name, layer_analysis[].summary, layer_analysis[].detail, and any other text string. Only JSON field names (keys) must remain in English.`
     : '';
 
   // 시스템 프롬프트 — RESPONSE_SCHEMA 제거 (cloud IP 403 방지), 어시스턴트 프리필로 JSON 강제

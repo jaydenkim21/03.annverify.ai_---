@@ -433,13 +433,35 @@ function annVerifyPartner(title, url, isVerified) {
   var art0 = state.partnerArticleData;
   state.partnerArticleLang = _detectLang((art0.title || '') + ' ' + (art0.summary || ''));
 
-  // ① 메모리 캐시에 전체 결과 있으면 즉시 표시
+  // 기사 원문 언어와 결과 언어 일치 여부 확인
+  // 한국어 기사인데 executive_summary가 영어이면 캐시 무효화 → 재팩트체크
+  var expectedLang = state.partnerArticleLang;
+  function _resultLangOk(r) {
+    if (expectedLang !== 'ko') return true;
+    var summary = (r && r.executive_summary) || '';
+    return !summary || /[가-힣]/.test(summary);
+  }
+  function _clearCache() {
+    if (state.verifiedFull) delete state.verifiedFull[url];
+    try {
+      var stored = JSON.parse(localStorage.getItem('pn_verified_full') || '{}');
+      delete stored[url];
+      localStorage.setItem('pn_verified_full', JSON.stringify(stored));
+    } catch (_) {}
+  }
+
+  // ① 메모리 캐시에 전체 결과 있으면 언어 확인 후 즉시 표시
   var cachedFull = state.verifiedFull && state.verifiedFull[url];
   if (cachedFull) {
-    state.lastResult = cachedFull;
-    state.lastInput  = url || title;
-    goPage('report');  // renderReport() → renderPartnerReport() 자동 호출
-    return;
+    if (!_resultLangOk(cachedFull)) {
+      _clearCache();
+      // 언어 불일치 캐시 → 재팩트체크
+    } else {
+      state.lastResult = cachedFull;
+      state.lastInput  = url || title;
+      goPage('report');
+      return;
+    }
   }
 
   // ② VERIFIED 기사: Firestore에서 전체 결과 가져오기 (API 재호출 없음)
@@ -450,6 +472,11 @@ function annVerifyPartner(title, url, isVerified) {
       db.collection('partnerVerified').doc(urlHash).get().then(function(snap) {
         if (snap.exists && snap.data().fullResult) {
           var full = snap.data().fullResult;
+          // 언어 불일치 → 재팩트체크 (이전 영어 캐시 무시)
+          if (!_resultLangOk(full)) {
+            _runVerifyAPI(url, title);
+            return;
+          }
           if (!state.verifiedFull) state.verifiedFull = {};
           state.verifiedFull[url] = full;
           if (snap.data().verifiedAt && !(state.verifiedArticles && state.verifiedArticles[url])) {
@@ -458,9 +485,8 @@ function annVerifyPartner(title, url, isVerified) {
           }
           state.lastResult = full;
           state.lastInput  = url || title;
-          goPage('report');  // renderReport() → renderPartnerReport() 자동 호출
+          goPage('report');
         } else {
-          // Firestore에 full result 없음 (이전 버전 데이터) → API 재실행 후 저장
           _runVerifyAPI(url, title);
         }
       }).catch(function() { _runVerifyAPI(url, title); });
