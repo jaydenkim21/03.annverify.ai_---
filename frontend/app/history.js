@@ -50,7 +50,7 @@ async function loadHistoryFromFirestore() {
       .collection('history')
       .orderBy('tsLocal', 'desc')
       .limit(50)
-      .get({ source: 'server' });
+      .get();
     state.history = snap.docs.map(function(doc) {
       var d = doc.data();
       return {

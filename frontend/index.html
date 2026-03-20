@@ -1610,7 +1610,7 @@ async function loadCommunityActivityFromFirestore() {
   if (!user) return;
   try {
     // 좋아요 수 (users/{uid}.likesGiven)
-    const userDoc = await db.collection('users').doc(user.uid).get({ source: 'server' });
+    const userDoc = await db.collection('users').doc(user.uid).get();
     if (userDoc.exists && userDoc.data().likesGiven !== undefined) {
       state.myActivity.likesGiven = userDoc.data().likesGiven;
     }
@@ -1951,43 +1951,9 @@ sessionStorage.removeItem('_googleAuthIntent');
 
 // ── 로그인 상태 감지 ───────────────────────────────────────────────────
 var _prevUser = undefined;
-auth.onAuthStateChanged(async function(user) {
+auth.onAuthStateChanged(function(user) {
   if (user) {
-    // 탈퇴 계정 차단 체크
-    const emailKey = (user.email || '').toLowerCase().replace(/\./g, '_').replace(/@/g, '__at__');
-    // Firestore 삭제가 실패할 경우를 대비해 localStorage를 폴백으로 사용
-    const reRegKey = 'ann_rereg_' + emailKey;
-    try {
-      const doc = await db.collection('deleted_accounts').doc(emailKey).get({ source: 'server' });
-      console.log('[DEBUG] deleted_accounts check:', emailKey, 'exists:', doc.exists, 'intent:', _googleAuthIntent);
-      if (doc.exists) {
-        const localReReg = localStorage.getItem(reRegKey) === '1';
-        if (_googleAuthIntent === 'signup' || localReReg) {
-          // Sign Up 탭에서 시도하거나 localStorage에 재가입 기록이 있는 경우: 허용
-          try {
-            await db.collection('deleted_accounts').doc(emailKey).delete();
-            localStorage.removeItem(reRegKey); // Firestore 삭제 성공 시 localStorage 정리
-          } catch(delErr) {
-            // Firestore 삭제 실패(규칙 등) → localStorage에 재가입 기록을 남겨 다음 sign-in도 허용
-            localStorage.setItem(reRegKey, '1');
-            console.warn('deleted_accounts 삭제 실패, localStorage 폴백 사용:', delErr.code);
-          }
-          // 로그인 진행 (return 없이 fall-through)
-        } else {
-          // Sign In 탭이거나 일반 세션 복구: 차단
-          _googleAuthIntent = null;
-          await auth.signOut();
-          showToast('탈퇴된 계정입니다. 재가입하려면 Sign Up 탭에서 가입해주세요.', 'error');
-          document.getElementById('auth-modal').classList.remove('hidden');
-          switchAuthTab('signup');
-          return;
-        }
-      }
-    } catch(e) { /* Firestore 읽기 오류 시 차단하지 않음 */ }
-    _googleAuthIntent = null; // 경로에 관계없이 항상 초기화
-
-    // 이메일 신규 가입: updateProfile()이 onAuthStateChanged보다 늦게 실행되므로
-    // 폼에서 입력한 이름(_pendingEmailName)을 우선 사용
+    // ── UI 즉시 업데이트 (Firestore 응답 기다리지 않음) ─────────────────
     const name    = window._pendingEmailName || user.displayName || user.email.split('@')[0];
     const email   = user.email || '';
     const picture = user.photoURL || '';
@@ -1998,16 +1964,13 @@ auth.onAuthStateChanged(async function(user) {
     document.getElementById('user-loggedin').classList.remove('hidden');
     closeAuthModal();
 
-    // 이메일 신규/기존 로그인 토스트 (Google은 signInWithPopup().then()에서 처리)
-    // _pendingEmailName: string이면 신규 이메일 가입, undefined면 이메일 로그인 또는 Google
+    // 이메일 신규/기존 로그인 토스트
     const isNewEmail = typeof window._pendingEmailName === 'string';
     window._pendingEmailName = undefined;
 
     if (_prevUser == null) {
       const isGoogle = user.providerData.some(function(p) { return p.providerId === 'google.com'; });
       if (!isGoogle) {
-        // 이메일 로그인/가입: 여기서 토스트 표시
-        // Google 로그인/가입: signInWithPopup().then() 또는 getRedirectResult().then()에서 표시
         if (isNewEmail) {
           showToast('🎉 ' + name + ' 님 환영합니다!', 'success');
         } else {
@@ -2019,16 +1982,43 @@ auth.onAuthStateChanged(async function(user) {
         setTimeout(function() { closeMobileSidebar(); }, 2000);
       }
     }
-    // 로그인 시 Firestore에서 히스토리 + 커뮤니티 활동 로드
+
+    // 로그인 시 Firestore에서 히스토리 + 커뮤니티 활동 로드 (백그라운드)
     if (_prevUser === null && typeof loadHistoryFromFirestore === 'function') {
       loadHistoryFromFirestore();
       loadCommunityActivityFromFirestore();
     }
-    // 로그인·세션 복구 시 프로필 정보를 Firestore에 저장/갱신
+    // 로그인·세션 복구 시 프로필 정보를 Firestore에 저장/갱신 (백그라운드)
     if (_prevUser == null) {
       saveUserProfile(user);
     }
     _prevUser = user;
+
+    // ── 탈퇴 계정 차단 체크 (백그라운드 — UI 블록 없음) ─────────────────
+    const emailKey = (user.email || '').toLowerCase().replace(/\./g, '_').replace(/@/g, '__at__');
+    const reRegKey = 'ann_rereg_' + emailKey;
+    const intentSnapshot = _googleAuthIntent;
+    _googleAuthIntent = null;
+    db.collection('deleted_accounts').doc(emailKey).get().then(function(doc) {
+      if (!doc.exists) return; // 정상 계정 — 대부분의 경우
+      const localReReg = localStorage.getItem(reRegKey) === '1';
+      if (intentSnapshot === 'signup' || localReReg) {
+        // Sign Up 탭에서 시도 또는 localStorage 재가입 기록: 삭제 후 유지
+        db.collection('deleted_accounts').doc(emailKey).delete()
+          .then(function() { localStorage.removeItem(reRegKey); })
+          .catch(function(delErr) {
+            localStorage.setItem(reRegKey, '1');
+            console.warn('deleted_accounts 삭제 실패, localStorage 폴백 사용:', delErr.code);
+          });
+      } else {
+        // 탈퇴 계정으로 Sign In 시도: 강제 로그아웃
+        auth.signOut().then(function() {
+          showToast('탈퇴된 계정입니다. 재가입하려면 Sign Up 탭에서 가입해주세요.', 'error');
+          document.getElementById('auth-modal').classList.remove('hidden');
+          switchAuthTab('signup');
+        });
+      }
+    }).catch(function() { /* Firestore 읽기 오류 시 차단하지 않음 */ });
   } else {
     _prevUser = null;
     // 로그아웃 시 localStorage 히스토리로 복원
