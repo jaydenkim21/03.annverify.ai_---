@@ -2049,6 +2049,8 @@ function signInWithGoogle(intent) {
     }
   }).catch(function(err) {
     _googleAuthIntent = null;
+    // COOP 환경에서 팝업 추적이 실패해도 onAuthStateChanged로 인증이 완료된 경우 무시
+    if (auth.currentUser) return;
     showErr(err);
   });
 }
