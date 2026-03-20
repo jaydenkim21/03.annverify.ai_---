@@ -362,13 +362,25 @@ function renderPartnerReport(r) {
     // Firestore에 공유 저장 (다른 사용자도 VERIFIED 상태 볼 수 있도록)
     try {
       var urlHash = _pnHash(art.url);
-      // _summary 문서: 배지 맵 업데이트 (merge)
+      // partnerVerified/_summary: 배지 맵 업데이트
       var summaryUpdate = {};
       summaryUpdate[urlHash] = Object.assign({ url: art.url }, saved);
       db.collection('partnerVerified').doc('_summary').set(summaryUpdate, { merge: true }).catch(function() {});
-      // 개별 문서: 전체 결과 저장
+      // partnerVerified/{hash}: 전체 결과 저장
       db.collection('partnerVerified').doc(urlHash).set({ url: art.url, fullResult: r, verifiedAt: saved.verifiedAt }).catch(function() {});
     } catch (_) {}
+
+    // partnerNews 컬렉션 기사 문서에 등급 저장 (피드에서 즉시 배지 표시용)
+    if (art._id) {
+      try {
+        db.collection('partnerNews').doc(art._id).update({
+          grade:         saved.grade,
+          score:         saved.score,
+          verdict_class: saved.verdict_class,
+          verifiedAt:    saved.verifiedAt,
+        }).catch(function() {});
+      } catch (_) {}
+    }
   }
 
   // ① 제목

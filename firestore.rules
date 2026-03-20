@@ -32,5 +32,12 @@ service cloud.firestore {
       allow read: if true;
       allow write: if request.auth != null;
     }
+
+    // Partner News 기사 — 누구나 읽기, 로그인 사용자는 등급 필드만 업데이트 허용
+    match /partnerNews/{docId} {
+      allow read: if true;
+      allow update: if request.auth != null
+        && request.resource.data.keys().hasOnly(['grade','score','verdict_class','verifiedAt']);
+    }
   }
 }

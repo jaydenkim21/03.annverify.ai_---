@@ -273,9 +273,17 @@ function renderPartnerArticles(items) {
     var liked     = _isLiked(a.url || '');
     var cmtCount  = _getCommentCount(a.url || '');
 
-    var verifiedResult = (state.verifiedArticles && state.verifiedArticles[a.url]) || a.verifiedStatus;
-    var isVerified     = !!verifiedResult;
-    var grade          = isVerified ? (verifiedResult.grade || verifiedResult.overall_grade || '') : '';
+    // 등급 우선순위: 메모리 캐시 > 피드에서 온 Firestore 등급 > verifiedStatus
+    var feedGrade      = a.grade ? { grade: a.grade, score: a.score, verdict_class: a.verdict_class, verifiedAt: a.verifiedAt } : null;
+    var verifiedResult = (state.verifiedArticles && state.verifiedArticles[a.url]) || feedGrade || a.verifiedStatus;
+    var isVerified     = !!(verifiedResult || (a.verdict_class && a.verdict_class !== 'unverified'));
+    var grade          = isVerified ? (verifiedResult && (verifiedResult.grade || verifiedResult.overall_grade)) || a.grade || '' : '';
+
+    // 피드에서 등급이 내려오면 메모리 캐시에도 동기화
+    if (feedGrade && a.url && !(state.verifiedArticles && state.verifiedArticles[a.url])) {
+      if (!state.verifiedArticles) state.verifiedArticles = {};
+      state.verifiedArticles[a.url] = feedGrade;
+    }
 
     var badgeHtml = isVerified
       ? '<div class="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-emerald-500 text-white text-[10px] font-black shadow-md uppercase tracking-wide flex items-center gap-1">' +
