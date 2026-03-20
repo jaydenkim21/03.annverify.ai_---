@@ -183,16 +183,40 @@ Guide: ${GENRE_GUIDE[body.genre] || GENRE_GUIDE.general}${gateNote}${tavilyCtx}`
     return json({ error: errMsg, status: res.status, raw: data, model: "claude-sonnet-4-6" }, res.status, cors);
   }
 
-  // gate_mode 주입 — 어시스턴트 프리필 "{" 때문에 실제 응답에 "{" 앞에 붙여서 파싱
-  const textBlock = Array.isArray(data.content) && data.content.find(b => b.type === "text");
-  if (textBlock && textBlock.text) {
-    // 프리필 "{" 보상: 응답 텍스트가 "{"로 시작하지 않으면 앞에 붙임
-    const raw = textBlock.text.replace(/```json|```/g, "").trim();
-    const jsonStr = raw.startsWith("{") ? raw : "{" + raw;
+  // JSON 파싱 헬퍼 — 프리필 "{" 보상 + 텍스트 내 JSON 추출 시도
+  function tryParseJson(text) {
+    const cleaned = text.replace(/```json|```/g, "").trim();
+    // 1차: 프리필 "{" 보상
+    const s1 = cleaned.startsWith("{") ? cleaned : "{" + cleaned;
+    try { return JSON.parse(s1); } catch (_) {}
+    // 2차: 텍스트 안에서 {…} 블록 추출
+    const m = /\{[\s\S]*\}/.exec(cleaned);
+    if (m) { try { return JSON.parse(m[0]); } catch (_) {} }
+    return null;
+  }
+
+  // gate_mode 주입 — 파싱 실패 시 1회 자동 재시도
+  function injectGateMode(responseData) {
+    const tb = Array.isArray(responseData.content) && responseData.content.find(b => b.type === "text");
+    if (!tb || !tb.text) return false;
+    const parsed = tryParseJson(tb.text);
+    if (!parsed) return false;
+    parsed.gate_mode = gateMode;
+    tb.text = JSON.stringify(parsed);
+    return true;
+  }
+
+  if (!injectGateMode(data)) {
+    // 1차 파싱 실패 → 1회 재시도
     try {
-      const parsed = JSON.parse(jsonStr);
-      parsed.gate_mode = gateMode;
-      textBlock.text = JSON.stringify(parsed);
+      const retryRes  = await callAnthropic({
+        model:      "claude-sonnet-4-6",
+        max_tokens: 6000,
+        system:     buildSystem(),
+        messages:   buildMessages(buildUserMsg(tavilyCtx)),
+      }, env.ANTHROPIC_API_KEY);
+      const retryData = await retryRes.json();
+      if (injectGateMode(retryData)) data = retryData;
     } catch (_) {}
   }
 
