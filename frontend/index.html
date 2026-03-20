@@ -2080,26 +2080,9 @@ function signInWithGoogle(intent) {
     if (target) { target.textContent = msg; target.classList.remove('hidden'); }
   }
 
-  auth.signInWithPopup(provider).then(function(result) {
-    // signInWithPopup().then()은 onAuthStateChanged 이후에 실행되므로
-    // isNewUser를 여기서 안전하게 읽어 토스트 표시
-    const isNew = result.additionalUserInfo && result.additionalUserInfo.isNewUser;
-    const name  = result.user.displayName || result.user.email.split('@')[0];
-    if (isNew) {
-      showConsentModal(result.user, name);
-    } else {
-      showToast('✓ ' + name + ' 님 로그인되었습니다', 'success');
-    }
-  }).catch(function(err) {
-    _googleAuthIntent = null; // 팝업 취소/오류 시 intent 초기화
-    if (err.code === 'auth/popup-blocked' || err.code === 'auth/cancelled-popup-request') {
-      // 팝업 차단 시 redirect 폴백 — 페이지 리로드 전에 intent를 sessionStorage에 보존
-      sessionStorage.setItem('_googleAuthIntent', intent);
-      auth.signInWithRedirect(provider).catch(showErr);
-    } else if (err.code !== 'auth/popup-closed-by-user') {
-      showErr(err);
-    }
-  });
+  // COOP 정책 충돌로 signInWithPopup 불가 → redirect 방식으로 전환
+  sessionStorage.setItem('_googleAuthIntent', intent);
+  auth.signInWithRedirect(provider).catch(showErr);
 }
 
 // ── redirect 복귀 후 결과 처리 (signInWithRedirect 폴백용) ───────────────
