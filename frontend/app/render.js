@@ -453,4 +453,98 @@ function renderPartnerReport(r) {
   document.getElementById('pnr-category').textContent  = art.category || (r.web_citations && r.web_citations.length ? 'General' : 'News');
   var hashRaw = r.bisl_hash || (art.url ? art.url.split('').reduce(function(h, c) { return (Math.imul(31, h) + c.charCodeAt(0)) >>> 0; }, 0).toString(16) : '');
   document.getElementById('pnr-hash').textContent = hashRaw ? '0x' + hashRaw.slice(0, 4) + '…' + hashRaw.slice(-4) : '—';
+
+  // ⑨ Evidence
+  var evEl  = document.getElementById('pnr-evidence');
+  var ev    = r.key_evidence || {};
+  var cits  = r.web_citations || [];
+  var hasEv = (ev.supporting && ev.supporting.length)
+           || (ev.contradicting && ev.contradicting.length)
+           || (ev.neutral && ev.neutral.length)
+           || cits.length;
+
+  if (!evEl) return;
+
+  if (!hasEv) {
+    evEl.innerHTML = '';
+    evEl.classList.add('hidden');
+    return;
+  }
+
+  var eHtml = '<div class="flex items-center gap-2 mb-4">'
+    + '<span class="material-symbols-outlined text-primary">fact_check</span>'
+    + '<h3 class="text-sm font-bold uppercase tracking-widest text-slate-700 dark:text-slate-300">Evidence</h3>'
+    + '</div>';
+
+  // Supporting
+  if (ev.supporting && ev.supporting.length) {
+    eHtml += '<div class="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-100 dark:border-emerald-800">'
+      + '<h4 class="text-xs font-bold uppercase text-emerald-700 dark:text-emerald-400 tracking-widest mb-3 flex items-center gap-1.5">'
+      + '<span class="material-symbols-outlined" style="font-size:14px">check_circle</span>Supporting Evidence</h4>'
+      + '<ul class="space-y-2">'
+      + ev.supporting.slice(0, 5).map(function(s) {
+          return '<li class="flex items-start gap-2 text-sm text-emerald-900 dark:text-emerald-200">'
+            + '<span class="text-emerald-500 mt-0.5 flex-shrink-0">✓</span>'
+            + '<span>' + escHtml(s) + '</span></li>';
+        }).join('')
+      + '</ul></div>';
+  }
+
+  // Contradicting
+  if (ev.contradicting && ev.contradicting.length) {
+    eHtml += '<div class="p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-100 dark:border-red-800">'
+      + '<h4 class="text-xs font-bold uppercase text-red-700 dark:text-red-400 tracking-widest mb-3 flex items-center gap-1.5">'
+      + '<span class="material-symbols-outlined" style="font-size:14px">cancel</span>Contradicting Evidence</h4>'
+      + '<ul class="space-y-2">'
+      + ev.contradicting.slice(0, 5).map(function(s) {
+          return '<li class="flex items-start gap-2 text-sm text-red-900 dark:text-red-200">'
+            + '<span class="text-red-500 mt-0.5 flex-shrink-0">✗</span>'
+            + '<span>' + escHtml(s) + '</span></li>';
+        }).join('')
+      + '</ul></div>';
+  }
+
+  // Neutral / Context
+  if (ev.neutral && ev.neutral.length) {
+    eHtml += '<div class="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-700">'
+      + '<h4 class="text-xs font-bold uppercase text-slate-500 tracking-widest mb-3 flex items-center gap-1.5">'
+      + '<span class="material-symbols-outlined" style="font-size:14px">info</span>Context</h4>'
+      + '<ul class="space-y-2">'
+      + ev.neutral.slice(0, 3).map(function(s) {
+          return '<li class="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400">'
+            + '<span class="text-slate-400 mt-0.5 flex-shrink-0">·</span>'
+            + '<span>' + escHtml(s) + '</span></li>';
+        }).join('')
+      + '</ul></div>';
+  }
+
+  // Related Sources (web_citations)
+  if (cits.length) {
+    eHtml += '<div>'
+      + '<h4 class="text-xs font-bold uppercase text-slate-500 tracking-widest mb-3 flex items-center gap-1.5">'
+      + '<span class="material-symbols-outlined" style="font-size:14px">link</span>Related Sources</h4>'
+      + '<div class="space-y-2">'
+      + cits.slice(0, 6).map(function(c) {
+          var isUrl = /^https?:\/\//.test(c);
+          if (isUrl) {
+            var domain = '';
+            try { domain = new URL(c).hostname.replace('www.', ''); } catch (_) {}
+            return '<a href="' + escHtml(c) + '" target="_blank" rel="noopener noreferrer"'
+              + ' class="flex items-center gap-3 p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-primary hover:shadow-sm transition-all group">'
+              + '<span class="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors text-base">open_in_new</span>'
+              + '<div class="min-w-0 flex-1">'
+              + (domain ? '<div class="text-[10px] text-slate-400 uppercase tracking-wide font-bold mb-0.5">' + escHtml(domain) + '</div>' : '')
+              + '<div class="text-sm text-slate-700 dark:text-slate-300 group-hover:text-primary truncate transition-colors">' + escHtml(c) + '</div>'
+              + '</div></a>';
+          }
+          return '<div class="flex items-center gap-3 p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800">'
+            + '<span class="material-symbols-outlined text-slate-400 text-base">article</span>'
+            + '<span class="text-sm text-slate-700 dark:text-slate-300">' + escHtml(c) + '</span>'
+            + '</div>';
+        }).join('')
+      + '</div></div>';
+  }
+
+  evEl.innerHTML = eHtml;
+  evEl.classList.remove('hidden');
 }
