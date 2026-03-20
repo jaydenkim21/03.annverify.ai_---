@@ -186,19 +186,25 @@ Guide: ${GENRE_GUIDE[body.genre] || GENRE_GUIDE.general}${gateNote}${tavilyCtx}`
     return json({ error: errMsg, status: res.status, raw: data, model: "claude-sonnet-4-6" }, res.status, cors);
   }
 
-  // JSON 파싱 헬퍼 — 프리필 "{" 보상 + 텍스트 내 JSON 추출 시도
+  // JSON 파싱 헬퍼 — 마크다운/프리필 보상 + {…} 블록 추출
   function tryParseJson(text) {
+    // 마크다운 ```json...``` 코드블록 추출 우선 시도
+    const cbMatch = /```json\s*([\s\S]*?)```/.exec(text) || /```\s*(\{[\s\S]*?\})\s*```/.exec(text);
+    if (cbMatch) { try { return JSON.parse(cbMatch[1].trim()); } catch (_) {} }
     const cleaned = text.replace(/```json|```/g, "").trim();
-    // 1차: 프리필 "{" 보상
+    // 프리필 "{" 보상
     const s1 = cleaned.startsWith("{") ? cleaned : "{" + cleaned;
     try { return JSON.parse(s1); } catch (_) {}
-    // 2차: 텍스트 안에서 {…} 블록 추출
-    const m = /\{[\s\S]*\}/.exec(cleaned);
-    if (m) { try { return JSON.parse(m[0]); } catch (_) {} }
+    // 텍스트 안에서 가장 바깥쪽 {…} 블록 추출
+    const start = cleaned.indexOf("{");
+    const end   = cleaned.lastIndexOf("}");
+    if (start !== -1 && end > start) {
+      try { return JSON.parse(cleaned.slice(start, end + 1)); } catch (_) {}
+    }
     return null;
   }
 
-  // gate_mode 주입 — 파싱 실패 시 1회 자동 재시도
+  // gate_mode 주입 — 파싱 실패 시 1회 자동 재시도 (교정 메시지 포함)
   function injectGateMode(responseData) {
     const tb = Array.isArray(responseData.content) && responseData.content.find(b => b.type === "text");
     if (!tb || !tb.text) return false;
@@ -210,13 +216,20 @@ Guide: ${GENRE_GUIDE[body.genre] || GENRE_GUIDE.general}${gateNote}${tavilyCtx}`
   }
 
   if (!injectGateMode(data)) {
-    // 1차 파싱 실패 → 1회 재시도
+    // 1차 파싱 실패 → 교정 메시지로 1회 재시도
     try {
+      const failedText = (Array.isArray(data.content) && data.content.find(b => b.type === "text") || {}).text || "";
+      const retryMessages = [
+        ...buildMessages(buildUserMsg(tavilyCtx)).slice(0, 1), // user turn only
+        { role: "assistant", content: failedText.slice(0, 200) },
+        { role: "user",      content: "Your response was not valid JSON. Return ONLY the raw JSON object, starting with { and ending with }. No markdown, no text." },
+        { role: "assistant", content: "{" },
+      ];
       const retryRes  = await callAnthropic({
         model:      "claude-sonnet-4-6",
         max_tokens: 6000,
         system:     buildSystem(),
-        messages:   buildMessages(buildUserMsg(tavilyCtx)),
+        messages:   retryMessages,
       }, env.ANTHROPIC_API_KEY);
       const retryData = await retryRes.json();
       if (injectGateMode(retryData)) data = retryData;
