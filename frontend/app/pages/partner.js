@@ -429,8 +429,7 @@ function annVerifyPartner(title, url, isVerified) {
   if (cachedFull) {
     state.lastResult = cachedFull;
     state.lastInput  = url || title;
-    renderPartnerReport(cachedFull);
-    goPage('partner-report');
+    goPage('report');  // renderReport() → renderPartnerReport() 자동 호출
     return;
   }
 
@@ -444,15 +443,13 @@ function annVerifyPartner(title, url, isVerified) {
           var full = snap.data().fullResult;
           if (!state.verifiedFull) state.verifiedFull = {};
           state.verifiedFull[url] = full;
-          // verifiedArticles 없으면 summary 데이터로 채우기
           if (snap.data().verifiedAt && !(state.verifiedArticles && state.verifiedArticles[url])) {
             if (!state.verifiedArticles) state.verifiedArticles = {};
             state.verifiedArticles[url] = { verifiedAt: snap.data().verifiedAt };
           }
           state.lastResult = full;
           state.lastInput  = url || title;
-          renderPartnerReport(full);
-          goPage('partner-report');
+          goPage('report');  // renderReport() → renderPartnerReport() 자동 호출
         } else {
           // Firestore에 full result 없음 (이전 버전 데이터) → API 재실행 후 저장
           _runVerifyAPI(url, title);
