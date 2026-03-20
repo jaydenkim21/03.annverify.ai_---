@@ -1995,11 +1995,13 @@ auth.onAuthStateChanged(function(user) {
     const reRegKey  = 'ann_rereg_' + emailKey;
     const intentSnap = _googleAuthIntent;
     _googleAuthIntent = null;
+    console.log('[AUTH] deleted_accounts check for:', emailKey);
     const timeout = new Promise(function(_, reject) { setTimeout(function() { reject(new Error('timeout')); }, 3000); });
     Promise.race([
       db.collection('deleted_accounts').doc(emailKey).get({ source: 'server' }),
       timeout,
     ]).then(function(doc) {
+      console.log('[AUTH] deleted_accounts result: exists=', doc.exists);
       if (!doc.exists) return;
       const localReReg = localStorage.getItem(reRegKey) === '1';
       if (intentSnap === 'signup' || localReReg) {
