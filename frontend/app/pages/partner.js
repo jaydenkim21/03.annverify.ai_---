@@ -30,6 +30,14 @@ function _detectLang(text) {
   return /[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(text || '') ? 'ko' : 'en';
 }
 
+// ── 캐시된 결과 언어 확인 (기사 언어와 불일치 시 재검증 필요) ──────────
+function _resultLangOk(result, expectedLang) {
+  if (!expectedLang || expectedLang === 'en') return true;
+  var summary = (result && result.executive_summary) || '';
+  if (expectedLang === 'ko') return /[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(summary);
+  return true;
+}
+
 // ── LocalStorage 기반 Like 유지 ───────────────────────────────────────
 function _pnHash(url) {
   var h = 0;
@@ -460,9 +468,9 @@ function annVerifyPartner(title, url, isVerified) {
   var art0 = state.partnerArticleData;
   state.partnerArticleLang = _detectLang((art0.title || '') + ' ' + (art0.summary || ''));
 
-  // ① 메모리 캐시에 전체 결과 있으면 즉시 표시
+  // ① 메모리 캐시에 전체 결과 있으면 즉시 표시 (언어 일치 시에만)
   var cachedFull = state.verifiedFull && state.verifiedFull[url];
-  if (cachedFull) {
+  if (cachedFull && _resultLangOk(cachedFull, state.partnerArticleLang)) {
     state.lastResult = cachedFull;
     state.lastInput  = url || title;
     goPage('report');
@@ -477,6 +485,11 @@ function annVerifyPartner(title, url, isVerified) {
       db.collection('partnerVerified').doc(urlHash).get().then(function(snap) {
         if (snap.exists && snap.data().fullResult) {
           var full = snap.data().fullResult;
+          // 기사 언어와 캐시 결과 언어가 다르면 재검증 (예: 한국어 기사인데 영문 결과)
+          if (!_resultLangOk(full, state.partnerArticleLang)) {
+            _runVerifyAPI(url, title);
+            return;
+          }
           if (!state.verifiedFull) state.verifiedFull = {};
           state.verifiedFull[url] = full;
           if (snap.data().verifiedAt && !(state.verifiedArticles && state.verifiedArticles[url])) {
