@@ -286,61 +286,66 @@ function renderCommunityDetail(item) {
     'PARTIAL VERIFIED': 'bg-amber-500',
     'UNVERIFIED':       'bg-slate-400',
   };
-  var vcls = verdictColor[item.verdict] || 'bg-slate-400';
+  var vcls      = verdictColor[item.verdict] || 'bg-slate-400';
   var scoreColor = item.score >= 80 ? 'text-emerald-600' : item.score >= 60 ? 'text-blue-600' : item.score >= 40 ? 'text-amber-600' : 'text-red-600';
-  var src = SOURCE_BADGE[item.source] || SOURCE_BADGE.user;
+  var src       = SOURCE_BADGE[item.source] || SOURCE_BADGE.user;
+  var sourceUrl = item.sourceUrl || '';
 
-  // 클레임 카드 — 이미지 좌 1/3 + 콘텐츠 우 2/3
+  // 클레임 카드
   document.getElementById('cd-claim-card').innerHTML = `
-    <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm overflow-hidden border border-slate-100 dark:border-slate-800 mb-6">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm overflow-hidden border border-slate-100 dark:border-slate-800 mb-5">
       <div class="flex flex-col sm:flex-row">
-        ${item.image ? `<div class="sm:w-1/3 shrink-0"><img src="${escHtml(item.image)}" alt="" class="w-full h-48 sm:h-full object-cover"/></div>` : ''}
-        <div class="flex-1 p-5 sm:p-6 min-w-0">
-          <div class="flex items-center gap-2 mb-3 flex-wrap">
-            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold text-white uppercase tracking-wide ${vcls}">${item.verdict || 'UNVERIFIED'}</span>
-            <span class="${src.cls} text-[10px] font-bold flex items-center gap-1 px-2.5 py-1 rounded-full">
-              <span class="material-symbols-outlined text-xs">${src.icon}</span>${src.label}
+        ${item.image ? `
+        <div class="relative sm:w-2/5 shrink-0">
+          <img src="${escHtml(item.image)}" alt="" class="w-full h-52 sm:h-full object-cover"/>
+          <span class="absolute top-3 left-3 ${vcls} text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow">${item.verdict || 'UNVERIFIED'}</span>
+        </div>` : `<div class="hidden sm:flex sm:w-2/5 shrink-0 items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5">
+          <span class="material-symbols-outlined text-5xl text-primary/30">fact_check</span>
+        </div>`}
+        <div class="flex-1 p-5 sm:p-7 min-w-0 flex flex-col">
+          <div class="flex items-start justify-between gap-4 mb-3">
+            <div class="flex items-center gap-1.5 text-primary text-xs font-bold">
+              <span class="material-symbols-outlined text-sm" style="font-variation-settings:'FILL' 1">verified</span>
+              Fact-Checked Claim
+            </div>
+            <div class="text-right shrink-0">
+              <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Trust Score</p>
+              <p class="text-2xl font-black ${scoreColor} leading-none">${item.score || 0}%</p>
+            </div>
+          </div>
+          <h2 class="font-display text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-snug mb-2">Claim: ${escHtml(item.title)}</h2>
+          <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-4 flex-1">${escHtml(item.description || '')}</p>
+          <div class="flex items-center justify-between gap-3 pt-4 border-t border-slate-100 dark:border-slate-800 flex-wrap">
+            <span class="text-xs text-slate-400 flex items-center gap-1">
+              <span class="material-symbols-outlined text-sm">link</span>
+              ${escHtml(src.label)}${item.date ? ' · ' + item.date : ''}
             </span>
-            <span class="ml-auto text-xs text-slate-400">${item.date || ''}</span>
+            ${sourceUrl ? `<a href="${escHtml(sourceUrl)}" target="_blank" class="text-xs font-bold text-primary border border-primary/30 px-3 py-1.5 rounded-lg hover:bg-primary/5 transition-colors flex items-center gap-1">
+              <span class="material-symbols-outlined text-sm">open_in_new</span>View Full Evidence Report
+            </a>` : ''}
           </div>
-          <p class="text-[10px] font-bold uppercase tracking-widest text-primary mb-1.5">Fact-Checked Claim</p>
-          <h2 class="font-display text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-snug mb-2">${escHtml(item.title)}</h2>
-          <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-4">${escHtml(item.description || '')}</p>
-          <div class="flex items-center gap-3 flex-wrap">
-            <div class="flex items-center gap-2">
-              <span class="text-xs text-slate-400 font-medium uppercase tracking-wide">Trust Score</span>
-              <span class="text-lg font-black ${scoreColor}">${item.score}%</span>
-            </div>
-            <div class="flex gap-2 ml-auto flex-wrap">
-              <span class="text-[10px] font-bold bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 px-2 py-1 rounded-lg">✓ ${item.yes}%</span>
-              <span class="text-[10px] font-bold bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 px-2 py-1 rounded-lg">~ ${item.partial}%</span>
-              <span class="text-[10px] font-bold bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 px-2 py-1 rounded-lg">✗ ${item.no}%</span>
-            </div>
-          </div>
-          ${item.claimSource ? `<p class="text-xs text-slate-400 mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">${escHtml(item.claimSource)}</p>` : ''}
         </div>
       </div>
     </div>`;
 
   // 커뮤니티 폴
   document.getElementById('cd-poll').innerHTML = `
-    <div class="bg-primary/5 border border-primary/20 rounded-xl p-5 mb-6">
-      <div class="flex items-center gap-2 mb-4">
-        <span class="material-symbols-outlined text-primary text-lg">how_to_vote</span>
+    <div class="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 mb-5">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-9 h-9 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
+          <span class="material-symbols-outlined text-primary text-lg">how_to_vote</span>
+        </div>
         <div>
-          <p class="font-bold text-slate-900 dark:text-white text-sm">Community Poll</p>
-          <p class="text-xs text-slate-500 dark:text-slate-400">Do you agree with this claim?</p>
+          <p class="font-bold text-slate-900 dark:text-white text-sm">Community Poll: Do you agree with this claim?</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Based on the provided evidence, what is your stance?</p>
         </div>
       </div>
       <div class="flex gap-3">
         <button onclick="voteCommunity('${item.id}','yes',this)" class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-primary text-white text-sm font-bold rounded-xl hover:bg-primary/90 transition-all shadow-md shadow-primary/20">
           <span class="material-symbols-outlined text-base">thumb_up</span>Yes, Verified
         </button>
-        <button onclick="voteCommunity('${item.id}','partial',this)" class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-400 text-sm font-bold rounded-xl hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-all">
-          <span class="material-symbols-outlined text-base">remove</span>Partially
-        </button>
-        <button onclick="voteCommunity('${item.id}','no',this)" class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-sm font-bold rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
-          <span class="material-symbols-outlined text-base">thumb_down</span>No
+        <button onclick="voteCommunity('${item.id}','no',this)" class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-sm font-bold rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-all">
+          <span class="material-symbols-outlined text-base">thumb_down</span>No, Skeptical
         </button>
       </div>
     </div>`;
