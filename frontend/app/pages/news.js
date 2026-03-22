@@ -178,7 +178,7 @@ function openAnnDiscussion(id) {
   db.collection('communityPosts').where('sourceId', '==', id).limit(1).get()
     .then(function(snap) {
       if (!snap.empty) {
-        openCommunityDetail(snap.docs[0].id);
+        _loadCommunityDetail(snap.docs[0].id);
       } else {
         var article = (state.newsData || []).find(function(a) { return a.id === id; });
         var postData = {
@@ -194,7 +194,7 @@ function openAnnDiscussion(id) {
           ts: firebase.firestore.FieldValue.serverTimestamp(),
         };
         db.collection('communityPosts').add(postData)
-          .then(function(ref) { openCommunityDetail(ref.id); })
+          .then(function(ref) { _loadCommunityDetail(ref.id); })
           .catch(function(e) { console.error('Discussion 생성 실패:', e); showToast('Discussion을 만들지 못했습니다.', 'error'); });
       }
     })

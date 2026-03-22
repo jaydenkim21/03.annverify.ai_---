@@ -249,18 +249,14 @@ function _showCommunityDetailSkeleton() {
   document.getElementById('cd-comment-count').textContent = '0';
 }
 
-function openCommunityDetail(id) {
-  // 즉시 페이지 이동 + 스켈레톤 표시
-  _showCommunityDetailSkeleton();
-  goPage('community-detail');
-
+// 데이터만 로드 (이미 community-detail로 이동된 경우)
+function _loadCommunityDetail(id) {
   db.collection('communityPosts').doc(id).get().then(function(snap) {
     if (!snap.exists) { showToast('게시글을 찾을 수 없습니다.', 'error'); return; }
     var item = _normPost(snap.id, snap.data());
     state.communityDetail = item;
     if (!state.communityComments) state.communityComments = {};
     renderCommunityDetail(item);
-    // 댓글 비동기 로드
     db.collection('communityPosts').doc(id).collection('comments')
       .orderBy('ts', 'desc').limit(50).get().then(function(cSnap) {
         state.communityComments[id] = cSnap.docs.map(function(d) {
@@ -274,6 +270,13 @@ function openCommunityDetail(id) {
   }).catch(function() {
     showToast('게시글을 불러오지 못했습니다.', 'error');
   });
+}
+
+// 커뮤니티 목록 카드 클릭 → 페이지 이동 + 데이터 로드
+function openCommunityDetail(id) {
+  _showCommunityDetailSkeleton();
+  goPage('community-detail');
+  _loadCommunityDetail(id);
 }
 
 function renderCommunityDetail(item) {
