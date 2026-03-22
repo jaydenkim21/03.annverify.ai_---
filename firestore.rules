@@ -40,6 +40,32 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(['grade','score','verdict_class','verifiedAt','verifiedCount']);
     }
 
+    // 커뮤니티 포스트 — 누구나 읽기, 로그인 사용자 생성, 지정 필드만 업데이트
+    match /communityPosts/{postId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null
+        && request.resource.data.keys().hasOnly(['yesCount','partialCount','noCount','likeCount','commentCount']);
+
+      // 댓글 — 누구나 읽기, 로그인 사용자 생성, 본인만 수정/삭제
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if request.auth != null
+          && request.resource.data.uid == request.auth.uid;
+        allow update: if request.auth != null
+          && (resource.data.uid == request.auth.uid
+              || request.resource.data.keys().hasOnly(['likeCount','replies']));
+        allow delete: if request.auth != null
+          && resource.data.uid == request.auth.uid;
+      }
+
+      // 투표 — 누구나 읽기, 본인 문서만 쓰기
+      match /votes/{uid} {
+        allow read: if true;
+        allow write: if request.auth != null && request.auth.uid == uid;
+      }
+    }
+
     // Partner News 좋아요 — 누구나 읽기, 로그인 사용자만 쓰기
     match /partnerLikes/{docId} {
       allow read: if true;
