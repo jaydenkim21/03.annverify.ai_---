@@ -139,12 +139,36 @@ function setCommunityTab(tab) {
   renderCommunity(tab);
 }
 
+var _COMM_GRADS = [
+  'from-violet-600 to-blue-500',
+  'from-fuchsia-600 to-violet-500',
+  'from-blue-600 to-cyan-500',
+  'from-rose-500 to-pink-600',
+  'from-indigo-600 to-violet-500',
+  'from-teal-500 to-cyan-600',
+];
+function _commGrad(id) {
+  var n = 0; for (var i = 0; i < id.length; i++) n += id.charCodeAt(i);
+  return _COMM_GRADS[n % _COMM_GRADS.length];
+}
+function _commTypePill(source) {
+  if (source === 'ainews')  return '<span class="bg-violet-600/80 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full">AI</span>';
+  if (source === 'partner') return '<span class="bg-emerald-600/80 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full">PN</span>';
+  return '<span class="bg-slate-600/80 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full">User</span>';
+}
+function _commGradeHtml(grade, score) {
+  if (!grade && !score) return '';
+  var g = grade || '';
+  var cls = g.startsWith('A') ? 'bg-emerald-500' : g.startsWith('B') ? 'bg-blue-500' : g === 'C' ? 'bg-amber-500' : 'bg-slate-400';
+  var label = g ? 'VERIFIED · ' + g : (score ? score + '/100' : '');
+  return '<span class="' + cls + ' text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:10px">verified</span>' + label + '</span>';
+}
+
 function renderCommunity(tab) {
   var items = state.communityData || [];
   if      (tab === 'user')    items = items.filter(i => i.source === 'user');
   else if (tab === 'ainews')  items = items.filter(i => i.source === 'ainews');
   else if (tab === 'partner') items = items.filter(i => i.source === 'partner');
-  // 'all' : 필터 없음
   items = sortCommunityItems(items);
 
   var emptyMsg = {
@@ -153,39 +177,57 @@ function renderCommunity(tab) {
     partner: 'No Partner News fact-checks available.',
     all:     'No discussions found.',
   };
-  var scoreColor = s => s >= 80 ? 'text-emerald-600' : s >= 60 ? 'text-blue-600' : s >= 40 ? 'text-amber-600' : 'text-red-600';
+
   document.getElementById('community-grid').innerHTML = items.length
-    ? items.map(item => `
-      <article onclick="openCommunityDetail('${item.id}')" class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-6 news-card cursor-pointer hover:border-primary/40 hover:shadow-xl transition-all">
-        <div class="flex items-start justify-between gap-3 mb-4">
-          <span class="text-[10px] font-bold uppercase tracking-widest text-primary bg-primary/10 px-2.5 py-1 rounded-full">${item.tag}</span>
-          <span class="text-lg font-black ${scoreColor(item.score)}">${item.score}</span>
+    ? items.map(item => {
+        var badge  = SOURCE_BADGE[item.source] || SOURCE_BADGE.user;
+        var grad   = _commGrad(item.id);
+        var avatar = _avatarHtml(item.photoURL || '', (item.displayName || 'A')[0].toUpperCase(), 'bg-primary', 'w-9 h-9');
+        return `
+      <article onclick="openCommunityDetail('${item.id}')" class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden news-card cursor-pointer hover:border-primary/40 hover:shadow-xl transition-all flex flex-col">
+        <!-- Thumbnail -->
+        <div class="relative h-44 bg-gradient-to-br ${grad} overflow-hidden shrink-0">
+          ${item.image ? `<img src="${escHtml(item.image)}" alt="" class="absolute inset-0 w-full h-full object-cover" onerror="this.style.display='none'">` : ''}
+          <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
+          <!-- Grade badge top-left -->
+          <div class="absolute top-2.5 left-2.5">${_commGradeHtml(item.grade || '', item.score || 0)}</div>
+          <!-- Avatar top-right -->
+          <div class="absolute top-2.5 right-2.5">${avatar}</div>
+          <!-- Source badge bottom-left -->
+          <div class="absolute bottom-2.5 left-2.5">
+            <span class="bg-black/40 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+              <span class="material-symbols-outlined" style="font-size:11px">${badge.icon}</span>${badge.label}
+            </span>
+          </div>
+          <!-- Type pill bottom-right -->
+          <div class="absolute bottom-2.5 right-2.5">${_commTypePill(item.source)}</div>
         </div>
-        <h3 class="font-display font-bold text-slate-900 dark:text-white leading-snug mb-5">${escHtml(item.title)}</h3>
-        <div class="flex gap-2 mb-5">
-          <div class="flex-1 py-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 text-xs font-bold text-center">
-            ✓ Yes Verified <span class="font-normal opacity-70">${item.yes}%</span>
+        <!-- Content -->
+        <div class="p-5 flex flex-col flex-1">
+          <div class="flex items-center gap-2 mb-2.5 flex-wrap">
+            <span class="text-[10px] font-bold uppercase tracking-widest text-primary bg-primary/10 px-2.5 py-1 rounded-full">${escHtml(item.tag || 'General')}</span>
+            ${item.date ? `<span class="text-[10px] text-slate-400 ml-auto">${item.date}</span>` : ''}
           </div>
-          <div class="flex-1 py-2.5 rounded-xl bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 text-xs font-bold text-center">
-            ~ Partial <span class="font-normal opacity-70">${item.partial}%</span>
-          </div>
-          <div class="flex-1 py-2.5 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 text-xs font-bold text-center">
-            ✗ No <span class="font-normal opacity-70">${item.no}%</span>
+          <h3 class="font-display font-bold text-slate-900 dark:text-white leading-snug mb-2 line-clamp-2">${escHtml(item.title)}</h3>
+          ${item.description ? `<p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-3">${escHtml(item.description)}</p>` : '<div class="flex-1"></div>'}
+          <!-- Bottom bar -->
+          <div class="flex items-center justify-between pt-3 mt-auto border-t border-slate-100 dark:border-slate-800">
+            <div class="flex items-center gap-3 text-slate-400">
+              <span class="flex items-center gap-1 text-xs"><span class="material-symbols-outlined text-sm">favorite_border</span>${item.likes || 0}</span>
+              <span class="flex items-center gap-1 text-xs"><span class="material-symbols-outlined text-sm">bookmark_border</span>0</span>
+              <span class="flex items-center gap-1 text-xs"><span class="material-symbols-outlined text-sm">comment</span>${item.comments || 0}</span>
+            </div>
+            <div class="flex items-center gap-1 text-slate-400">
+              <button class="p-1 hover:text-primary transition-colors" onclick="event.stopPropagation();if(navigator.share)navigator.share({title:'${escHtml(item.title).replace(/'/g,"\\'")}',url:location.href})">
+                <span class="material-symbols-outlined text-sm">share</span>
+              </button>
+              ${item.sourceUrl ? `<a href="${escHtml(item.sourceUrl)}" target="_blank" onclick="event.stopPropagation()" class="p-1 hover:text-primary transition-colors"><span class="material-symbols-outlined text-sm">open_in_new</span></a>` : ''}
+            </div>
           </div>
         </div>
-        <div class="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
-          <span class="${SOURCE_BADGE[item.source].cls} text-xs font-bold flex items-center gap-1 px-2.5 py-1 rounded-full">
-            <span class="material-symbols-outlined text-sm">${SOURCE_BADGE[item.source].icon}</span>
-            ${SOURCE_BADGE[item.source].label}
-          </span>
-          <div class="flex items-center gap-3 text-slate-400">
-            <span class="flex items-center gap-1 text-xs"><span class="material-symbols-outlined text-sm">favorite_border</span>${item.likes || 0}</span>
-            <span class="flex items-center gap-1 text-xs"><span class="material-symbols-outlined text-sm">comment</span>${item.comments || 0}</span>
-            <span class="text-xs">${item.date}</span>
-          </div>
-        </div>
-      </article>`).join('')
-    : `<div class="col-span-2 py-16 text-center text-slate-400">
+      </article>`;
+      }).join('')
+    : `<div class="col-span-3 py-16 text-center text-slate-400">
         <span class="material-symbols-outlined text-4xl mb-3 block">forum</span>
         <p class="mb-4">${emptyMsg[tab] || emptyMsg.all}</p>
         <button onclick="goPage('home')" class="px-6 py-2.5 bg-primary text-white rounded-xl font-bold text-sm">Start Verifying</button>

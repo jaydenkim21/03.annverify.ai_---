@@ -607,9 +607,11 @@ function openPartnerDiscussion(url, title, articleData) {
         var postData = {
           sourceId: h, sourceType: 'partner', sourceUrl: url,
           title: title || art.title || '',
-          description: art.summary || '',
+          description: art.summary || art.excerpt || '',
           image: art.thumb || '',
           tag: art.category || 'News',
+          score: art.score || 0,
+          grade: art.grade || art.trust_grade || '',
           source: 'partner',
           yesCount: 0, partialCount: 0, noCount: 0,
           likeCount: 0, commentCount: 0,

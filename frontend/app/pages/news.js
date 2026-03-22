@@ -182,6 +182,8 @@ function openAnnDiscussion(id) {
           description: article ? (article.excerpt || article.summary || '') : '',
           image:       article ? (article.thumb   || '') : '',
           tag:         article ? (article.category || article.cat || 'News') : 'News',
+          score:       article ? (article.trust_score || article.score || 0) : 0,
+          grade:       article ? (article.trust_grade || article.grade || '') : '',
           source: 'ainews',
           yesCount: 0, partialCount: 0, noCount: 0, likeCount: 0, commentCount: 0,
           ts: firebase.firestore.FieldValue.serverTimestamp(),
