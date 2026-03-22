@@ -168,11 +168,13 @@ function toggleAnnBookmark(id) {
 // ── Discussion 이동 (없으면 자동 생성) ──────────────────────────────────
 function openAnnDiscussion(id) {
   if (!id) return;
-  db.collection('communityPosts').where('sourceId', '==', id).where('sourceType', '==', 'ainews').limit(1).get()
+  db.collection('communityPosts').where('sourceId', '==', id).limit(1).get()
     .then(function(snap) {
       if (!snap.empty) {
         openCommunityDetail(snap.docs[0].id);
       } else {
+        var user = auth && auth.currentUser;
+        if (!user) { showToast('로그인 후 Discussion을 시작할 수 있습니다.', 'info'); return; }
         var article = (state.newsData || []).find(function(a) { return a.id === id; });
         var postData = {
           sourceId: id, sourceType: 'ainews',
@@ -186,10 +188,10 @@ function openAnnDiscussion(id) {
         };
         db.collection('communityPosts').add(postData)
           .then(function(ref) { openCommunityDetail(ref.id); })
-          .catch(function() { showToast('Discussion을 불러오지 못했습니다.', 'error'); });
+          .catch(function(e) { console.error('Discussion 생성 실패:', e); showToast('Discussion을 만들지 못했습니다.', 'error'); });
       }
     })
-    .catch(function() { showToast('Discussion을 불러오지 못했습니다.', 'error'); });
+    .catch(function(e) { console.error('Discussion 조회 실패:', e); showToast('Discussion을 불러오지 못했습니다.', 'error'); });
 }
 
 function openAnnDiscussionDetail() {
