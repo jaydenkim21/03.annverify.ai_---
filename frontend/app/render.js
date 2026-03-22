@@ -359,18 +359,37 @@ function renderPartnerReport(r) {
       localStorage.setItem('pn_verified_full', JSON.stringify(full));
     } catch (_) {}
 
+    // 팩트체크 히스토리 누적 저장
+    var historyEntry = { grade: saved.grade, score: saved.score, verdict_class: saved.verdict_class, verifiedAt: saved.verifiedAt };
+    try {
+      var histKey = 'pn_history_' + _pnHash(art.url);
+      var hist = JSON.parse(localStorage.getItem(histKey) || '[]');
+      hist.unshift(historyEntry); // 최신 항목을 앞에 추가
+      if (hist.length > 20) hist = hist.slice(0, 20); // 최대 20개 보관
+      localStorage.setItem(histKey, JSON.stringify(hist));
+      if (!state.verifiedHistory) state.verifiedHistory = {};
+      state.verifiedHistory[art.url] = hist;
+    } catch (_) {}
+
     // Firestore에 공유 저장 (다른 사용자도 VERIFIED 상태 볼 수 있도록)
     try {
       var urlHash = _pnHash(art.url);
-      // partnerVerified/_summary: 배지 맵 업데이트
+      // partnerVerified/_summary: 배지 맵 업데이트 + verifiedCount 증가
       var summaryUpdate = {};
       summaryUpdate[urlHash] = Object.assign({ url: art.url }, saved);
       db.collection('partnerVerified').doc('_summary').set(summaryUpdate, { merge: true }).catch(function() {});
-      // partnerVerified/{hash}: 전체 결과 저장
-      db.collection('partnerVerified').doc(urlHash).set({ url: art.url, fullResult: r, verifiedAt: saved.verifiedAt }).catch(function() {});
+      var cntKey = {}; cntKey[urlHash + '.verifiedCount'] = firebase.firestore.FieldValue.increment(1);
+      db.collection('partnerVerified').doc('_summary').update(cntKey).catch(function() {});
+      // partnerVerified/{hash}: 전체 결과 + 히스토리 저장
+      db.collection('partnerVerified').doc(urlHash).set({
+        url: art.url,
+        fullResult: r,
+        verifiedAt: saved.verifiedAt,
+        history: firebase.firestore.FieldValue.arrayUnion(historyEntry),
+      }, { merge: true }).catch(function() {});
     } catch (_) {}
 
-    // partnerNews 컬렉션 기사 문서에 등급 저장 (피드에서 즉시 배지 표시용)
+    // partnerNews 컬렉션 기사 문서에 등급 + 팩트체크 횟수 저장
     if (art._id) {
       try {
         db.collection('partnerNews').doc(art._id).update({
@@ -378,6 +397,7 @@ function renderPartnerReport(r) {
           score:         saved.score,
           verdict_class: saved.verdict_class,
           verifiedAt:    saved.verifiedAt,
+          verifiedCount: firebase.firestore.FieldValue.increment(1),
         }).catch(function() {});
       } catch (_) {}
     }
@@ -444,9 +464,9 @@ function renderPartnerReport(r) {
   claims.slice(0, 4).forEach(function(c, i) {
     var isEven = i % 2 === 1;
     if (isEven) {
-      bodyHtml += '<p class="relative">'
-        + '<span class="absolute -top-1 right-0 px-1.5 py-0.5 bg-emerald-500 text-white text-[9px] font-bold rounded uppercase">Evidence</span>'
+      bodyHtml += '<p class="flex flex-wrap items-baseline gap-2">'
         + '<span class="border-b-2 border-emerald-400">' + escHtml(c.sentence || '') + '</span>'
+        + '<span class="inline-flex shrink-0 px-1.5 py-0.5 bg-emerald-500 text-white text-[9px] font-bold rounded uppercase leading-none self-center">Evidence</span>'
         + '</p>';
     } else {
       bodyHtml += '<p>' + escHtml(c.sentence || '') + '</p>';
@@ -590,4 +610,60 @@ function renderPartnerReport(r) {
 
   evEl.innerHTML = eHtml;
   evEl.classList.remove('hidden');
+
+  // ── 팩트체크 히스토리 렌더링 ──────────────────────────────────────────
+  var histEl     = document.getElementById('pnr-history');
+  var histListEl = document.getElementById('pnr-history-list');
+  if (histEl && histListEl && art.url) {
+    var verdictLabels = { verified:'VERIFIED', likely:'LIKELY TRUE', partial:'PARTIAL', misleading:'MISLEADING', false:'FALSE' };
+    var verdictColors = { verified:'text-emerald-600', likely:'text-blue-600', partial:'text-amber-600', misleading:'text-orange-600', false:'text-red-600' };
+
+    // 메모리 캐시 → localStorage 순으로 히스토리 로드
+    var histData = (state.verifiedHistory && state.verifiedHistory[art.url]) || [];
+    if (!histData.length) {
+      try {
+        histData = JSON.parse(localStorage.getItem('pn_history_' + _pnHash(art.url)) || '[]');
+      } catch (_) {}
+    }
+
+    if (histData.length) {
+      histListEl.innerHTML = histData.map(function(h, i) {
+        var vc    = (h.verdict_class || 'likely').toLowerCase();
+        var label = verdictLabels[vc] || vc.toUpperCase();
+        var color = verdictColors[vc] || 'text-slate-600';
+        var d     = new Date(h.verifiedAt);
+        var dateStr = d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+        var timeStr = d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+        var isLatest = i === 0;
+        return '<div class="flex items-center justify-between gap-2 py-2' + (i > 0 ? ' border-t border-slate-100 dark:border-slate-800' : '') + '">'
+          + '<div class="flex items-center gap-2 min-w-0">'
+          + (isLatest ? '<span class="material-symbols-outlined text-primary shrink-0" style="font-size:14px">radio_button_checked</span>'
+                      : '<span class="material-symbols-outlined text-slate-300 shrink-0" style="font-size:14px">radio_button_unchecked</span>')
+          + '<div class="min-w-0">'
+          + '<p class="text-xs text-slate-500">' + dateStr + ' · ' + timeStr + '</p>'
+          + '<p class="text-xs font-bold ' + color + '">' + label + (h.grade ? ' · ' + h.grade : '') + '</p>'
+          + '</div></div>'
+          + '<span class="text-xs font-black text-slate-400 shrink-0">' + (h.score != null ? h.score + '%' : '') + '</span>'
+          + '</div>';
+      }).join('');
+      histEl.classList.remove('hidden');
+    } else {
+      histEl.classList.add('hidden');
+    }
+  }
+
+  // ── 피드 카드 배지 즉시 업데이트 (UNVERIFIED → VERIFIED) ──────────────
+  if (art.url) {
+    var card = document.querySelector('[data-pn-url="' + art.url.replace(/"/g, '\\"') + '"]');
+    if (card) {
+      var savedGrade = (state.verifiedArticles && state.verifiedArticles[art.url] && state.verifiedArticles[art.url].grade) || r.overall_grade || '';
+      var newBadge = '<div class="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-emerald-500 text-white text-[10px] font-black shadow-md uppercase tracking-wide flex items-center gap-1">'
+        + '<span class="material-symbols-outlined" style="font-size:11px">verified</span>VERIFIED'
+        + (savedGrade ? ' · ' + savedGrade : '')
+        + '</div>';
+      var oldBadge = card.querySelector('.absolute.top-3.right-3');
+      if (oldBadge) oldBadge.outerHTML = newBadge;
+      card.setAttribute('data-pn-verified', '1');
+    }
+  }
 }

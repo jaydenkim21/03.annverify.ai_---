@@ -172,6 +172,7 @@ function loadPartner() {
 
       renderPartners();
       renderPartnerArticles();
+      _fetchFirestoreLikes();
     })
     .catch(function() {
       document.getElementById('partner-articles').innerHTML =
@@ -376,13 +377,25 @@ function togglePartnerLike(url) {
   var h     = _pnHash(url);
   var liked = _isLiked(url);
   var count = _getLikeCount(url);
+  var uid   = (typeof firebase !== 'undefined' && firebase.auth().currentUser)
+              ? firebase.auth().currentUser.uid : null;
 
   if (liked) {
     count = Math.max(0, count - 1);
     localStorage.removeItem('pn_ld_' + h);
+    try {
+      var undoUpdate = { likeCount: firebase.firestore.FieldValue.increment(-1) };
+      if (uid) undoUpdate.likedBy = firebase.firestore.FieldValue.arrayRemove(uid);
+      db.collection('partnerLikes').doc(h).set(undoUpdate, { merge: true }).catch(function() {});
+    } catch (_) {}
   } else {
     count = count + 1;
     localStorage.setItem('pn_ld_' + h, '1');
+    try {
+      var addUpdate = { likeCount: firebase.firestore.FieldValue.increment(1) };
+      if (uid) addUpdate.likedBy = firebase.firestore.FieldValue.arrayUnion(uid);
+      db.collection('partnerLikes').doc(h).set(addUpdate, { merge: true }).catch(function() {});
+    } catch (_) {}
   }
   localStorage.setItem('pn_lc_' + h, count);
 
@@ -396,6 +409,47 @@ function togglePartnerLike(url) {
     var countEl = document.getElementById('pn-lc-' + h);
     if (countEl) countEl.textContent = count;
   }
+}
+
+// ── Firestore에서 Like/Comment 수 로드 ──────────────────────────────
+function _fetchFirestoreLikes() {
+  var uid = (typeof firebase !== 'undefined' && firebase.auth().currentUser)
+            ? firebase.auth().currentUser.uid : null;
+  (state.partnerArticles || []).forEach(function(a) {
+    if (!a.url) return;
+    var h = _pnHash(a.url);
+    // Like 수 로드
+    try {
+      db.collection('partnerLikes').doc(h).get().then(function(snap) {
+        if (!snap.exists) return;
+        var data  = snap.data();
+        var count = data.likeCount || 0;
+        localStorage.setItem('pn_lc_' + h, count);
+        var countEl = document.getElementById('pn-lc-' + h);
+        if (countEl) countEl.textContent = count;
+        // 로그인 사용자가 좋아요 눌렀는지 Firestore 기준으로 동기화
+        if (uid && data.likedBy && data.likedBy.indexOf(uid) !== -1) {
+          localStorage.setItem('pn_ld_' + h, '1');
+          var btn = document.getElementById('pn-like-' + h);
+          if (btn) {
+            btn.className = 'pn-like flex items-center gap-1.5 text-sm transition-colors text-rose-500';
+            var icon = btn.querySelector('.material-symbols-outlined');
+            if (icon) icon.style.fontVariationSettings = "'FILL' 1";
+          }
+        }
+      }).catch(function() {});
+    } catch (_) {}
+    // Comment 수 로드
+    try {
+      db.collection('partnerComments').doc(h).get().then(function(snap) {
+        if (!snap.exists) return;
+        var cmtCount = (snap.data().commentCount) || 0;
+        localStorage.setItem('pn_cc_' + h, cmtCount);
+        var cmtEl = document.getElementById('pn-cc-' + h);
+        if (cmtEl) cmtEl.textContent = cmtCount;
+      }).catch(function() {});
+    } catch (_) {}
+  });
 }
 
 // ── 공유 (버튼 엘리먼트를 직접 받음) ─────────────────────────────────
@@ -458,6 +512,14 @@ function sharePartnerArticle(url, title, btnEl) {
 
 // ── ANN Verify → 팩트체크 or 저장된 리포트 즉시 표시 ──────────────────
 // isVerified: 카드 DOM의 data-pn-verified="1" 기준 (state 로딩 race condition 방지)
+var _PN_REFRESH_MS = 12 * 60 * 60 * 1000; // 12시간
+
+function _isPnExpired(url) {
+  var cached = state.verifiedArticles && state.verifiedArticles[url];
+  if (!cached || !cached.verifiedAt) return false;
+  return (Date.now() - new Date(cached.verifiedAt).getTime()) > _PN_REFRESH_MS;
+}
+
 function annVerifyPartner(title, url, isVerified) {
   state.reportFrom = 'partner';
   state.partnerArticleData = (state.partnerArticles || []).find(function(a) {
@@ -467,6 +529,14 @@ function annVerifyPartner(title, url, isVerified) {
   // 기사 언어 감지 (팩트체크 결과 언어 결정)
   var art0 = state.partnerArticleData;
   state.partnerArticleLang = _detectLang((art0.title || '') + ' ' + (art0.summary || ''));
+
+  // 12시간 경과 시 캐시 무효화 → 강제 재팩트체크
+  if (_isPnExpired(url)) {
+    if (state.verifiedFull) delete state.verifiedFull[url];
+    showToast('12시간이 경과하여 최신 팩트체크를 진행합니다.', 'info');
+    _runVerifyAPI(url, title);
+    return;
+  }
 
   // ① 메모리 캐시에 전체 결과 있으면 즉시 표시 (언어 일치 시에만)
   var cachedFull = state.verifiedFull && state.verifiedFull[url];
@@ -495,6 +565,15 @@ function annVerifyPartner(title, url, isVerified) {
           if (snap.data().verifiedAt && !(state.verifiedArticles && state.verifiedArticles[url])) {
             if (!state.verifiedArticles) state.verifiedArticles = {};
             state.verifiedArticles[url] = { verifiedAt: snap.data().verifiedAt };
+          }
+          // Firestore history 로드 → state + localStorage 동기화
+          if (snap.data().history && snap.data().history.length) {
+            var fsHist = snap.data().history.slice().sort(function(a, b) {
+              return new Date(b.verifiedAt) - new Date(a.verifiedAt);
+            });
+            if (!state.verifiedHistory) state.verifiedHistory = {};
+            state.verifiedHistory[url] = fsHist;
+            try { localStorage.setItem('pn_history_' + _pnHash(url), JSON.stringify(fsHist)); } catch (_) {}
           }
           state.lastResult = full;
           state.lastInput  = url || title;
