@@ -168,13 +168,18 @@ function toggleAnnBookmark(id) {
 // ── Discussion 이동 (없으면 자동 생성) ──────────────────────────────────
 function openAnnDiscussion(id) {
   if (!id) return;
+  var user = auth && auth.currentUser;
+  if (!user) { showToast('로그인 후 Discussion을 시작할 수 있습니다.', 'info'); return; }
+
+  // 즉시 community-detail로 이동 + 스켈레톤 표시
+  if (typeof _showCommunityDetailSkeleton === 'function') _showCommunityDetailSkeleton();
+  goPage('community-detail');
+
   db.collection('communityPosts').where('sourceId', '==', id).limit(1).get()
     .then(function(snap) {
       if (!snap.empty) {
         openCommunityDetail(snap.docs[0].id);
       } else {
-        var user = auth && auth.currentUser;
-        if (!user) { showToast('로그인 후 Discussion을 시작할 수 있습니다.', 'info'); return; }
         var article = (state.newsData || []).find(function(a) { return a.id === id; });
         var postData = {
           sourceId: id, sourceType: 'ainews',

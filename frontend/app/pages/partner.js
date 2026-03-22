@@ -599,14 +599,19 @@ function togglePartnerBookmark(url) {
 
 // ── Discussion 이동 (없으면 자동 생성) ──────────────────────────────────
 function openPartnerDiscussion(url, title, articleData) {
+  var user = auth && auth.currentUser;
+  if (!user) { showToast('로그인 후 Discussion을 시작할 수 있습니다.', 'info'); return; }
+
+  // 즉시 community-detail로 이동 + 스켈레톤 표시
+  if (typeof _showCommunityDetailSkeleton === 'function') _showCommunityDetailSkeleton();
+  goPage('community-detail');
+
   var h = _pnHash(url);
   db.collection('communityPosts').where('sourceId', '==', h).limit(1).get()
     .then(function(snap) {
       if (!snap.empty) {
         openCommunityDetail(snap.docs[0].id);
       } else {
-        var user = auth && auth.currentUser;
-        if (!user) { showToast('로그인 후 Discussion을 시작할 수 있습니다.', 'info'); return; }
         var art = articleData || {};
         var postData = {
           sourceId: h, sourceType: 'partner', sourceUrl: url,

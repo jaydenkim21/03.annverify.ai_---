@@ -235,24 +235,41 @@ function renderCommunity(tab) {
 }
 
 // ── 디테일 페이지 ─────────────────────────────────────────────────────
+function _showCommunityDetailSkeleton() {
+  document.getElementById('cd-claim-card').innerHTML =
+    '<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 mb-6 p-6 animate-pulse">' +
+      '<div class="h-4 bg-slate-200 dark:bg-slate-700 rounded w-1/4 mb-3"></div>' +
+      '<div class="h-6 bg-slate-200 dark:bg-slate-700 rounded w-3/4 mb-2"></div>' +
+      '<div class="h-4 bg-slate-200 dark:bg-slate-700 rounded w-full mb-1"></div>' +
+      '<div class="h-4 bg-slate-200 dark:bg-slate-700 rounded w-2/3"></div>' +
+    '</div>';
+  document.getElementById('cd-poll').innerHTML = '';
+  document.getElementById('cd-comments-list').innerHTML =
+    '<div class="py-8 text-center text-slate-400 text-sm animate-pulse">댓글을 불러오는 중...</div>';
+  document.getElementById('cd-comment-count').textContent = '0';
+}
+
 function openCommunityDetail(id) {
+  // 즉시 페이지 이동 + 스켈레톤 표시
+  _showCommunityDetailSkeleton();
+  goPage('community-detail');
+
   db.collection('communityPosts').doc(id).get().then(function(snap) {
-    if (!snap.exists) return;
+    if (!snap.exists) { showToast('게시글을 찾을 수 없습니다.', 'error'); return; }
     var item = _normPost(snap.id, snap.data());
     state.communityDetail = item;
     if (!state.communityComments) state.communityComments = {};
-    // Firestore에서 댓글 로드
+    renderCommunityDetail(item);
+    // 댓글 비동기 로드
     db.collection('communityPosts').doc(id).collection('comments')
       .orderBy('ts', 'desc').limit(50).get().then(function(cSnap) {
         state.communityComments[id] = cSnap.docs.map(function(d) {
           return _normComment(d.id, d.data());
         });
-        renderCommunityDetail(item);
-        goPage('community-detail');
+        renderCommunityComments(id);
       }).catch(function() {
         state.communityComments[id] = [];
-        renderCommunityDetail(item);
-        goPage('community-detail');
+        renderCommunityComments(id);
       });
   }).catch(function() {
     showToast('게시글을 불러오지 못했습니다.', 'error');
