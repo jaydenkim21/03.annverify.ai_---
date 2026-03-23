@@ -108,18 +108,26 @@ function sortCommunityItems(items) {
 // AI News 데이터 미로드 시 직접 fetch (Community 탭 자체 프리페치용)
 function _prefetchNewsData() {
   if (state.newsData && state.newsData.length) return Promise.resolve();
+
+  var _fetchFromApi = function() {
+    return fetch(API_URL + '/api/v4/news/feed')
+      .then(function(res) { return res.ok ? res.json() : { articles: [] }; })
+      .then(function(data) { state.newsData = data.articles || []; })
+      .catch(function() { state.newsData = []; });
+  };
+
   return db.collection('aiNews').orderBy('deployedAt', 'desc').limit(60).get()
     .then(function(snap) {
       state.newsData = snap.docs.map(function(d) {
         return Object.assign({ id: d.id }, d.data());
       });
-      if (state.newsData.length === 0) {
-        return fetch(API_URL + '/api/v4/news/feed')
-          .then(function(res) { return res.ok ? res.json() : { articles: [] }; })
-          .then(function(data) { state.newsData = data.articles || []; });
-      }
+      // Firestore 성공이지만 결과 없으면 API 폴백
+      if (state.newsData.length === 0) return _fetchFromApi();
     })
-    .catch(function() { if (!state.newsData) state.newsData = []; });
+    .catch(function() {
+      // Firestore 실패(권한 등) → API 폴백
+      return _fetchFromApi();
+    });
 }
 
 // Partner News 데이터 미로드 시 직접 fetch (Community 탭 자체 프리페치용)
