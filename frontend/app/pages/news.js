@@ -353,6 +353,10 @@ function renderNews() {
         ${n.thumb
           ? `<img src="${escHtml(n.thumb)}" alt="" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" onerror="this.style.display='none'"/>`
           : ''}
+        <!-- ANN 심볼 -->
+        <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <img src="/assets/ann-logo-symbol.svg" alt="ANN" class="w-28 h-28 opacity-20 drop-shadow-xl">
+        </div>
         <div class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all flex items-center justify-center">
           <div class="w-14 h-14 rounded-full bg-white/0 group-hover:bg-white/90 transition-all flex items-center justify-center scale-75 group-hover:scale-100">
             <span class="material-symbols-outlined text-primary opacity-0 group-hover:opacity-100 transition-opacity text-2xl">article</span>

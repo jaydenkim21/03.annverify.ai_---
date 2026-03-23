@@ -320,9 +320,14 @@ function renderPartnerArticles(items) {
       ? '<span class="inline-flex self-start mb-2 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ' + catCls + '">' + escHtml(a.category) + '</span>'
       : '';
 
-    var thumbHtml = a.thumb
-      ? '<img src="' + escHtml(a.thumb) + '" alt="" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" onerror="this.style.display=\'none\'"/>'
-      : '';
+    // 기사 이미지 대신 매체사 로고 표시
+    var iconLetter = escHtml(a.icon || (a.source || '?').charAt(0).toUpperCase());
+    var sourceName = escHtml(a.source || '');
+    var thumbHtml =
+      '<div class="absolute inset-0 flex flex-col items-center justify-center gap-2 pointer-events-none">' +
+        '<div class="w-16 h-16 rounded-2xl bg-white/25 backdrop-blur-sm border border-white/40 flex items-center justify-center text-white font-black text-3xl shadow-lg">' + iconLetter + '</div>' +
+        '<span class="text-white font-bold text-sm tracking-wide drop-shadow">' + sourceName + '</span>' +
+      '</div>';
 
     var timeHtml = time
       ? '<div class="absolute bottom-3 right-3 text-white/70 text-[10px]">' + time + '</div>'
