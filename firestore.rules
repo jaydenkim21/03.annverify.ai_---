@@ -33,11 +33,13 @@ service cloud.firestore {
       allow write: if request.auth != null;
     }
 
-    // Partner News 기사 — 누구나 읽기, 로그인 사용자는 지정 필드만 업데이트 허용
+    // Partner News 기사 — 누구나 읽기, 로그인 사용자 생성/지정 필드 업데이트 허용
     match /partnerNews/{docId} {
       allow read: if true;
+      allow create: if request.auth != null;
       allow update: if request.auth != null
-        && request.resource.data.keys().hasOnly(['grade','score','verdict_class','verifiedAt','verifiedCount']);
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['grade','score','verdict_class','verifiedAt','verifiedCount','title','excerpt','thumb','category','source_label','url','publishedAt','partnerId']);
     }
 
     // 커뮤니티 포스트 — 누구나 읽기, 로그인 사용자 생성, 지정 필드만 업데이트
@@ -90,19 +92,5 @@ service cloud.firestore {
       allow write: if request.auth != null;
     }
 
-    // Partner News 댓글 메타 (commentCount) — 누구나 읽기, 로그인 사용자만 쓰기
-    match /partnerComments/{docId} {
-      allow read: if true;
-      allow write: if request.auth != null;
-
-      // 댓글 개별 문서 — 누구나 읽기, 본인만 쓰기/삭제
-      match /comments/{commentId} {
-        allow read: if true;
-        allow create: if request.auth != null
-          && request.resource.data.uid == request.auth.uid;
-        allow delete: if request.auth != null
-          && resource.data.uid == request.auth.uid;
-      }
-    }
   }
 }

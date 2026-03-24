@@ -256,6 +256,7 @@ function _setupNewsEvents() {
     if (e.target.closest('.ann-like'))     { e.stopPropagation(); toggleAnnLike(id);     return; }
     if (e.target.closest('.ann-bookmark')) { e.stopPropagation(); toggleAnnBookmark(id); return; }
     if (e.target.closest('.ann-discuss'))  { e.stopPropagation(); openAnnDiscussion(id); return; }
+    if (e.target.closest('.ann-comment'))  { e.stopPropagation(); openAnnDiscussion(id); return; }
     if (e.target.closest('.ann-share')) {
       e.stopPropagation();
       var article = (state.newsData || []).find(function(a) { return a.id === id; });
@@ -341,11 +342,11 @@ function renderNews() {
     var bmCount    = _capCountAnn(_getAnnBookmarkCount(safeId));
     var dcCount    = _capCountAnn(_getAnnDiscussCount(safeId));
 
-    var gradeFilledBg = !grade ? 'bg-slate-400'
-      : grade.startsWith('A') ? 'bg-emerald-500'
-      : grade.startsWith('B') ? 'bg-blue-500'
-      : grade === 'C'         ? 'bg-amber-500'
-      : 'bg-red-500';
+    var gradeColor = !grade ? '#94a3b8'
+      : grade.startsWith('A') ? '#10b981'
+      : grade.startsWith('B') ? '#3b82f6'
+      : grade === 'C'         ? '#f59e0b'
+      : '#ef4444';
 
     return `
     <article class="news-card bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col group hover:border-primary/30 hover:shadow-lg transition-all"
@@ -363,7 +364,7 @@ function renderNews() {
             ${verdictHtml}
           </div>
           <div class="flex flex-col items-center gap-0.5 shrink-0">
-            <div class="w-11 h-11 rounded-full flex items-center justify-center text-sm font-black text-white ${gradeFilledBg}">
+            <div class="w-11 h-11 rounded-full flex items-center justify-center text-sm font-black text-white" style="background-color:${gradeColor}">
               ${escHtml(grade || '?')}
             </div>
             <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">TRUST</span>
@@ -395,10 +396,16 @@ function renderNews() {
           <span class="material-symbols-outlined text-base" style="font-variation-settings:'FILL' ${bookmarked ? 1 : 0}">bookmark</span>
           <span id="ann-bmc-${safeId}">${bmCount}</span>
         </button>
+        <button class="ann-comment flex items-center gap-1 text-sm text-slate-400 hover:text-primary transition-colors">
+          <span class="material-symbols-outlined text-base">chat_bubble</span>
+          <span id="ann-dc-${safeId}">${dcCount}</span>
+        </button>
+        <button class="ann-share text-slate-400 hover:text-primary transition-colors" title="Share">
+          <span class="material-symbols-outlined text-base">share</span>
+        </button>
         <button class="ann-discuss ml-auto px-4 py-2 rounded-full bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-colors flex items-center gap-1.5">
           <span class="material-symbols-outlined text-sm">forum</span>
           Join Discuss
-          ${dcCount > 0 ? `<span id="ann-dc-${safeId}" class="bg-white/20 rounded-full px-1.5 text-[10px]">${dcCount}</span>` : `<span id="ann-dc-${safeId}" class="hidden">${dcCount}</span>`}
         </button>
       </div>
     </article>`;

@@ -119,6 +119,37 @@ function _setupPartnerEvents() {
   });
 }
 
+// ── Partner 기사 메타 Firestore 저장 (partnerNews 컬렉션) ────────────────
+function _savePartnerNewsToFirestore(articles) {
+  if (!articles || !articles.length) return;
+  var user = typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser;
+  if (!user) return; // 로그인 사용자만 저장
+  try {
+    var batch = db.batch();
+    var count = 0;
+    articles.forEach(function(a) {
+      if (!a.url || a._isTest) return; // 테스트 기사 제외
+      var docId = _pnHash(a.url).toString();
+      var ref = db.collection('partnerNews').doc(docId);
+      batch.set(ref, {
+        articleId:    docId,
+        title:        a.title        || '',
+        excerpt:      a.summary      || '',
+        thumb:        a.thumb        || '',
+        category:     a.category     || '',
+        source_label: a.source       || '',
+        partnerId:    a.partnerId    || '',
+        url:          a.url,
+        publishedAt:  a.pubDate      || '',
+        savedAt:      firebase.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+      count++;
+      if (count >= 20) return; // 배치 한도 제한
+    });
+    if (count > 0) batch.commit().catch(function() {});
+  } catch (_) {}
+}
+
 // ── Firestore _summary에서 verified 상태 가져오기 ──────────────────────
 function _fetchFirestoreVerified() {
   try {
@@ -186,6 +217,7 @@ function loadPartner() {
       renderPartners();
       renderPartnerArticles();
       _fetchFirestoreLikes();
+      _savePartnerNewsToFirestore(state.partnerArticles);
     })
     .catch(function() {
       document.getElementById('partner-articles').innerHTML =
