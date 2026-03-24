@@ -1353,16 +1353,79 @@
       </div>
     </div>
 
+    <!-- Activity History Graph -->
+    <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-6 sm:p-8 mb-6">
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+        <h3 class="font-display text-lg font-bold text-slate-900 dark:text-white">Activity History Graph</h3>
+        <div class="flex flex-wrap items-center gap-2">
+          <div class="flex items-center gap-1.5">
+            <label class="text-xs text-slate-500 font-semibold">Fact-Check</label>
+            <select id="ahg-source" onchange="renderActivityGraph()" class="text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 font-semibold text-slate-600 dark:text-slate-300 focus:outline-none">
+              <option value="all">All</option>
+              <option value="user">User</option>
+              <option value="ainews">AI News</option>
+              <option value="partner">Partner News</option>
+            </select>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <label class="text-xs text-slate-500 font-semibold">Period</label>
+            <select id="ahg-period" onchange="renderActivityGraph()" class="text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 font-semibold text-slate-600 dark:text-slate-300 focus:outline-none">
+              <option value="all">All</option>
+              <option value="1w">1 Week</option>
+              <option value="1m">1 Month</option>
+              <option value="3m">3 Months</option>
+              <option value="6m">6 Months</option>
+              <option value="1y">1 Year</option>
+            </select>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <label class="text-xs text-slate-500 font-semibold">Status</label>
+            <select id="ahg-status" onchange="renderActivityGraph()" class="text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 font-semibold text-slate-600 dark:text-slate-300 focus:outline-none">
+              <option value="all">All</option>
+              <option value="A">Grade A</option>
+              <option value="B">Grade B</option>
+              <option value="C">Grade C</option>
+              <option value="D">Grade D</option>
+            </select>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <label class="text-xs text-slate-500 font-semibold">Category</label>
+            <select id="ahg-category" onchange="renderActivityGraph()" class="text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 font-semibold text-slate-600 dark:text-slate-300 focus:outline-none">
+              <option value="all">All</option>
+              <option value="international">International</option>
+              <option value="politics">Politics</option>
+              <option value="economy">Economy</option>
+              <option value="science">Science</option>
+              <option value="health">Health</option>
+              <option value="social">Social</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <!-- 총 건수 표시 -->
+      <div class="mb-4 flex items-baseline gap-2">
+        <span id="ahg-total-label" class="text-2xl font-black text-slate-900 dark:text-white">0</span>
+        <span class="text-sm text-slate-400 font-medium">Total Verifications</span>
+      </div>
+      <!-- 막대 그래프 -->
+      <div id="ahg-container" class="w-full overflow-x-auto" style="min-height:200px"></div>
+    </div>
+
     <!-- 커뮤니티 활동 -->
     <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-6 sm:p-8">
       <h3 class="font-display text-lg font-bold text-slate-900 dark:text-white mb-6">Community Activity</h3>
 
-      <!-- 커뮤니티 통계 3개 -->
-      <div class="grid grid-cols-3 gap-4 mb-8">
+      <!-- 커뮤니티 통계 4개 -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
         <div class="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 flex flex-col items-center">
           <span class="material-symbols-outlined text-primary text-2xl mb-1">forum</span>
           <p class="text-2xl font-black text-slate-900 dark:text-white" id="stat-community-posts">0</p>
           <p class="text-xs text-slate-500 mt-1 text-center">Posts</p>
+        </div>
+        <div class="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 flex flex-col items-center">
+          <span class="material-symbols-outlined text-blue-500 text-2xl mb-1">chat_bubble</span>
+          <p class="text-2xl font-black text-slate-900 dark:text-white" id="stat-community-comments">0</p>
+          <p class="text-xs text-slate-500 mt-1 text-center">Comments</p>
         </div>
         <div class="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 flex flex-col items-center">
           <span class="material-symbols-outlined text-rose-500 text-2xl mb-1">favorite</span>
@@ -1596,15 +1659,15 @@
 <!-- ① Client Layer — 앱 코어 -->
 <script src="/app/config.js"></script>
 <script src="/app/utils.js"></script>
-<script src="/app/state.js?v=2"></script>
+<script src="/app/state.js?v=3"></script>
 <script src="/app/router.js?v=3"></script>
-<script src="/app/history.js"></script>
-<script src="/app/check.js?v=2"></script>
+<script src="/app/history.js?v=2"></script>
+<script src="/app/check.js?v=3"></script>
 <script src="/app/render.js?v=9"></script>
 
 <!-- ① Client Layer — 페이지별 스크립트 -->
-<script src="/app/pages/news.js?v=5"></script>
-<script src="/app/pages/partner.js?v=10"></script>
+<script src="/app/pages/news.js?v=6"></script>
+<script src="/app/pages/partner.js?v=11"></script>
 <script src="/app/pages/community.js?v=10"></script>
 
 <!-- 앱 초기화 -->
@@ -1783,7 +1846,8 @@ function renderProfilePage() {
 
   // 커뮤니티 활동
   const act = state.myActivity || { comments: [], likesGiven: 0, votes: [] };
-  document.getElementById('stat-community-posts').textContent = act.comments.length;
+  document.getElementById('stat-community-posts').textContent = 0;
+  document.getElementById('stat-community-comments').textContent = act.comments.length;
   document.getElementById('stat-community-likes').textContent = act.likesGiven;
   document.getElementById('stat-community-votes').textContent = act.votes.length;
 
@@ -1817,6 +1881,102 @@ function renderProfilePage() {
   } else {
     votesEl.innerHTML = '<p class="text-sm text-slate-400 text-center py-6">No votes cast yet.</p>';
   }
+
+  renderActivityGraph();
+}
+
+// ── Activity History Graph ────────────────────────────────────────────
+function renderActivityGraph() {
+  var container = document.getElementById('ahg-container');
+  var totalEl   = document.getElementById('ahg-total-label');
+  if (!container) return;
+
+  var source   = (document.getElementById('ahg-source')   || {}).value || 'all';
+  var period   = (document.getElementById('ahg-period')   || {}).value || 'all';
+  var status   = (document.getElementById('ahg-status')   || {}).value || 'all';
+  var category = (document.getElementById('ahg-category') || {}).value || 'all';
+
+  var now  = Date.now();
+  var periodMs = { '1w': 7, '1m': 30, '3m': 90, '6m': 180, '1y': 365 };
+
+  // 필터 적용
+  var items = (state.history || []).filter(function(h) {
+    if (source   !== 'all' && (h.sourceType || 'user') !== source) return false;
+    if (status   !== 'all' && !(h.grade || '').startsWith(status)) return false;
+    if (category !== 'all' && (h.category || '') !== category)     return false;
+    if (period   !== 'all') {
+      var days = periodMs[period];
+      if (h.ts < now - days * 86400000) return false;
+    }
+    return true;
+  });
+
+  if (totalEl) totalEl.textContent = items.length;
+
+  if (!items.length) {
+    container.innerHTML = '<div class="flex flex-col items-center justify-center py-16 text-slate-300 dark:text-slate-600">'
+      + '<span class="material-symbols-outlined text-5xl mb-3">bar_chart</span>'
+      + '<p class="text-sm">No verification data found.</p></div>';
+    return;
+  }
+
+  // 날짜 그룹 키 생성 함수
+  function _groupKey(ts) {
+    var d = new Date(ts);
+    if (period === '1w' || period === '1m') {
+      return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    }
+    if (period === '3m' || period === '6m') {
+      // 주 단위
+      var start = new Date(d); start.setDate(d.getDate() - d.getDay());
+      return start.getFullYear() + '-W' + String(Math.ceil((start.getDate())/7)).padStart(2,'0') + '-' + String(start.getMonth()+1).padStart(2,'0');
+    }
+    // 1년 / All → 월 단위
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+  }
+
+  // 그룹핑
+  var groups = {};
+  items.forEach(function(h) { var k = _groupKey(h.ts); groups[k] = (groups[k] || 0) + 1; });
+  var keys = Object.keys(groups).sort();
+  var vals = keys.map(function(k) { return groups[k]; });
+  var maxVal = Math.max.apply(null, vals) || 1;
+
+  // 라벨 포맷
+  function _label(k) {
+    if (k.indexOf('-W') > -1) { var p = k.split('-W'); return p[0].slice(2) + '/W' + p[1]; }
+    var parts = k.split('-');
+    if (parts.length === 3) return parts[1] + '/' + parts[2];
+    return parts[1] + '/' + parts[0].slice(2);
+  }
+
+  var barW   = Math.max(24, Math.min(60, Math.floor(560 / keys.length)));
+  var gap    = Math.max(4, Math.floor(barW * 0.3));
+  var height = 160;
+  var totalW = keys.length * (barW + gap);
+
+  var bars = keys.map(function(k, i) {
+    var v   = groups[k];
+    var bh  = Math.max(4, Math.round((v / maxVal) * height));
+    var x   = i * (barW + gap);
+    var y   = height - bh;
+    return '<g>'
+      + '<rect x="' + x + '" y="' + y + '" width="' + barW + '" height="' + bh + '" rx="4" fill="var(--color-primary, #3b82f6)" opacity="0.85"/>'
+      + '<text x="' + (x + barW/2) + '" y="' + (y - 5) + '" text-anchor="middle" font-size="10" fill="currentColor" class="text-slate-600">' + v + '</text>'
+      + '<text x="' + (x + barW/2) + '" y="' + (height + 16) + '" text-anchor="middle" font-size="9" fill="#94a3b8">' + _label(k) + '</text>'
+      + '</g>';
+  }).join('');
+
+  // Y축 가이드라인
+  var guides = [0, 0.25, 0.5, 0.75, 1].map(function(r) {
+    var y = height - Math.round(r * height);
+    var v = Math.round(r * maxVal);
+    return '<line x1="-28" y1="' + y + '" x2="' + totalW + '" y2="' + y + '" stroke="#e2e8f0" stroke-width="1"/>'
+      + '<text x="-32" y="' + (y + 4) + '" text-anchor="end" font-size="9" fill="#94a3b8">' + v + '</text>';
+  }).join('');
+
+  container.innerHTML = '<svg width="100%" viewBox="-40 -20 ' + (totalW + 50) + ' ' + (height + 40) + '" preserveAspectRatio="xMinYMid meet" style="overflow:visible">'
+    + guides + bars + '</svg>';
 }
 
 // ── 프로필 편집 모달 ───────────────────────────────────────────────────

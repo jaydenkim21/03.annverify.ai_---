@@ -117,8 +117,11 @@ function runCheck() {
 
   state.lastInput         = input;
   state.lastResult        = null;
-  state.reportFrom        = state.reportFrom || null; // partner.js에서 설정한 경우 유지, 그 외 초기화
-  if (state.reportFrom !== 'partner') state.reportFrom = null;
+  // partner.js / news.js에서 설정한 경우 유지, 그 외 null(user)
+  if (state.reportFrom !== 'partner' && state.reportFrom !== 'ainews') {
+    state.reportFrom = null;
+    state.reportCategory = null;
+  }
 
   goPage('report');
   startLoading(input);
@@ -261,7 +264,9 @@ function finishLoading(result) {
   document.getElementById('loading-status').textContent = 'Complete! Rendering report...';
   setTimeout(() => {
     document.getElementById('report-loading').classList.add('hidden');
-    saveHistory(state.lastInput, result);
+    saveHistory(state.lastInput, result, state.reportFrom, state.reportCategory);
+    state.reportFrom = null;
+    state.reportCategory = null;
     renderReport();
   }, 400);
 }

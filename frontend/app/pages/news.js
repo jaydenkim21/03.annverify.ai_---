@@ -416,6 +416,8 @@ function runNewsCheck(articleId) {
   var article = (state.newsData || []).find(function(a) { return a.id === articleId; });
   if (!article) return;
   state.annCurrentArticleId = articleId;
+  state.reportFrom     = 'ainews';
+  state.reportCategory = article.category || article.cat || null;
 
   state.lastInput = article.title || article.url || '';
   state.imageB64  = null;

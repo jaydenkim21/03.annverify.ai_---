@@ -16,4 +16,6 @@ var state = {
   myActivity:       { comments: [], likesGiven: 0, votes: [] },
   history:          JSON.parse(localStorage.getItem('ann_history') || '[]'),
   activePartner:    'all',
+  reportFrom:       null,   // 'partner' | 'ainews' | null(user)
+  reportCategory:   null,   // partner/ainews 카테고리
 };

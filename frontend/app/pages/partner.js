@@ -741,6 +741,7 @@ function annVerifyPartner(title, url, isVerified) {
   state.partnerArticleData = (state.partnerArticles || []).find(function(a) {
     return a.url === url || a.title === title;
   }) || { title: title, url: url };
+  state.reportCategory = state.partnerArticleData.category || null;
 
   // 기사 언어 감지 (팩트체크 결과 언어 결정)
   var art0 = state.partnerArticleData;

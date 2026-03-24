@@ -1,13 +1,15 @@
 // ① Client Layer — 히스토리 관리 (Firestore + localStorage 폴백)
 
 // ── Firestore 히스토리 저장 ────────────────────────────────────────────
-async function saveHistory(input, result) {
+async function saveHistory(input, result, sourceType, category) {
   var item = {
-    input:   input.slice(0, 100),
-    score:   result.overall_score,
-    grade:   result.overall_grade,
-    verdict: result.verdict_class,
-    ts:      Date.now(),
+    input:      input.slice(0, 100),
+    score:      result.overall_score,
+    grade:      result.overall_grade,
+    verdict:    result.verdict_class,
+    sourceType: sourceType || 'user',
+    category:   category   || null,
+    ts:         Date.now(),
   };
 
   // 로컬 state 업데이트
@@ -19,12 +21,14 @@ async function saveHistory(input, result) {
     // 로그인 상태 → Firestore에 저장
     try {
       await db.collection('users').doc(user.uid).collection('history').add({
-        input:     item.input,
-        score:     item.score,
-        grade:     item.grade,
-        verdict:   item.verdict,
-        ts:        firebase.firestore.FieldValue.serverTimestamp(),
-        tsLocal:   item.ts,
+        input:      item.input,
+        score:      item.score,
+        grade:      item.grade,
+        verdict:    item.verdict,
+        sourceType: item.sourceType,
+        category:   item.category,
+        ts:         firebase.firestore.FieldValue.serverTimestamp(),
+        tsLocal:    item.ts,
       });
       // Firestore 저장 성공 시 localStorage는 동기화 불필요 — 빈값으로 초기화
       localStorage.removeItem('ann_history');
@@ -55,11 +59,13 @@ async function loadHistoryFromFirestore() {
       var d = doc.data();
       return {
         id:      doc.id,
-        input:   d.input,
-        score:   d.score,
-        grade:   d.grade,
-        verdict: d.verdict,
-        ts:      d.tsLocal || (d.ts && d.ts.toMillis ? d.ts.toMillis() : Date.now()),
+        input:      d.input,
+        score:      d.score,
+        grade:      d.grade,
+        verdict:    d.verdict,
+        sourceType: d.sourceType || 'user',
+        category:   d.category   || null,
+        ts:         d.tsLocal || (d.ts && d.ts.toMillis ? d.ts.toMillis() : Date.now()),
       };
     });
     localStorage.removeItem('ann_history');
