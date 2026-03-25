@@ -228,7 +228,86 @@ export async function handleV4PartnerFeed(_request, env, cors) {
 }
 
 // ── HTTP: POST /api/v4/partner/refresh — 수동 RSS 갱신 트리거 ─────────
-export async function handleV4PartnerRefresh(request, env, cors) {
+export async function handleV4PartnerRefresh(_request, env, cors) {
   const result = await runPartnerPipeline(env);
   return json(result, 200, cors);
+}
+
+// ── Fisher-Yates 셔플 ─────────────────────────────────────────────────
+function shuffleArray(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ── Today's Hot: cron에서 24h 만료 시 전체 RSS → 랜덤 5개 교체 ─────────
+// Firestore todayHot/current: { registeredAt, slots: [...5개] }
+// 24h 이내면 유지, 초과 시 전체 파트너 RSS 수집 → 셔플 → 상위 5개 저장
+export async function runTodayHotUpdate(env) {
+  const db = await getDb(env);
+  if (!db) return;
+
+  const now     = Date.now();
+  const TTL_24H = 24 * 3600 * 1000;
+
+  // 현재 슬롯 확인
+  const current    = await db.get('todayHot', 'current');
+  const registeredAt = current && current.registeredAt
+    ? new Date(current.registeredAt).getTime() : 0;
+
+  if (current && (now - registeredAt) < TTL_24H) {
+    console.log('[TodayHot] Still valid, skipping update');
+    return;
+  }
+
+  // 전체 파트너 RSS 수집 (파트너당 최대 2건)
+  const settled = await Promise.allSettled(PARTNER_SOURCES.map(s => fetchPartnerFeed(s)));
+  const allArticles = [];
+  settled.forEach((r, i) => {
+    const src = PARTNER_SOURCES[i];
+    if (r.status === 'fulfilled' && r.value.articles.length > 0) {
+      r.value.articles.forEach(a => {
+        allArticles.push({ ...a, color: src.color, icon: src.icon });
+      });
+    }
+  });
+
+  if (!allArticles.length) {
+    console.log('[TodayHot] No articles from RSS, keeping existing slots');
+    return;
+  }
+
+  // 셔플 후 5개 선정
+  const picked = shuffleArray(allArticles).slice(0, 5).map(a => ({
+    url:       a.url,
+    title:     a.title,
+    thumb:     a.thumb     || null,
+    summary:   a.summary   || '',
+    pubDate:   a.pubDate   || null,
+    category:  a.category  || 'general',
+    partnerId: a.partnerId,
+    source:    a.source,
+    color:     a.color,
+    icon:      a.icon,
+  }));
+
+  await db.set('todayHot', 'current', {
+    registeredAt: new Date().toISOString(),
+    slots:        picked,
+  });
+  console.log(`[TodayHot] Updated: ${picked.map(p => p.partnerId).join(', ')}`);
+}
+
+// ── HTTP: GET /api/v4/partner/hot ─────────────────────────────────────
+export async function handleV4PartnerHot(_request, env, cors) {
+  const db = await getDb(env);
+  if (!db) return json({ slots: [] }, 500, cors);
+
+  const current = await db.get('todayHot', 'current');
+  const slots   = (current && Array.isArray(current.slots)) ? current.slots : [];
+
+  return json({ slots }, 200, cors);
 }

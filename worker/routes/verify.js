@@ -146,7 +146,6 @@ CLAIM: "${claim || "(see image)"}"
 Genre: ${body.genre || "general"} | Depth: ${body.depth || "standard"}
 Guide: ${GENRE_GUIDE[body.genre] || GENRE_GUIDE.general}${gateNote}${tavilyCtx}`;
 
-  // 어시스턴트 프리필 "{" → Claude가 반드시 JSON으로 시작하도록 강제
   const buildMessages = (userMsg) => {
     const userTurn = body.image_b64
       ? { role: "user", content: [
@@ -154,7 +153,7 @@ Guide: ${GENRE_GUIDE[body.genre] || GENRE_GUIDE.general}${gateNote}${tavilyCtx}`
           { type: "text", text: userMsg },
         ]}
       : { role: "user", content: userMsg };
-    return [userTurn, { role: "assistant", content: "{" }];
+    return [userTurn];
   };
 
   // ── Tavily 웹 검색으로 최신 컨텍스트 보강 ─────────────────────────
@@ -223,7 +222,6 @@ Guide: ${GENRE_GUIDE[body.genre] || GENRE_GUIDE.general}${gateNote}${tavilyCtx}`
         ...buildMessages(buildUserMsg(tavilyCtx)).slice(0, 1), // user turn only
         { role: "assistant", content: failedText.slice(0, 200) },
         { role: "user",      content: "Your response was not valid JSON. Return ONLY the raw JSON object, starting with { and ending with }. No markdown, no text." },
-        { role: "assistant", content: "{" },
       ];
       const retryRes  = await callAnthropic({
         model:      "claude-sonnet-4-6",

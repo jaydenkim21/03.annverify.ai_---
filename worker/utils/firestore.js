@@ -126,6 +126,16 @@ export class FirestoreClient {
     return res.ok;
   }
 
+  // 단일 문서 조회
+  async get(collection, docId) {
+    const res = await fetch(`${this.base}/${collection}/${encodeURIComponent(docId)}`, {
+      headers: this._headers(),
+    });
+    if (!res.ok) return null;
+    const doc = await res.json();
+    return (doc && doc.fields) ? fromDoc(doc) : null;
+  }
+
   // 배치 저장 (단일 HTTP 요청으로 최대 500건)
   async batchSet(collection, docsMap) {
     // docsMap: { [docId]: data }

@@ -37,7 +37,7 @@ import { handleV4OpenAI }                      from './routes/v4/openai.js';
 import { handleV4Grok }                        from './routes/v4/grok.js';
 import { handleV4DeBERTa }                     from './routes/v4/deberta.js';
 import { handleV4NewsFeed, handleV4NewsGenerate, handleV4NewsCleanup, runNewsPipeline } from './routes/v4/news.js';
-import { handleV4PartnerFeed, handleV4PartnerRefresh, runPartnerPipeline } from './routes/v4/partner.js';
+import { handleV4PartnerFeed, handleV4PartnerRefresh, handleV4PartnerHot, runPartnerPipeline, runTodayHotUpdate } from './routes/v4/partner.js';
 
 export default {
   async fetch(request, env, ctx) {
@@ -67,6 +67,7 @@ export default {
       if (url.pathname === "/api/cmc")           return handleCMC(url, env, cors);
       if (url.pathname === "/api/v4/news/feed")     return await handleV4NewsFeed(request, env, cors);
       if (url.pathname === "/api/v4/partner/feed") return await handleV4PartnerFeed(request, env, cors);
+      if (url.pathname === "/api/v4/partner/hot")  return await handleV4PartnerHot(request, env, cors);
 
       // ── POST 전용 이하 ────────────────────────────────────────────
       if (request.method !== "POST")
@@ -95,7 +96,7 @@ export default {
   // Partner News: UTC 00:00 / 13:00 2회 RSS 갱신
   async scheduled(_event, env) {
     const hour = new Date().getUTCHours();
-    const tasks = [runNewsPipeline(env)];
+    const tasks = [runNewsPipeline(env), runTodayHotUpdate(env)];
     if (hour === 0 || hour === 13) tasks.push(runPartnerPipeline(env));
     await Promise.allSettled(tasks);
   },

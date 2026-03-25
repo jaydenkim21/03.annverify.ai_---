@@ -610,12 +610,47 @@
       </div>
     </div>
   </div>
+  <!-- ── 파트너 로고 행 ─────────────────────────────────────────────── -->
+  <div class="border-b border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900/60 px-4 sm:px-8 py-5">
+    <div class="max-w-7xl mx-auto flex items-center justify-center gap-6 sm:gap-10 flex-wrap">
+      <img src="/assets/partners/afp.png"       alt="AFP"      class="h-7 sm:h-9 object-contain opacity-70 hover:opacity-100 transition-opacity">
+      <img src="/assets/partners/ap.png"        alt="AP"       class="h-7 sm:h-9 object-contain opacity-70 hover:opacity-100 transition-opacity dark:brightness-0 dark:invert">
+      <img src="/assets/partners/bbc.png"       alt="BBC"      class="h-7 sm:h-9 object-contain opacity-70 hover:opacity-100 transition-opacity dark:brightness-0 dark:invert">
+      <img src="/assets/partners/bloomberg.png" alt="Bloomberg" class="h-7 sm:h-9 object-contain opacity-70 hover:opacity-100 transition-opacity dark:brightness-0 dark:invert">
+      <img src="/assets/partners/cnn.png"       alt="CNN"      class="h-7 sm:h-9 object-contain opacity-70 hover:opacity-100 transition-opacity">
+      <img src="/assets/partners/reuters.png"   alt="Reuters"  class="h-7 sm:h-9 object-contain opacity-70 hover:opacity-100 transition-opacity">
+      <img src="/assets/partners/yonhap.png"    alt="연합뉴스"  class="h-7 sm:h-9 object-contain opacity-70 hover:opacity-100 transition-opacity">
+    </div>
+  </div>
+
+  <!-- ── Today's Hot + Today's Rankings ──────────────────────────────── -->
+  <div class="px-4 sm:px-8 lg:px-10 py-6 sm:py-8 border-b border-slate-200/60 dark:border-slate-800">
+    <div class="max-w-7xl mx-auto flex flex-col lg:flex-row gap-6">
+      <!-- Today's Hot 캐러셀 -->
+      <div class="flex-1 lg:flex-[5]">
+        <h3 class="font-display font-black text-xl text-slate-900 dark:text-white mb-4">Today's Hot</h3>
+        <div id="partner-hot-carousel" class="relative rounded-2xl overflow-hidden bg-slate-200 dark:bg-slate-800" style="min-height:380px">
+          <div class="skeleton rounded-2xl" style="height:380px"></div>
+        </div>
+      </div>
+      <!-- Today's Rankings -->
+      <div class="lg:w-72 xl:w-80 shrink-0">
+        <h3 class="font-display font-black text-xl text-slate-900 dark:text-white mb-4">Today's Rankings</h3>
+        <div id="partner-rankings" class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden" style="min-height:380px">
+          <div class="skeleton rounded-2xl" style="height:380px"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Today's Partner News 그리드 ─────────────────────────────────── -->
   <div class="flex-1 p-4 sm:p-8 lg:p-10">
     <div class="max-w-7xl mx-auto">
-      <div id="partner-articles" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-        <div class="skeleton rounded-3xl h-72"></div>
-        <div class="skeleton rounded-3xl h-72"></div>
-        <div class="skeleton rounded-3xl h-72"></div>
+      <h3 class="font-display font-black text-xl text-slate-900 dark:text-white mb-6">Today's Partner News</h3>
+      <div id="partner-articles" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+        <div class="skeleton rounded-2xl h-56"></div>
+        <div class="skeleton rounded-2xl h-56"></div>
+        <div class="skeleton rounded-2xl h-56"></div>
       </div>
     </div>
   </div>
@@ -1632,7 +1667,7 @@
 
 <!-- ① Client Layer — 페이지별 스크립트 -->
 <script src="/app/pages/news.js?v=8"></script>
-<script src="/app/pages/partner.js?v=13"></script>
+<script src="/app/pages/partner.js?v=14"></script>
 <script src="/app/pages/community.js?v=11"></script>
 
 <!-- 앱 초기화 -->

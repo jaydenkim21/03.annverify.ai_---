@@ -4,6 +4,11 @@
 var _partnerLoading    = false;
 var _partnerEventsSet  = false;
 
+// Today's Hot 캐러셀 상태
+var _hotSlots      = [];
+var _hotIndex      = 0;
+var _hotTimer      = null;
+
 // 카테고리 배지 색상
 var CAT_COLOR = {
   'international': 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400',
@@ -184,9 +189,10 @@ function loadPartner() {
   _restoreVerified();
   _setupPartnerEvents();
   _fetchFirestoreVerified();
+  loadTodayHot();
 
   document.getElementById('partner-articles').innerHTML =
-    Array(6).fill('<div class="skeleton rounded-3xl h-72"></div>').join('');
+    Array(6).fill('<div class="skeleton rounded-2xl h-56"></div>').join('');
 
   fetch(API_URL + '/api/v4/partner/feed', {
     headers: { 'Origin': window.location.origin },
@@ -216,6 +222,7 @@ function loadPartner() {
 
       renderPartners();
       renderPartnerArticles();
+      renderRankings();
       _fetchFirestoreLikes();
       _savePartnerNewsToFirestore(state.partnerArticles);
     })
@@ -320,7 +327,6 @@ function renderPartnerArticles(items) {
   }
 
   document.getElementById('partner-articles').innerHTML = items.map(function(a) {
-    var grad      = PARTNER_GRADIENT[a.partnerId] || 'from-slate-500 to-slate-700';
     var time      = partnerTimeAgo(a.pubDate);
     var h             = _pnHash(a.url || '');
     var likeCount     = _getLikeCount(a.url || '');
@@ -329,117 +335,66 @@ function renderPartnerArticles(items) {
     var bookmarkCount = _getBookmarkCount(h);
     var discussCount  = _getDiscussCount(h);
 
-    // 등급 우선순위: 메모리 캐시 > 피드에서 온 Firestore 등급 > verifiedStatus
     var feedGrade      = a.grade ? { grade: a.grade, score: a.score, verdict_class: a.verdict_class, verifiedAt: a.verifiedAt } : null;
     var verifiedResult = (state.verifiedArticles && state.verifiedArticles[a.url]) || feedGrade || a.verifiedStatus;
     var isVerified     = !!(verifiedResult || (a.verdict_class && a.verdict_class !== 'unverified'));
-    var grade          = isVerified ? (verifiedResult && (verifiedResult.grade || verifiedResult.overall_grade)) || a.grade || '' : '';
 
-    // 피드에서 등급이 내려오면 메모리 캐시에도 동기화
     if (feedGrade && a.url && !(state.verifiedArticles && state.verifiedArticles[a.url])) {
       if (!state.verifiedArticles) state.verifiedArticles = {};
       state.verifiedArticles[a.url] = feedGrade;
     }
 
-    var badgeHtml = isVerified
-      ? '<div class="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-emerald-500 text-white text-[10px] font-black shadow-md uppercase tracking-wide flex items-center gap-1">' +
-          '<span class="material-symbols-outlined" style="font-size:11px">verified</span>VERIFIED' + (grade ? ' · ' + grade : '') +
-        '</div>'
-      : '<div class="absolute top-3 right-3 px-2.5 py-1 rounded-full border-2 border-slate-300 bg-white/90 text-slate-500 text-[10px] font-black shadow-md backdrop-blur-sm uppercase tracking-wide">UNVERIFIED</div>';
-
-    var catCls  = CAT_COLOR[a.category] || CAT_COLOR['social'];
-    var catHtml = a.category
-      ? '<span class="inline-flex self-start mb-2 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ' + catCls + '">' + escHtml(a.category) + '</span>'
-      : '';
-
-    // 기사 이미지 대신 매체사 로고 표시
-    // bloomberg / ap / bbc 는 로고 자체가 어두운 색 → 다크모드에서 흰색으로 반전
-    var DARK_INVERT_LOGOS = { bloomberg: true, ap: true, bbc: true };
-    var iconLetter  = escHtml(a.icon || (a.source || '?').charAt(0).toUpperCase());
-    var sourceName  = escHtml(a.source || '');
+    var DARK_INVERT = { bloomberg: true, ap: true, bbc: true };
     var partnerId   = escHtml(a.partnerId || '');
-    var filterCls   = DARK_INVERT_LOGOS[a.partnerId] ? 'dark:brightness-0 dark:invert' : '';
-    var thumbHtml =
-      '<div class="absolute inset-0 flex flex-col items-center justify-center gap-3 pointer-events-none">' +
-        // 로고 이미지 (파일 없으면 fallback 표시)
-        '<img src="/assets/partners/' + partnerId + '.png"' +
-             ' alt="' + sourceName + '"' +
-             ' class="max-h-14 max-w-[160px] object-contain drop-shadow-lg ' + filterCls + '"' +
-             ' onerror="this.style.display=\'none\';this.nextElementSibling.style.removeProperty(\'display\')"' +
-             ' style="display:block">' +
-        // Fallback: 아이콘 글자 (로고 파일 로드 실패 시)
-        '<div style="display:none" class="w-16 h-16 rounded-2xl bg-white/25 backdrop-blur-sm border border-white/40 flex items-center justify-center text-white font-black text-3xl shadow-lg">' + iconLetter + '</div>' +
-      '</div>';
-
-    var timeHtml = time
-      ? '<div class="absolute bottom-3 right-3 text-white/70 text-[10px]">' + time + '</div>'
-      : '';
-
-    var summaryHtml = a.summary
-      ? '<p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-4 line-clamp-2">' + escHtml(a.summary) + '</p>'
-      : '';
+    var sourceName  = escHtml(a.source || '');
+    var filterCls   = DARK_INVERT[a.partnerId] ? 'dark:brightness-0 dark:invert' : '';
+    var catCls      = CAT_COLOR[a.category] || CAT_COLOR['social'];
 
     return (
-      '<article class="news-card bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col group"' +
+      '<article class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 flex flex-col overflow-hidden shadow-sm hover:shadow-md transition-shadow"' +
              ' data-pn-url="' + escHtml(a.url || '') + '"' +
              ' data-pn-title="' + escHtml(a.title || '') + '"' +
              (isVerified ? ' data-pn-verified="1"' : '') + '>' +
 
-        '<!-- 썸네일 -->' +
-        '<div class="pn-open relative overflow-hidden h-48 bg-gradient-to-br ' + grad + ' shrink-0 cursor-pointer">' +
-          thumbHtml +
-          '<div class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all flex items-center justify-center">' +
-            '<div class="w-14 h-14 rounded-full bg-white/0 group-hover:bg-white/90 transition-all flex items-center justify-center scale-75 group-hover:scale-100">' +
-              '<span class="material-symbols-outlined text-primary opacity-0 group-hover:opacity-100 transition-opacity text-2xl">open_in_new</span>' +
-            '</div>' +
-          '</div>' +
-          badgeHtml +
-          '<div class="absolute bottom-3 left-3 px-2.5 py-1 rounded-full bg-black/50 text-white text-[10px] font-bold backdrop-blur-sm">' + escHtml(a.source || '') + '</div>' +
-          timeHtml +
+        '<!-- 카드 헤더: 파트너 로고 + 카테고리 + 시간 -->' +
+        '<div class="flex items-center gap-2 px-4 pt-4 pb-3">' +
+          '<img src="/assets/partners/' + partnerId + '.png" alt="' + sourceName + '"' +
+               ' class="h-5 object-contain shrink-0 ' + filterCls + '"' +
+               ' onerror="this.style.display=\'none\'">' +
+          (a.category ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide shrink-0 ' + catCls + '">' + escHtml(a.category) + '</span>' : '') +
+          (time ? '<span class="ml-auto text-[11px] text-slate-400 shrink-0">' + time + '</span>' : '') +
         '</div>' +
 
-        '<!-- 콘텐츠 -->' +
-        '<div class="p-5 flex flex-col flex-1">' +
-          catHtml +
-          '<h3 class="pn-open font-display font-bold text-slate-900 dark:text-white text-base leading-snug mb-3 flex-1 cursor-pointer hover:text-primary transition-colors line-clamp-3">' + escHtml(a.title || '') + '</h3>' +
-          summaryHtml +
+        '<!-- 제목 + 요약 -->' +
+        '<div class="pn-open px-4 pb-3 flex-1 cursor-pointer">' +
+          '<h3 class="font-display font-bold text-slate-900 dark:text-white text-sm leading-snug mb-2 line-clamp-3 hover:text-primary transition-colors">' + escHtml(a.title || '') + '</h3>' +
+          (a.summary ? '<p class="text-slate-500 dark:text-slate-400 text-xs leading-relaxed line-clamp-2">' + escHtml(a.summary) + '</p>' : '') +
+        '</div>' +
 
-          '<!-- 하단 버튼 -->' +
-          '<div class="flex items-center gap-2 mt-auto pt-4 border-t border-slate-100 dark:border-slate-800">' +
-
-            '<div class="flex items-center gap-2">' +
-
-              '<button id="pn-like-' + h + '" class="pn-like flex items-center gap-1 text-sm transition-colors ' + (liked ? 'text-rose-500' : 'text-slate-400 hover:text-rose-500') + '">' +
-                '<span class="material-symbols-outlined text-base" style="font-variation-settings:\'FILL\' ' + (liked ? 1 : 0) + '">favorite</span>' +
-                '<span id="pn-lc-' + h + '">' + _capCount(likeCount) + '</span>' +
-              '</button>' +
-
-              '<button id="pn-bm-' + h + '" class="pn-bookmark flex items-center gap-1 text-sm transition-colors ' + (bookmarked ? 'text-primary' : 'text-slate-400 hover:text-primary') + '">' +
-                '<span class="material-symbols-outlined text-base" style="font-variation-settings:\'FILL\' ' + (bookmarked ? 1 : 0) + '">bookmark</span>' +
-                '<span id="pn-bmc-' + h + '">' + _capCount(bookmarkCount) + '</span>' +
-              '</button>' +
-
-              '<button class="pn-discuss flex items-center gap-1 text-sm text-slate-400 hover:text-primary transition-colors">' +
-                '<span class="material-symbols-outlined text-base">forum</span>' +
-                '<span id="pn-dc-' + h + '">' + _capCount(discussCount) + '</span>' +
-              '</button>' +
-
-              '<button class="pn-share text-slate-400 hover:text-primary transition-colors p-1" title="Share">' +
-                '<span class="material-symbols-outlined text-base">share</span>' +
-              '</button>' +
-
-            '</div>' +
-
-            '<!-- Fact Check / Verify Report 버튼 -->' +
-            '<button id="pn-fc-' + h + '" class="pn-factcheck ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ' +
-              (isVerified
-                ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 border border-emerald-200 dark:border-emerald-800'
-                : 'bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20') + '">' +
-              '<span class="material-symbols-outlined text-sm">' + (isVerified ? 'verified' : 'fact_check') + '</span>' +
-              (isVerified ? 'Verify Report' : 'Fact Check') +
-            '</button>' +
-
-          '</div>' +
+        '<!-- 하단 버튼 -->' +
+        '<div class="flex items-center gap-1.5 px-4 py-3 border-t border-slate-100 dark:border-slate-800 mt-auto">' +
+          '<button id="pn-like-' + h + '" class="pn-like flex items-center gap-1 text-xs transition-colors ' + (liked ? 'text-rose-500' : 'text-slate-400 hover:text-rose-500') + '">' +
+            '<span class="material-symbols-outlined text-sm" style="font-variation-settings:\'FILL\' ' + (liked ? 1 : 0) + '">favorite</span>' +
+            '<span id="pn-lc-' + h + '">' + _capCount(likeCount) + '</span>' +
+          '</button>' +
+          '<button id="pn-bm-' + h + '" class="pn-bookmark flex items-center gap-1 text-xs transition-colors ' + (bookmarked ? 'text-primary' : 'text-slate-400 hover:text-primary') + '">' +
+            '<span class="material-symbols-outlined text-sm" style="font-variation-settings:\'FILL\' ' + (bookmarked ? 1 : 0) + '">bookmark</span>' +
+            '<span id="pn-bmc-' + h + '">' + _capCount(bookmarkCount) + '</span>' +
+          '</button>' +
+          '<button class="pn-discuss flex items-center gap-1 text-xs text-slate-400 hover:text-primary transition-colors">' +
+            '<span class="material-symbols-outlined text-sm">forum</span>' +
+            '<span id="pn-dc-' + h + '">' + _capCount(discussCount) + '</span>' +
+          '</button>' +
+          '<button class="pn-share text-slate-400 hover:text-primary transition-colors p-0.5">' +
+            '<span class="material-symbols-outlined text-sm">share</span>' +
+          '</button>' +
+          '<button id="pn-fc-' + h + '" class="pn-factcheck ml-auto flex items-center gap-1 px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all ' +
+            (isVerified
+              ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 border border-emerald-200 dark:border-emerald-800'
+              : 'bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20') + '">' +
+            '<span class="material-symbols-outlined text-xs">' + (isVerified ? 'verified' : 'fact_check') + '</span>' +
+            (isVerified ? 'Verify Report' : 'Fact Check') +
+          '</button>' +
         '</div>' +
       '</article>'
     );
@@ -541,6 +496,8 @@ function _fetchFirestoreLikes() {
       }).catch(function() {});
     } catch (_) {}
   });
+  // 좋아요 로드 완료 후 Rankings 갱신
+  setTimeout(renderRankings, 1500);
 }
 
 // ── 공유 (버튼 엘리먼트를 직접 받음) ─────────────────────────────────
@@ -841,4 +798,253 @@ function _runVerifyAPI(url, title) {
   var el = document.getElementById('home-input');
   if (el) el.value = input;
   runCheck();
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// TODAY'S HOT — 캐러셀
+// ══════════════════════════════════════════════════════════════════════
+
+function loadTodayHot() {
+  fetch(API_URL + '/api/v4/partner/hot')
+    .then(function(res) { return res.ok ? res.json() : Promise.reject(res.status); })
+    .then(function(data) {
+      _hotSlots = (data.slots || []).filter(function(s) { return s && s.url; });
+      _hotIndex = 0;
+      renderTodayHot();
+    })
+    .catch(function() {
+      var el = document.getElementById('partner-hot-carousel');
+      if (el) el.innerHTML =
+        '<div class="flex items-center justify-center h-full text-slate-400 text-sm py-16">' +
+          '<span class="material-symbols-outlined mr-2">info</span>No featured articles configured.' +
+        '</div>';
+    });
+}
+
+function renderTodayHot() {
+  var wrap = document.getElementById('partner-hot-carousel');
+  if (!wrap) return;
+
+  if (!_hotSlots.length) {
+    wrap.innerHTML =
+      '<div class="flex items-center justify-center text-slate-400 text-sm py-16">' +
+        '<span class="material-symbols-outlined mr-2">info</span>No featured articles configured.' +
+      '</div>';
+    return;
+  }
+
+  // 캐러셀 슬라이드 HTML 생성
+  var slidesHtml = _hotSlots.map(function(s, i) {
+    var DARK_INVERT  = { bloomberg: true, ap: true, bbc: true };
+    var filterCls    = DARK_INVERT[s.partnerId] ? 'brightness-0 invert' : '';
+    var catCls       = CAT_COLOR[s.category] || CAT_COLOR['social'];
+    var time         = partnerTimeAgo(s.pubDate);
+    var h            = _pnHash(s.url || '');
+    var likeCount    = _getLikeCount(s.url || '');
+    var liked        = _isLiked(s.url || '');
+    var bookmarked   = _isBookmarked(h);
+    var bookmarkCount = _getBookmarkCount(h);
+    var discussCount = _getDiscussCount(h);
+    var isVerified   = !!(state.verifiedArticles && state.verifiedArticles[s.url]);
+    var feedGrade    = s.grade || '';
+
+    return (
+      '<div class="partner-hot-slide absolute inset-0 transition-opacity duration-500 flex flex-col" style="opacity:' + (i === 0 ? '1' : '0') + ';pointer-events:' + (i === 0 ? 'auto' : 'none') + '" data-hot-idx="' + i + '">' +
+
+        '<!-- 다크 이미지 영역 -->' +
+        '<div class="relative flex-1 overflow-hidden bg-gradient-to-br from-slate-800 to-slate-900 cursor-pointer pn-open"' +
+             ' data-pn-url="' + escHtml(s.url || '') + '" data-pn-title="' + escHtml(s.title || '') + '">' +
+          (s.thumb
+            ? '<img src="' + escHtml(s.thumb) + '" class="absolute inset-0 w-full h-full object-cover opacity-50" onerror="this.style.display=\'none\'">'
+            : '') +
+          '<div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/10"></div>' +
+
+          '<!-- 상단: 로고 + 카테고리 + 시간 -->' +
+          '<div class="absolute top-4 left-4 right-4 flex items-center gap-2">' +
+            '<img src="/assets/partners/' + escHtml(s.partnerId || '') + '.png" alt="' + escHtml(s.source || '') + '"' +
+                 ' class="h-6 object-contain shrink-0 ' + filterCls + '"' +
+                 ' onerror="this.style.display=\'none\'">' +
+            (s.category ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ' + catCls + '">' + escHtml(s.category) + '</span>' : '') +
+            (isVerified ? '<span class="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500 text-white text-[10px] font-black uppercase"><span class="material-symbols-outlined" style="font-size:10px">verified</span>' + (feedGrade ? feedGrade : 'VERIFIED') + '</span>' : '') +
+            (time ? '<span class="ml-auto text-white/60 text-xs shrink-0">' + time + '</span>' : '') +
+          '</div>' +
+
+          '<!-- 하단: 제목 + AI 요약 -->' +
+          '<div class="absolute bottom-4 left-4 right-4">' +
+            '<h2 class="text-white font-black text-xl sm:text-2xl leading-tight mb-2 line-clamp-3">' + escHtml(s.title || '') + '</h2>' +
+            (s.summary
+              ? '<p class="text-white/70 text-sm leading-relaxed line-clamp-2">' +
+                  '<span class="text-cyan-400 font-bold text-xs mr-1">AI SUMMARY:</span>' + escHtml(s.summary) +
+                '</p>'
+              : '') +
+          '</div>' +
+
+          '<!-- 좌우 화살표 -->' +
+          (_hotSlots.length > 1
+            ? '<button class="hot-prev absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/40 hover:bg-black/70 text-white flex items-center justify-center transition-all backdrop-blur-sm">' +
+                '<span class="material-symbols-outlined text-lg">chevron_left</span>' +
+              '</button>' +
+              '<button class="hot-next absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/40 hover:bg-black/70 text-white flex items-center justify-center transition-all backdrop-blur-sm">' +
+                '<span class="material-symbols-outlined text-lg">chevron_right</span>' +
+              '</button>'
+            : '') +
+        '</div>' +
+
+        '<!-- 하단 액션 바 (흰 배경) -->' +
+        '<div class="flex items-center gap-2 px-4 py-3 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 shrink-0"' +
+             ' data-pn-url="' + escHtml(s.url || '') + '" data-pn-title="' + escHtml(s.title || '') + '"' +
+             (isVerified ? ' data-pn-verified="1"' : '') + '>' +
+          '<button id="hot-like-' + h + '" class="pn-like flex items-center gap-1 text-sm transition-colors ' + (liked ? 'text-rose-500' : 'text-slate-400 hover:text-rose-500') + '">' +
+            '<span class="material-symbols-outlined text-base" style="font-variation-settings:\'FILL\' ' + (liked ? 1 : 0) + '">favorite</span>' +
+            '<span id="hot-lc-' + h + '">' + _capCount(likeCount) + '</span>' +
+          '</button>' +
+          '<button id="hot-bm-' + h + '" class="pn-bookmark flex items-center gap-1 text-sm transition-colors ' + (bookmarked ? 'text-primary' : 'text-slate-400 hover:text-primary') + '">' +
+            '<span class="material-symbols-outlined text-base" style="font-variation-settings:\'FILL\' ' + (bookmarked ? 1 : 0) + '">bookmark</span>' +
+            '<span id="hot-bmc-' + h + '">' + _capCount(bookmarkCount) + '</span>' +
+          '</button>' +
+          '<button class="pn-discuss flex items-center gap-1 text-sm text-slate-400 hover:text-primary transition-colors">' +
+            '<span class="material-symbols-outlined text-base">forum</span>' +
+            '<span id="hot-dc-' + h + '">' + _capCount(discussCount) + '</span>' +
+          '</button>' +
+          '<button class="pn-share text-slate-400 hover:text-primary transition-colors p-1">' +
+            '<span class="material-symbols-outlined text-base">share</span>' +
+          '</button>' +
+          '<button class="pn-factcheck ml-auto flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-xs font-bold transition-all ' +
+            (isVerified
+              ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 border border-emerald-200 dark:border-emerald-800'
+              : 'bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20') + '">' +
+            '<span class="material-symbols-outlined text-sm">' + (isVerified ? 'verified' : 'fact_check') + '</span>' +
+            (isVerified ? 'Verify Report' : 'Fact Check') +
+          '</button>' +
+        '</div>' +
+
+      '</div>'
+    );
+  }).join('');
+
+  // 인디케이터 점
+  var dotsHtml = _hotSlots.length > 1
+    ? '<div class="hot-dots absolute bottom-16 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">' +
+        _hotSlots.map(function(_, i) {
+          return '<button class="hot-dot w-2 h-2 rounded-full transition-all ' +
+            (i === 0 ? 'bg-white w-5' : 'bg-white/40') + '" data-dot="' + i + '"></button>';
+        }).join('') +
+      '</div>'
+    : '';
+
+  wrap.innerHTML = '<div class="relative w-full h-full" style="min-height:380px">' + slidesHtml + dotsHtml + '</div>';
+
+  // 이벤트: 화살표 + 인디케이터
+  wrap.querySelectorAll('.hot-prev').forEach(function(btn) {
+    btn.addEventListener('click', function(e) { e.stopPropagation(); _hotMove(-1); });
+  });
+  wrap.querySelectorAll('.hot-next').forEach(function(btn) {
+    btn.addEventListener('click', function(e) { e.stopPropagation(); _hotMove(1); });
+  });
+  wrap.querySelectorAll('.hot-dot').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      _hotGoTo(parseInt(btn.dataset.dot));
+    });
+  });
+  // pn-open (카드 클릭 → 새창)
+  wrap.querySelectorAll('.pn-open').forEach(function(el) {
+    el.addEventListener('click', function() {
+      var url = el.dataset.pnUrl;
+      if (url) window.open(url, '_blank');
+    });
+  });
+
+  // 3초 자동 전환
+  if (_hotTimer) clearInterval(_hotTimer);
+  if (_hotSlots.length > 1) {
+    _hotTimer = setInterval(function() { _hotMove(1); }, 3000);
+  }
+}
+
+function _hotMove(dir) {
+  _hotGoTo((_hotIndex + dir + _hotSlots.length) % _hotSlots.length);
+}
+
+function _hotGoTo(idx) {
+  var wrap = document.getElementById('partner-hot-carousel');
+  if (!wrap) return;
+  var slides = wrap.querySelectorAll('.partner-hot-slide');
+  var dots   = wrap.querySelectorAll('.hot-dot');
+  slides.forEach(function(s, i) {
+    s.style.opacity       = i === idx ? '1' : '0';
+    s.style.pointerEvents = i === idx ? 'auto' : 'none';
+  });
+  dots.forEach(function(d, i) {
+    d.className = 'hot-dot rounded-full transition-all ' + (i === idx ? 'bg-white w-5 h-2' : 'bg-white/40 w-2 h-2');
+  });
+  _hotIndex = idx;
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// TODAY'S RANKINGS — verified 기사 중 좋아요 많은 순 상위 5개
+// ══════════════════════════════════════════════════════════════════════
+
+function renderRankings() {
+  var wrap = document.getElementById('partner-rankings');
+  if (!wrap) return;
+
+  var articles = (state.partnerArticles || []).filter(function(a) {
+    if (a._isTest) return false;
+    var feedGrade  = a.grade ? { grade: a.grade, score: a.score } : null;
+    var verResult  = (state.verifiedArticles && state.verifiedArticles[a.url]) || feedGrade || a.verifiedStatus;
+    return !!(verResult || (a.verdict_class && a.verdict_class !== 'unverified'));
+  });
+
+  articles.sort(function(a, b) {
+    var likeA  = _getLikeCount(a.url);
+    var likeB  = _getLikeCount(b.url);
+    if (likeB !== likeA) return likeB - likeA;
+    var scoreA = a.score || 0;
+    var scoreB = b.score || 0;
+    return scoreB - scoreA;
+  });
+
+  var top5 = articles.slice(0, 5);
+
+  if (!top5.length) {
+    wrap.innerHTML =
+      '<div class="flex flex-col items-center justify-center py-12 text-slate-400 text-sm gap-2">' +
+        '<span class="material-symbols-outlined text-3xl">fact_check</span>' +
+        '<p>No verified articles yet.</p>' +
+      '</div>';
+    return;
+  }
+
+  wrap.innerHTML = top5.map(function(a, i) {
+    var verResult = (state.verifiedArticles && state.verifiedArticles[a.url]) || a.verifiedStatus || {};
+    var score     = verResult.score || a.score || 0;
+    var scoreClr  = score >= 80 ? 'text-emerald-500' : score >= 60 ? 'text-amber-500' : 'text-red-400';
+    var rankClr   = ['text-amber-500','text-slate-400','text-amber-700','text-slate-500','text-slate-500'][i] || 'text-slate-400';
+
+    return (
+      '<div class="flex items-center gap-3 px-4 py-3 ' + (i < top5.length - 1 ? 'border-b border-slate-100 dark:border-slate-800' : '') + ' hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer pn-open"' +
+           ' data-pn-url="' + escHtml(a.url || '') + '" data-pn-title="' + escHtml(a.title || '') + '">' +
+        '<span class="font-black text-lg w-7 shrink-0 ' + rankClr + '">' + String(i + 1).padStart(2, '0') + '</span>' +
+        '<div class="flex-1 min-w-0">' +
+          '<p class="text-sm font-semibold text-slate-800 dark:text-slate-200 leading-snug line-clamp-2">' + escHtml(a.title || '') + '</p>' +
+          '<p class="text-[11px] text-slate-400 mt-0.5">' + escHtml(a.source || '') + '</p>' +
+        '</div>' +
+        (score
+          ? '<div class="text-right shrink-0">' +
+              '<span class="text-xl font-black ' + scoreClr + '">' + score + '</span>' +
+              '<p class="text-[10px] text-slate-400 leading-none">TRUST</p>' +
+            '</div>'
+          : '') +
+      '</div>'
+    );
+  }).join('');
+
+  // 클릭 → 새창
+  wrap.querySelectorAll('.pn-open').forEach(function(el) {
+    el.addEventListener('click', function() {
+      var url = el.dataset.pnUrl;
+      if (url) window.open(url, '_blank');
+    });
+  });
 }
