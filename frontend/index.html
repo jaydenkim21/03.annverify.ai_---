@@ -2266,24 +2266,6 @@ function showToast(msg, type) {
 // intent('signin'|'signup')는 탈퇴 계정 재가입 허용 여부 판단에만 사용.
 var _googleAuthIntent = null;
 
-// ── Redirect 결과 처리 (signInWithRedirect 복귀 시) ────────────────────
-auth.getRedirectResult().then(function(result) {
-  if (!result || !result.user) return;
-  var intent = sessionStorage.getItem('_googleAuthIntent') || 'signin';
-  sessionStorage.removeItem('_googleAuthIntent');
-  var isNew = result.additionalUserInfo && result.additionalUserInfo.isNewUser;
-  var name  = result.user.displayName || result.user.email.split('@')[0];
-  if (isNew) {
-    showConsentModal(result.user, name);
-  } else {
-    showToast('✓ Signed in as ' + name, 'success');
-  }
-}).catch(function(err) {
-  if (err && err.code && err.code !== 'auth/no-auth-event') {
-    console.warn('[Auth] getRedirectResult error:', err.code);
-  }
-});
-
 // ── 로그인 상태 감지 ───────────────────────────────────────────────────
 var _prevUser = undefined;
 auth.onAuthStateChanged(function(user) {
@@ -2362,12 +2344,26 @@ auth.onAuthStateChanged(function(user) {
 // ── Google 로그인/가입 ─────────────────────────────────────────────────
 // Google OAuth는 신규/기존 사용자를 자동 처리 (정책상 단일 흐름).
 // intent: 'signin' = Sign In 탭, 'signup' = Sign Up 탭 (탈퇴 재가입 허용 판단용)
-// signInWithRedirect: COOP 제약 없이 안정적인 Google 로그인
 function signInWithGoogle(intent) {
   _googleAuthIntent = intent;
-  sessionStorage.setItem('_googleAuthIntent', intent);
   const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithRedirect(provider);
+  auth.signInWithPopup(provider).then(function(result) {
+    var isNew = result.additionalUserInfo && result.additionalUserInfo.isNewUser;
+    var name  = result.user.displayName || result.user.email.split('@')[0];
+    if (isNew) {
+      showConsentModal(result.user, name);
+    } else {
+      showToast('✓ Signed in as ' + name, 'success');
+    }
+  }).catch(function(err) {
+    _googleAuthIntent = null;
+    if (auth.currentUser) return; // onAuthStateChanged가 처리
+    if (err.message && err.message.includes('INTERNAL ASSERTION FAILED')) return;
+    if (err.code === 'auth/popup-closed-by-user') return;
+    if (err.code === 'auth/cancelled-popup-request') return;
+    console.warn('[Auth] Google sign-in error:', err.code || err.message);
+    showToast('Google sign-in failed. Please try again.', 'error');
+  });
 }
 
 // ── 이메일 로그인 ──────────────────────────────────────────────────────
