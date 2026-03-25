@@ -16,6 +16,17 @@ var CAT_GRADIENT = {
   'Energy':   'from-yellow-500 to-orange-600',
 };
 
+// 카테고리 배지 색상
+var NEWS_CAT_COLOR = {
+  'World':    'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400',
+  'Tech':     'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-400',
+  'Finance':  'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400',
+  'Science':  'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-400',
+  'Health':   'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-400',
+  'Security': 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400',
+  'Energy':   'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400',
+};
+
 function newsGradeClass(grade) {
   if (!grade) return 'text-slate-400 border-slate-200 bg-white dark:bg-slate-800';
   if (grade.startsWith('A')) return 'text-emerald-600 border-emerald-300 bg-emerald-50 dark:bg-emerald-900/40 dark:border-emerald-700';
@@ -336,15 +347,7 @@ function renderNews() {
     var cat     = n.category || n.cat || 'World';
     var grade   = n.trust_grade || n.grade || '';
     var excerpt = n.excerpt || n.summary || '';
-    var source  = n.source_label || n.source || '';
-    var isSynth = n._engine === 'ai_synthesized';
-
     var time   = newsTimeAgo(n.publishedAt || n.pubDate);
-    // 판정 배지: AI Synthesized vs 기존 verdict_class
-    var verdictHtml = isSynth
-      ? `<span class="px-2.5 py-0.5 rounded-full bg-violet-50 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400 text-[10px] font-bold uppercase">AI Synthesized</span>`
-      : `<span class="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase">${escHtml((n.verdict_class || 'UNVERIFIED').replace(/_/g, ' '))}</span>`;
-
     var safeId = escHtml(n.id || '');
 
     var liked      = _isAnnLiked(safeId);
@@ -359,67 +362,53 @@ function renderNews() {
       : grade === 'C'         ? '#f59e0b'
       : '#ef4444';
 
-    return `
-    <article class="news-card bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col group hover:border-primary/30 hover:shadow-lg transition-all"
-             data-ann-id="${safeId}" data-ann-title="${escHtml(n.title || '')}">
+    return (
+      '<article class="news-card bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col group hover:border-primary/30 hover:shadow-lg transition-all"' +
+               ' data-ann-id="' + safeId + '" data-ann-title="' + escHtml(n.title || '') + '">' +
 
-      <!-- 클릭 가능 영역 (버튼 행 제외) -->
-      <div class="flex-1 flex flex-col cursor-pointer" onclick="runNewsCheck('${safeId}')">
-        <!-- 헤더: 7-LAYER VERIFIED 배지 + 등급 원형 배지 -->
-        <div class="p-5 pb-3 flex items-start justify-between gap-3">
-          <div class="flex flex-col gap-1.5">
-            ${grade ? `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500 text-white text-[10px] font-bold uppercase tracking-wider w-fit">
-              <span class="material-symbols-outlined text-[11px]" style="font-variation-settings:'FILL' 1">verified</span>
-              7-LAYER VERIFIED
-            </span>` : ''}
-            ${verdictHtml}
-          </div>
-          <div class="flex flex-col items-center gap-0.5 shrink-0">
-            <div class="w-11 h-11 rounded-full flex items-center justify-center text-sm font-black text-white" style="background-color:${gradeColor}">
-              ${escHtml(grade || '?')}
-            </div>
-            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">TRUST</span>
-          </div>
-        </div>
+        '<!-- 클릭 가능 영역 (버튼 행 제외) -->' +
+        '<div class="flex-1 flex flex-col cursor-pointer" onclick="runNewsCheck(\'' + safeId + '\')">' +
 
-        <!-- 콘텐츠 -->
-        <div class="px-5 pb-4 flex flex-col flex-1">
-          <!-- Category + 날짜 + 출처 -->
-          <div class="flex items-center gap-2 mb-2 flex-wrap">
-            <span class="px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] font-bold uppercase tracking-wide">${escHtml(cat)}</span>
-            ${time ? `<span class="text-xs text-slate-400">${time}</span>` : ''}
-            ${source ? `<span class="text-xs text-slate-400">· ${escHtml(isSynth ? 'ANN AI' : source)}</span>` : ''}
-          </div>
-          <!-- 제목 -->
-          <h3 class="font-display font-bold text-slate-900 dark:text-white text-base leading-snug mb-2 line-clamp-3">${escHtml(n.title || '')}</h3>
-          <!-- 요약 -->
-          ${excerpt ? `<p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed line-clamp-2">${escHtml(excerpt)}</p>` : ''}
-        </div>
-      </div>
+          '<!-- 헤더: 카테고리 + 시간 + 등급 원형 -->' +
+          '<div class="px-5 pt-5 pb-3 flex items-center gap-2">' +
+            '<span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide shrink-0 ' + (NEWS_CAT_COLOR[cat] || 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300') + '">' + escHtml(cat) + '</span>' +
+            (time ? '<span class="text-xs text-slate-400 shrink-0">' + time + '</span>' : '') +
+            '<div class="ml-auto w-9 h-9 rounded-full flex items-center justify-center text-sm font-black text-white shrink-0" style="background-color:' + gradeColor + '">' +
+              escHtml(grade || '?') +
+            '</div>' +
+          '</div>' +
 
-      <!-- 하단 버튼 행 -->
-      <div class="px-5 pb-5 pt-4 flex items-center gap-2 border-t border-slate-100 dark:border-slate-800">
-        <button id="ann-like-${safeId}" class="ann-like flex items-center gap-1 text-sm transition-colors ${liked ? 'text-rose-500' : 'text-slate-400 hover:text-rose-500'}">
-          <span class="material-symbols-outlined text-base" style="font-variation-settings:'FILL' ${liked ? 1 : 0}">favorite</span>
-          <span id="ann-lc-${safeId}">${likeCount}</span>
-        </button>
-        <button id="ann-bm-${safeId}" class="ann-bookmark flex items-center gap-1 text-sm transition-colors ${bookmarked ? 'text-primary' : 'text-slate-400 hover:text-primary'}">
-          <span class="material-symbols-outlined text-base" style="font-variation-settings:'FILL' ${bookmarked ? 1 : 0}">bookmark</span>
-          <span id="ann-bmc-${safeId}">${bmCount}</span>
-        </button>
-        <button class="ann-comment flex items-center gap-1 text-sm text-slate-400 hover:text-primary transition-colors">
-          <span class="material-symbols-outlined text-base">chat_bubble</span>
-          <span id="ann-dc-${safeId}">${dcCount}</span>
-        </button>
-        <button class="ann-share text-slate-400 hover:text-primary transition-colors" title="Share">
-          <span class="material-symbols-outlined text-base">share</span>
-        </button>
-        <button class="ann-discuss ml-auto px-4 py-2 rounded-full bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-colors flex items-center gap-1.5">
-          <span class="material-symbols-outlined text-sm">forum</span>
-          Join Discuss
-        </button>
-      </div>
-    </article>`;
+          '<!-- 제목 + 요약 -->' +
+          '<div class="px-5 pb-4 flex flex-col flex-1">' +
+            '<h3 class="font-display font-bold text-slate-900 dark:text-white text-base leading-snug mb-2 line-clamp-3">' + escHtml(n.title || '') + '</h3>' +
+            (excerpt ? '<p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed line-clamp-2">' + escHtml(excerpt) + '</p>' : '') +
+          '</div>' +
+        '</div>' +
+
+        '<!-- 하단 버튼 행 -->' +
+        '<div class="px-5 pb-5 pt-3 flex items-center gap-2 border-t border-slate-100 dark:border-slate-800">' +
+          '<button id="ann-like-' + safeId + '" class="ann-like flex items-center gap-1 text-sm transition-colors ' + (liked ? 'text-rose-500' : 'text-slate-400 hover:text-rose-500') + '">' +
+            '<span class="material-symbols-outlined text-base" style="font-variation-settings:\'FILL\' ' + (liked ? 1 : 0) + '">favorite</span>' +
+            '<span id="ann-lc-' + safeId + '">' + likeCount + '</span>' +
+          '</button>' +
+          '<button id="ann-bm-' + safeId + '" class="ann-bookmark flex items-center gap-1 text-sm transition-colors ' + (bookmarked ? 'text-primary' : 'text-slate-400 hover:text-primary') + '">' +
+            '<span class="material-symbols-outlined text-base" style="font-variation-settings:\'FILL\' ' + (bookmarked ? 1 : 0) + '">bookmark</span>' +
+            '<span id="ann-bmc-' + safeId + '">' + bmCount + '</span>' +
+          '</button>' +
+          '<button class="ann-comment flex items-center gap-1 text-sm text-slate-400 hover:text-primary transition-colors">' +
+            '<span class="material-symbols-outlined text-base">chat_bubble</span>' +
+            '<span id="ann-dc-' + safeId + '">' + dcCount + '</span>' +
+          '</button>' +
+          '<button class="ann-share text-slate-400 hover:text-primary transition-colors" title="Share">' +
+            '<span class="material-symbols-outlined text-base">share</span>' +
+          '</button>' +
+          '<button class="ann-discuss ml-auto px-4 py-2 rounded-full bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-colors flex items-center gap-1.5">' +
+            '<span class="material-symbols-outlined text-sm">forum</span>' +
+            'Join Discuss' +
+          '</button>' +
+        '</div>' +
+      '</article>'
+    );
   }).join('');
   _fetchAnnInteractions();
 }
