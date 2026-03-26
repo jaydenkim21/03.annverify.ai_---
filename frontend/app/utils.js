@@ -209,11 +209,15 @@ function _footer(doc) {
   }
 }
 
-// 공통 헤더(상단 바 + 제목). 새 y 반환
-function _header(doc, title, subtitle) {
+// 공통 헤더: 제목(좌) + 신뢰점수 박스(우) 나란히, 하단 두꺼운 파란 구분선
+// score/grade 없으면 박스 생략
+function _header(doc, title, subtitle, score, grade) {
   var x = _P.ML, y = _P.MT;
+  var bw = 36, bh = 28;
+  var bx = _P.W - _P.MR - bw;
+  var titleW = (score !== undefined && score !== null) ? bx - x - 6 : _P.CW;
 
-  // 파란 상단 강조 바
+  // 얇은 상단 강조 바
   doc.setFillColor(_P.C.primary[0], _P.C.primary[1], _P.C.primary[2]);
   doc.rect(x, y, _P.CW, 1.5, 'F');
   y += 5;
@@ -224,27 +228,49 @@ function _header(doc, title, subtitle) {
   var today = new Date().toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' });
   _set(doc, 7.5, false, _P.C.muted);
   doc.text(today, _P.W - _P.MR, y, { align: 'right' });
-  y += 6;
+  y += 7;
 
-  // 메인 타이틀
-  _set(doc, 16, true, _P.C.dark);
-  var titleLines = doc.splitTextToSize(String(title || 'ANN Verify Report'), _P.CW);
+  // 제목 (좌측, 신뢰점수 박스 폭 제외)
+  _set(doc, 15, true, _P.C.dark);
+  var titleLines = doc.splitTextToSize(String(title || 'ANN Verify Report'), titleW);
   doc.text(titleLines, x, y);
-  y += titleLines.length * _lh(16) + 1;
+  var titleEndY = y + titleLines.length * _lh(15);
 
-  // 서브타이틀
-  if (subtitle) {
-    _set(doc, 8.5, false, _P.C.muted);
-    var subLines = doc.splitTextToSize(String(subtitle), _P.CW);
-    doc.text(subLines, x, y);
-    y += subLines.length * _lh(8.5) + 1;
+  // 신뢰점수 박스 (우측, 제목과 나란히)
+  if (score !== undefined && score !== null) {
+    _trustBox(doc, score, grade, bx, y - 3);
   }
 
-  // 구분선
-  doc.setDrawColor(_P.C.divider[0], _P.C.divider[1], _P.C.divider[2]);
-  doc.setLineWidth(0.3);
-  doc.line(x, y, x + _P.CW, y);
-  return y + 6;
+  y = Math.max(titleEndY, y + bh - 3) + 3;
+
+  // 서브타이틀 (있을 때만)
+  if (subtitle) {
+    _set(doc, 8.5, false, _P.C.muted);
+    var subLines = doc.splitTextToSize(String(subtitle), titleW);
+    doc.text(subLines, x, y);
+    y += subLines.length * _lh(8.5) + 2;
+  }
+
+  // 두꺼운 파란 구분선
+  doc.setFillColor(_P.C.primary[0], _P.C.primary[1], _P.C.primary[2]);
+  doc.rect(x, y, _P.CW, 1, 'F');
+  return y + 7;
+}
+
+// 단락(p 태그) 단위로 텍스트 출력, 단락 사이 간격 삽입. 새 y 반환
+function _txtParas(doc, el, y) {
+  if (!el) return y;
+  var paras = el.querySelectorAll('p');
+  if (paras.length === 0) {
+    return _txt(doc, el.innerText.trim(), y, { fs: 9, col: _P.C.body });
+  }
+  paras.forEach(function(p) {
+    var t = p.textContent.trim();
+    if (!t) return;
+    y = _txt(doc, t, y, { fs: 9, col: _P.C.body });
+    y += 3; // 단락 간격
+  });
+  return y;
 }
 
 // DOM 텍스트 안전 읽기
@@ -260,48 +286,22 @@ function _domText(id) {
 function _buildAnnNewsPdf(doc) {
   var title    = _domText('ann-article-title');
   var date     = _domText('ann-article-date');
-  var excerpt  = _domText('ann-article-excerpt');
   var score    = _domText('ann-trust-score');
   var grade    = _domText('ann-trust-grade');
   var bodyEl   = document.getElementById('ann-article-body');
   var bodyText = bodyEl ? bodyEl.innerText.trim() : '';
-  // ── 헤더 ──
-  var y = _header(doc, title || 'AI News Report', 'AI News Analysis · ' + date);
 
-  // ── 신뢰 점수 박스 (우측) + 요약 (좌측) ──
-  var bx = _P.W - _P.MR - 34;
-  _trustBox(doc, score, grade, bx, y);
-  var excerptW = bx - _P.ML - 5;
-  var yAfterExcerpt = y;
-  if (excerpt) {
-    yAfterExcerpt = _txt(doc, excerpt, y, { fs: 9, col: _P.C.body, maxW: excerptW });
-  }
-  y = Math.max(yAfterExcerpt, y + 28) + 6;
+  // ── 헤더 (제목 좌 + 신뢰점수 우) ──
+  var y = _header(doc, title || 'AI News Report', date || '', score, grade);
 
   // ── 기사 본문 ──
   if (bodyText) {
     y = _secTitle(doc, 'Article', y);
-    y = _txt(doc, bodyText, y, { fs: 9, col: _P.C.body });
+    y = _txtParas(doc, bodyEl, y);
     y += 6;
   }
 
-  // ── 7-Layer 점수 바 (state.lastResult 있으면) ──
-  var la = state.lastResult && state.lastResult.layer_analysis;
-  if (la && la.length) {
-    y = _secTitle(doc, 'Layer Scores', y);
-    la.forEach(function(l) {
-      y = _br(doc, y, 14);
-      y = _bar(doc, y, l.score || 70, l.name || ('Layer ' + l.layer));
-      if (l.summary) {
-        y = _txt(doc, l.summary, y, { fs: 7.5, col: _P.C.muted });
-        y += 2;
-      }
-    });
-    y += 3;
-  }
-
   // ── 소스 ──
-  // 구조: div > span.material-symbols-outlined(icon) + span(name)
   var sourceItems = document.querySelectorAll('#ann-sources-grid > div');
   if (sourceItems.length) {
     y = _secTitle(doc, 'Primary Sources', y);
@@ -324,66 +324,20 @@ function _buildAnnNewsPdf(doc) {
 // ═══════════════════════════════════════════════════════════
 
 function _buildStandardReportPdf(doc) {
-  var r      = state.lastResult || {};
-  var title  = _domText('result-title') || state.lastInput || 'Fact Check Report';
-  var meta   = _domText('result-meta');
-  var score  = r.overall_score || _domText('trust-score-num') || '--';
-  var grade  = r.overall_grade || _domText('trust-grade') || '--';
+  var r       = state.lastResult || {};
+  var title   = _domText('result-title') || state.lastInput || 'Fact Check Report';
+  var score   = r.overall_score || _domText('trust-score-num') || '--';
+  var grade   = r.overall_grade || _domText('trust-grade') || '--';
   var summary = _domText('result-summary');
 
-  // ── 헤더 ──
-  var y = _header(doc, title, meta || 'ANN Verify Fact Check Report');
-
-  // ── 신뢰 점수 박스 ──
-  var bx = _P.W - _P.MR - 34;
-  _trustBox(doc, score, grade, bx, y);
-  y += 30;
-
-  // ── Metrics ──
-  var m = r.metrics || {};
-  var metricKeys = [
-    ['factual',          'Factual'],
-    ['logic',            'Logic'],
-    ['source_quality',   'Sources'],
-    ['cross_validation', 'Cross-Val'],
-    ['recency',          'Recency'],
-  ];
-  var hasMetrics = metricKeys.some(function(mk) { return (m[mk[0]] || 0) > 0; });
-  if (hasMetrics) {
-    y = _secTitle(doc, 'Analysis Metrics', y);
-    var colW = _P.CW / metricKeys.length;
-    metricKeys.forEach(function(mk, i) {
-      var v   = m[mk[0]] || 0;
-      var col = _scoreColor(v);
-      var mx  = _P.ML + i * colW + colW / 2;
-      _set(doc, 13, true, col);
-      doc.text(String(v), mx, y + 7, { align: 'center' });
-      _set(doc, 7, false, _P.C.muted);
-      doc.text(mk[1].toUpperCase(), mx, y + 12, { align: 'center' });
-    });
-    y += 18;
-  }
-
-  // ── 7-Layer 분석 ──
-  var la = r.layer_analysis || [];
-  if (la.length) {
-    y = _secTitle(doc, '7-Layer Analysis', y);
-    la.forEach(function(l) {
-      y = _br(doc, y, 16);
-      y = _bar(doc, y, l.score || 70, l.name || ('Layer ' + l.layer));
-      if (l.summary) {
-        y = _txt(doc, l.summary, y, { fs: 7.5, col: _P.C.muted });
-        y += 2;
-      }
-    });
-    y += 4;
-  }
+  // ── 헤더 (제목 좌 + 신뢰점수 우) ──
+  var y = _header(doc, title, null, score, grade);
 
   // ── Executive Summary ──
   if (summary) {
     y = _secTitle(doc, 'Executive Summary', y);
     y = _txt(doc, summary, y, { fs: 9, col: _P.C.body });
-    y += 5;
+    y += 6;
   }
 
   // ── AI Synthesized 기사 본문 ──
@@ -393,8 +347,8 @@ function _buildStandardReportPdf(doc) {
     var aiText = aiBody.innerText.trim();
     if (aiText) {
       y = _secTitle(doc, 'AI Synthesized Article', y);
-      y = _txt(doc, aiText, y, { fs: 9, col: _P.C.body });
-      y += 5;
+      y = _txtParas(doc, aiBody, y);
+      y += 6;
     }
   }
 
@@ -408,10 +362,9 @@ function _buildStandardReportPdf(doc) {
       var isCon  = st === 'CONFIRMED';
       var isDis  = st === 'DISPUTED' || st === 'FALSE';
       var dotCol = isCon ? _P.C.emerald : isDis ? _P.C.red : _P.C.amber;
-      var dotY   = y - 1.5;
 
       doc.setFillColor(dotCol[0], dotCol[1], dotCol[2]);
-      doc.circle(_P.ML + 2, dotY, 1.5, 'F');
+      doc.circle(_P.ML + 2, y - 1.5, 1.5, 'F');
 
       var claimText = (c.claim || c.text || JSON.stringify(c)).trim();
       y = _txt(doc, claimText, y, { x: _P.ML + 6, fs: 8.5, col: _P.C.body, maxW: _P.CW - 6 });
@@ -435,13 +388,8 @@ function _buildPartnerReportPdf(doc) {
   var grade = r.overall_grade || _domText('pnr-trust-grade') || '--';
   var score = r.overall_score || '--';
 
-  // ── 헤더 ──
-  var y = _header(doc, title, 'ANN Verify · Partner News Fact Check');
-
-  // ── 신뢰 점수 박스 ──
-  var bx = _P.W - _P.MR - 34;
-  _trustBox(doc, score, grade, bx, y);
-  y += 30;
+  // ── 헤더 (제목 좌 + 신뢰점수 우) ──
+  var y = _header(doc, title, null, score, grade);
 
   // ── 7-Layer 분석 ──
   var la = r.layer_analysis || [];
