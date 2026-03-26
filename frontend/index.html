@@ -5,8 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>ANN Verify — AI Fact-Checking Engine</title>
 
-<!-- html2pdf -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<!-- PDF 생성 라이브러리 (html2pdf 레거시 유지, jsPDF는 utils.js 위에서 로드) -->
 
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
@@ -1639,7 +1638,8 @@
 
 <!-- ① Client Layer — 앱 코어 -->
 <script src="/app/config.js"></script>
-<script src="/app/utils.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="/app/utils.js?v=3"></script>
 <script src="/app/state.js?v=3"></script>
 <script src="/app/router.js?v=3"></script>
 <script src="/app/history.js?v=2"></script>
