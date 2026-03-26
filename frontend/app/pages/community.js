@@ -619,43 +619,29 @@ function voteCommunity(id, vote, btn) {
   var user = typeof auth !== 'undefined' && auth.currentUser;
   if (!user) { showToast('로그인 후 투표할 수 있습니다.', 'info'); return; }
 
-  // UI 낙관적 업데이트 (버튼 하이라이트)
   var container = btn.closest('#cd-poll');
+  if (!container) return;
   var btns = container.querySelectorAll('button');
-  var prevActiveBtn = null;
-  btns.forEach(function(b) {
-    if (b.className.includes('bg-primary')) prevActiveBtn = b;
-    b.className = b.className
-      .replace('bg-primary text-white shadow-lg shadow-primary/20', 'border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300');
-    b.disabled = true;
-  });
-  btn.className = btn.className
-    .replace('border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300', 'bg-primary text-white shadow-lg shadow-primary/20');
 
+  // 모든 버튼 일시 비활성화
+  btns.forEach(function(b) { b.disabled = true; });
   _votingInProgress[id] = true;
 
   var postRef = db.collection('communityPosts').doc(id);
   var voteRef = postRef.collection('votes').doc(user.uid);
-
-  // vote 값 → Firestore 필드명 매핑
   var voteFieldMap = { yes: 'yesCount', no: 'noCount', partial: 'partialCount', notsure: 'notSureCount' };
 
-  // 이전 투표 조회 후 batch write (runTransaction의 precondition 충돌 방지)
   voteRef.get().then(function(voteSnap) {
     var prevVote = voteSnap.exists ? voteSnap.data().vote : null;
     if (prevVote === vote) {
-      // 동일 투표 → 버튼만 복원
       btns.forEach(function(b) { b.disabled = false; });
       delete _votingInProgress[id];
       return;
     }
 
     var batch = db.batch();
-
-    // 내 투표 문서 저장 (precondition 없는 무조건 덮어쓰기)
     batch.set(voteRef, { vote: vote, ts: Date.now() });
 
-    // 포스트 카운트 업데이트
     var updates = {};
     if (prevVote && voteFieldMap[prevVote]) updates[voteFieldMap[prevVote]] = firebase.firestore.FieldValue.increment(-1);
     if (voteFieldMap[vote]) updates[voteFieldMap[vote]] = firebase.firestore.FieldValue.increment(1);
@@ -664,18 +650,21 @@ function voteCommunity(id, vote, btn) {
     return batch.commit();
   }).then(function() {
     btns.forEach(function(b) { b.disabled = false; });
+    // onclick 속성에서 vote 값 파싱 후 classList로 선택 상태 반영
+    btns.forEach(function(b) {
+      var m = (b.getAttribute('onclick') || '').match(/'([^']+)',this\)/);
+      var bv = m ? m[1] : '';
+      if (bv === vote) {
+        b.classList.add('bg-primary', 'text-white', 'shadow-md');
+        b.classList.remove('border-slate-300', 'text-slate-700', 'dark:text-slate-300');
+      } else if (bv) {
+        b.classList.remove('bg-primary', 'text-white', 'shadow-md');
+        b.classList.add('border-slate-300', 'text-slate-700');
+      }
+    });
   }).catch(function(e) {
     console.warn('vote 저장 실패:', e);
-    // 실패: UI 롤백
-    btns.forEach(function(b) {
-      b.disabled = false;
-      b.className = b.className
-        .replace('bg-primary text-white shadow-lg shadow-primary/20', 'border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300');
-    });
-    if (prevActiveBtn) {
-      prevActiveBtn.className = prevActiveBtn.className
-        .replace('border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300', 'bg-primary text-white shadow-lg shadow-primary/20');
-    }
+    btns.forEach(function(b) { b.disabled = false; });
     showToast('투표 저장에 실패했습니다. 다시 시도해 주세요.', 'error');
   }).finally(function() {
     delete _votingInProgress[id];
