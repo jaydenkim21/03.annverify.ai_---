@@ -157,6 +157,8 @@ function _savePartnerNewsToFirestore(articles) {
         partnerId:    a.partnerId    || '',
         url:          a.url,
         publishedAt:  a.pubDate      || '',
+        grade:        a.grade        || '',
+        score:        a.score        || 0,
         savedAt:      firebase.firestore.FieldValue.serverTimestamp(),
       }, { merge: true });
       count++;
