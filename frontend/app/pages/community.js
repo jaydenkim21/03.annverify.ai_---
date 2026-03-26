@@ -647,20 +647,28 @@ function voteCommunity(id, vote, btn) {
     if (voteFieldMap[vote]) updates[voteFieldMap[vote]] = firebase.firestore.FieldValue.increment(1);
     batch.set(postRef, updates, { merge: true });
 
-    return batch.commit();
-  }).then(function() {
-    btns.forEach(function(b) { b.disabled = false; });
-    // onclick 속성에서 vote 값 파싱 후 classList로 선택 상태 반영
-    btns.forEach(function(b) {
-      var m = (b.getAttribute('onclick') || '').match(/'([^']+)',this\)/);
-      var bv = m ? m[1] : '';
-      if (bv === vote) {
-        b.classList.add('bg-primary', 'text-white', 'shadow-md');
-        b.classList.remove('border-slate-300', 'text-slate-700', 'dark:text-slate-300');
-      } else if (bv) {
-        b.classList.remove('bg-primary', 'text-white', 'shadow-md');
-        b.classList.add('border-slate-300', 'text-slate-700');
-      }
+    return batch.commit().then(function() {
+      btns.forEach(function(b) { b.disabled = false; });
+      btns.forEach(function(b) {
+        var m = (b.getAttribute('onclick') || '').match(/'([^']+)',this\)/);
+        var bv = m ? m[1] : '';
+        var countSpan = b.querySelector('span.font-black');
+        if (bv === vote) {
+          b.classList.add('bg-primary', 'text-white', 'shadow-md');
+          b.classList.remove('border-slate-300', 'text-slate-700', 'dark:text-slate-300');
+          if (countSpan) {
+            var n = parseInt(countSpan.textContent, 10) || 0;
+            countSpan.textContent = String(n + 1).padStart(2, '0');
+          }
+        } else if (bv) {
+          b.classList.remove('bg-primary', 'text-white', 'shadow-md');
+          b.classList.add('border-slate-300', 'text-slate-700');
+          if (bv === prevVote && countSpan) {
+            var n = parseInt(countSpan.textContent, 10) || 0;
+            countSpan.textContent = String(Math.max(0, n - 1)).padStart(2, '0');
+          }
+        }
+      });
     });
   }).catch(function(e) {
     console.warn('vote 저장 실패:', e);
