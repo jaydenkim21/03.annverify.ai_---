@@ -363,7 +363,7 @@ function renderCommunity(tab) {
             // 댓글 수 + 날짜
             + '<div class="flex items-center gap-3 text-xs text-slate-400 shrink-0">'
               + '<span class="flex items-center gap-1">'
-                + '<span class="material-symbols-outlined text-sm">comment</span>'
+                + '<span class="material-symbols-outlined text-sm">forum</span>'
                 + (item.comments || 0)
               + '</span>'
               + (item.date ? '<span>' + item.date + '</span>' : '')
