@@ -2362,12 +2362,31 @@ auth.onAuthStateChanged(function(user) {
 // ── Google 로그인/가입 ─────────────────────────────────────────────────
 // Google OAuth는 신규/기존 사용자를 자동 처리 (정책상 단일 흐름).
 // intent: 'signin' = Sign In 탭, 'signup' = Sign Up 탭 (탈퇴 재가입 허용 판단용)
-// signInWithRedirect: COOP 제약 없이 안정적인 Google 로그인
+// signInWithPopup: firebase.json에 COOP=unsafe-none 설정되어 있어 popup 사용 가능
+// SES lockdown(MetaMask 등 확장 프로그램) 간섭 없이 직접 결과 반환
 function signInWithGoogle(intent) {
   _googleAuthIntent = intent;
   sessionStorage.setItem('_googleAuthIntent', intent);
   const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithRedirect(provider);
+  auth.signInWithPopup(provider).then(function(result) {
+    if (!result || !result.user) return;
+    _googleAuthIntent = sessionStorage.getItem('_googleAuthIntent') || 'signin';
+    sessionStorage.removeItem('_googleAuthIntent');
+    var isNew = result.additionalUserInfo && result.additionalUserInfo.isNewUser;
+    var name  = result.user.displayName || result.user.email.split('@')[0];
+    if (isNew) {
+      showConsentModal(result.user, name);
+    } else {
+      showToast('✓ Signed in as ' + name, 'success');
+    }
+  }).catch(function(err) {
+    if (err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user') {
+      // 팝업 차단 시 redirect 로 폴백
+      auth.signInWithRedirect(provider);
+    } else if (err.code && err.code !== 'auth/cancelled-popup-request') {
+      console.warn('[Auth] signInWithPopup error:', err.code);
+    }
+  });
 }
 
 // ── 이메일 로그인 ──────────────────────────────────────────────────────
