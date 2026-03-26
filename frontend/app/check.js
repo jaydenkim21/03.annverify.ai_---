@@ -1,7 +1,7 @@
 // ① Client Layer — 팩트체크 실행 + 로딩 UI
 // ③ ML Core Layer (ANNEngineV4) 연동 포함
 
-var LAYER_ICONS = ['source','translate','database','query_stats','robot','fact_check','verified'];
+var LAYER_ICONS = ['source','travel_explore','database','shield','robot','fact_check','verified'];
 var LAYER_NAMES = ['Claim Parse','Source Strategy','Evidence','Adversarial','NLI Score','Verdict','BISL Hash'];
 var _layer7Timer = null;
 var _layer7Start = null;
