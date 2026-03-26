@@ -55,8 +55,9 @@ function _downloadElementAsPdf(el, filename) {
   var tempId = origId || ('_pdf_tmp_' + Date.now());
   if (!origId) el.id = tempId;
 
+  // 이미지 30% 축소: A4 콘텐츠 폭 190mm → 133mm (좌우 마진 38.5mm)
   var opt = {
-    margin:      [10, 10, 10, 10],
+    margin:      [10, 38.5, 10, 38.5],
     filename:    filename,
     image:       { type: 'jpeg', quality: 0.97 },
     html2canvas: {
