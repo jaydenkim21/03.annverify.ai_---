@@ -996,15 +996,12 @@ function _hotGoTo(idx) {
 // TODAY'S RANKINGS — verified 기사 중 좋아요 많은 순 상위 5개
 // ══════════════════════════════════════════════════════════════════════
 
-function renderRankings() {
+async function renderRankings() {
   var wrap = document.getElementById('partner-rankings');
   if (!wrap) return;
 
   var articles = (state.partnerArticles || []).filter(function(a) {
-    if (a._isTest) return false;
-    var feedGrade  = a.grade ? { grade: a.grade, score: a.score } : null;
-    var verResult  = (state.verifiedArticles && state.verifiedArticles[a.url]) || feedGrade || a.verifiedStatus;
-    return !!(verResult || (a.verdict_class && a.verdict_class !== 'unverified'));
+    return !a._isTest && (a.grade || a.score);
   });
 
   articles.sort(function(a, b) {
@@ -1018,6 +1015,44 @@ function renderRankings() {
 
   var top5 = articles.slice(0, 5);
 
+  // 5개 미만이면 Firestore 과거 기사로 보충 (동일 URL·동일 파트너사 제외)
+  if (top5.length < 5) {
+    try {
+      var usedUrls    = new Set(top5.map(function(a) { return a.url; }));
+      var usedSources = new Set(top5.map(function(a) { return a.source || a.partnerId || ''; }));
+
+      var snap = await db.collection('partnerNews')
+        .orderBy('savedAt', 'desc')
+        .limit(60)
+        .get();
+
+      var candidates = [];
+      snap.docs.forEach(function(doc) {
+        var d = doc.data();
+        if (!d.url || usedUrls.has(d.url)) return;
+        var srcKey = d.source_label || d.partnerId || '';
+        if (usedSources.has(srcKey)) return;
+        var verResult = (state.verifiedArticles && state.verifiedArticles[d.url]) || {};
+        var grade = verResult.grade || d.grade || '';
+        var score = verResult.score || d.score || 0;
+        if (!grade && !score) return;
+        candidates.push({ url: d.url, title: d.title, source: d.source_label, partnerId: d.partnerId, grade: grade, score: score, _past: true });
+      });
+
+      candidates.sort(function(a, b) { return (b.score || 0) - (a.score || 0); });
+
+      candidates.forEach(function(c) {
+        if (top5.length >= 5) return;
+        var srcKey = c.source || c.partnerId || '';
+        if (!usedSources.has(srcKey)) {
+          top5.push(c);
+          usedUrls.add(c.url);
+          usedSources.add(srcKey);
+        }
+      });
+    } catch (_) {}
+  }
+
   if (!top5.length) {
     wrap.innerHTML =
       '<div class="flex flex-col items-center justify-center py-12 text-slate-400 text-sm gap-2">' +
@@ -1029,8 +1064,8 @@ function renderRankings() {
 
   wrap.innerHTML = top5.map(function(a, i) {
     var verResult = (state.verifiedArticles && state.verifiedArticles[a.url]) || a.verifiedStatus || {};
-    var score     = verResult.score || a.score || 0;
-    var scoreClr  = score >= 80 ? 'text-emerald-500' : score >= 60 ? 'text-amber-500' : 'text-red-400';
+    var grade     = verResult.grade || a.grade || '';
+    var gradeClr  = /^A/.test(grade) ? 'text-emerald-500' : /^B/.test(grade) ? 'text-blue-500' : /^C/.test(grade) ? 'text-amber-500' : grade ? 'text-red-400' : '';
     var rankClr   = ['text-amber-500','text-slate-400','text-amber-700','text-slate-500','text-slate-500'][i] || 'text-slate-400';
 
     return (
@@ -1041,10 +1076,10 @@ function renderRankings() {
           '<p class="text-sm font-semibold text-slate-800 dark:text-slate-200 leading-snug line-clamp-2">' + escHtml(a.title || '') + '</p>' +
           '<p class="text-[11px] text-slate-400 mt-0.5">' + escHtml(a.source || '') + '</p>' +
         '</div>' +
-        (score
+        (grade
           ? '<div class="text-right shrink-0">' +
-              '<span class="text-xl font-black ' + scoreClr + '">' + score + '</span>' +
-              '<p class="text-[10px] text-slate-400 leading-none">TRUST</p>' +
+              '<span class="text-2xl font-black ' + gradeClr + '">' + escHtml(grade) + '</span>' +
+              '<p class="text-[10px] text-slate-400 leading-none">GRADE</p>' +
             '</div>'
           : '') +
       '</div>'
