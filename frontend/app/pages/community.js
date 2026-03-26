@@ -609,19 +609,30 @@ function renderCommunityComments(id) {
   }).join('') || '<p class="text-sm text-slate-400 text-center py-8">Be the first to share your perspective!</p>';
 }
 
+// 진행 중인 투표 ID 추적 (중복 클릭 방지)
+var _votingInProgress = {};
+
 function voteCommunity(id, vote, btn) {
-  // UI 업데이트
+  // 중복 클릭 방지
+  if (_votingInProgress[id]) return;
+
+  var user = typeof auth !== 'undefined' && auth.currentUser;
+  if (!user) { showToast('로그인 후 투표할 수 있습니다.', 'info'); return; }
+
+  // UI 낙관적 업데이트 (버튼 하이라이트)
   var container = btn.closest('#cd-poll');
   var btns = container.querySelectorAll('button');
+  var prevActiveBtn = null;
   btns.forEach(function(b) {
+    if (b.className.includes('bg-primary')) prevActiveBtn = b;
     b.className = b.className
       .replace('bg-primary text-white shadow-lg shadow-primary/20', 'border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300');
+    b.disabled = true;
   });
   btn.className = btn.className
     .replace('border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300', 'bg-primary text-white shadow-lg shadow-primary/20');
 
-  var user = typeof auth !== 'undefined' && auth.currentUser;
-  if (!user) { showToast('로그인 후 투표할 수 있습니다.', 'info'); return; }
+  _votingInProgress[id] = true;
 
   var postRef = db.collection('communityPosts').doc(id);
   var voteRef = postRef.collection('votes').doc(user.uid);
@@ -640,7 +651,25 @@ function voteCommunity(id, vote, btn) {
       tx.set(voteRef, { vote: vote, ts: Date.now() });
       tx.set(postRef, updates, { merge: true });
     });
-  }).catch(function(e) { console.warn('vote 저장 실패:', e); });
+  }).then(function() {
+    // 성공: 버튼 활성화
+    btns.forEach(function(b) { b.disabled = false; });
+  }).catch(function(e) {
+    console.warn('vote 저장 실패:', e);
+    // 실패: UI 롤백
+    btns.forEach(function(b) {
+      b.disabled = false;
+      b.className = b.className
+        .replace('bg-primary text-white shadow-lg shadow-primary/20', 'border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300');
+    });
+    if (prevActiveBtn) {
+      prevActiveBtn.className = prevActiveBtn.className
+        .replace('border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300', 'bg-primary text-white shadow-lg shadow-primary/20');
+    }
+    showToast('투표 저장에 실패했습니다. 다시 시도해 주세요.', 'error');
+  }).finally(function() {
+    delete _votingInProgress[id];
+  });
 
   // 로컬 state 활동 추적
   var item = state.communityDetail || {};
