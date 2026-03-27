@@ -681,15 +681,15 @@ function renderCommunityDetail(item) {
           <span class="material-symbols-outlined text-base">thumb_up</span>Like
           <span class="font-black">${String(cntYes).padStart(2,'0')}</span>
         </button>
-        <button onclick="voteCommunity('${item.id}','no',this)" class="flex items-center justify-center gap-2 px-3 py-3 sm:py-2.5 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-sm font-bold rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-all">
+        <button onclick="voteCommunity('${item.id}','no',this)" class="flex items-center justify-center gap-2 px-3 py-3 sm:py-2.5 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-sm font-bold rounded-xl hover:bg-primary hover:text-white hover:border-primary transition-all">
           <span class="material-symbols-outlined text-base">thumb_down</span>Dislike
           <span class="font-black">${String(cntNo).padStart(2,'0')}</span>
         </button>
-        <button onclick="voteCommunity('${item.id}','partial',this)" class="flex items-center justify-center gap-2 px-3 py-3 sm:py-2.5 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-sm font-bold rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-all">
+        <button onclick="voteCommunity('${item.id}','partial',this)" class="flex items-center justify-center gap-2 px-3 py-3 sm:py-2.5 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-sm font-bold rounded-xl hover:bg-primary hover:text-white hover:border-primary transition-all">
           <span class="material-symbols-outlined text-base">sentiment_neutral</span>Neutral
           <span class="font-black">${String(cntPartial).padStart(2,'0')}</span>
         </button>
-        <button onclick="voteCommunity('${item.id}','notsure',this)" class="flex items-center justify-center gap-2 px-3 py-3 sm:py-2.5 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-sm font-bold rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-all">
+        <button onclick="voteCommunity('${item.id}','notsure',this)" class="flex items-center justify-center gap-2 px-3 py-3 sm:py-2.5 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-sm font-bold rounded-xl hover:bg-primary hover:text-white hover:border-primary transition-all">
           <span class="material-symbols-outlined text-base">help_outline</span>Not Sure
           <span class="font-black">${String(cntNotSure).padStart(2,'0')}</span>
         </button>
