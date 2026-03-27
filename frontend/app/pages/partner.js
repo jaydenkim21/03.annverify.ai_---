@@ -401,7 +401,7 @@ function renderPartnerArticles(items) {
           '<button class="pn-share text-slate-400 hover:text-primary transition-colors p-0.5">' +
             '<span class="material-symbols-outlined text-sm">share</span>' +
           '</button>' +
-          '<button id="pn-fc-' + h + '" class="pn-factcheck ml-auto flex items-center gap-1 px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all ' +
+          '<button id="pn-fc-' + h + '" class="pn-factcheck ml-auto flex items-center gap-1 px-3 py-2 rounded-xl text-[11px] font-bold transition-all ' +
             (isVerified
               ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 border border-emerald-200 dark:border-emerald-800'
               : 'bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20') + '">' +
@@ -520,7 +520,8 @@ function sharePartnerArticle(url, title, btnEl) {
 
   var popup = document.createElement('div');
   popup.id = 'pn-share-popup';
-  popup.style.cssText = 'position:fixed;z-index:9999;background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:8px;box-shadow:0 8px 32px rgba(0,0,0,0.12);min-width:180px;';
+  var popupW = Math.min(180, window.innerWidth - 24);
+  popup.style.cssText = 'position:fixed;z-index:9999;background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:8px;box-shadow:0 8px 32px rgba(0,0,0,0.12);width:' + popupW + 'px;';
   if (document.documentElement.classList.contains('dark')) {
     popup.style.background = '#1e293b';
     popup.style.borderColor = '#334155';
@@ -559,7 +560,8 @@ function sharePartnerArticle(url, title, btnEl) {
     var rect = btnEl.getBoundingClientRect();
     var left = rect.left + window.scrollX;
     var top  = rect.bottom + window.scrollY + 6;
-    if (left + 200 > window.innerWidth) left = window.innerWidth - 210;
+    if (left + popupW + 12 > window.innerWidth) left = window.innerWidth - popupW - 12;
+    if (left < 12) left = 12;
     popup.style.left = left + 'px';
     popup.style.top  = top  + 'px';
   }
@@ -894,10 +896,10 @@ function renderTodayHot() {
 
           '<!-- 좌우 화살표 -->' +
           (_hotSlots.length > 1
-            ? '<button class="hot-prev absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/40 hover:bg-black/70 text-white flex items-center justify-center transition-all backdrop-blur-sm">' +
+            ? '<button class="hot-prev absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 hover:bg-black/70 text-white flex items-center justify-center transition-all backdrop-blur-sm">' +
                 '<span class="material-symbols-outlined text-lg">chevron_left</span>' +
               '</button>' +
-              '<button class="hot-next absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/40 hover:bg-black/70 text-white flex items-center justify-center transition-all backdrop-blur-sm">' +
+              '<button class="hot-next absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 hover:bg-black/70 text-white flex items-center justify-center transition-all backdrop-blur-sm">' +
                 '<span class="material-symbols-outlined text-lg">chevron_right</span>' +
               '</button>'
             : '') +
@@ -945,7 +947,8 @@ function renderTodayHot() {
       '</div>'
     : '';
 
-  wrap.innerHTML = '<div class="relative w-full h-full" style="min-height:380px">' + slidesHtml + dotsHtml + '</div>';
+  var _hotMinH = Math.max(220, Math.min(380, Math.round(window.innerHeight * 0.45)));
+  wrap.innerHTML = '<div class="relative w-full h-full" style="min-height:' + _hotMinH + 'px">' + slidesHtml + dotsHtml + '</div>';
 
   // 이벤트: 화살표 + 인디케이터
   wrap.querySelectorAll('.hot-prev').forEach(function(btn) {
@@ -1085,7 +1088,7 @@ async function renderRankings() {
     return (
       '<div class="flex items-center gap-3 px-4 py-3 ' + (i < top5.length - 1 ? 'border-b border-slate-100 dark:border-slate-800' : '') + ' hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer pn-open"' +
            ' data-pn-url="' + escHtml(a.url || '') + '" data-pn-title="' + escHtml(a.title || '') + '">' +
-        '<span class="font-black text-lg w-7 shrink-0 ' + rankClr + '">' + String(i + 1).padStart(2, '0') + '</span>' +
+        '<span class="font-black text-sm sm:text-base w-6 sm:w-7 shrink-0 ' + rankClr + '">' + String(i + 1).padStart(2, '0') + '</span>' +
         '<div class="flex-1 min-w-0">' +
           '<p class="text-sm font-semibold text-slate-800 dark:text-slate-200 leading-snug line-clamp-2">' + escHtml(a.title || '') + '</p>' +
           '<p class="text-[11px] text-slate-400 mt-0.5">' + escHtml(a.source || '') + '</p>' +

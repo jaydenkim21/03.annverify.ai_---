@@ -352,22 +352,22 @@ function renderCommunity(tab) {
           + '<div class="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800 gap-2 flex-wrap">'
 
             // 투표 카운트
-            + '<div class="flex items-center text-xs text-slate-500 dark:text-slate-400 gap-0 flex-wrap gap-y-1">'
-              + '<span class="flex items-center gap-1 pr-2.5 mr-2.5 border-r border-slate-200 dark:border-slate-700">'
+            + '<div class="flex items-center text-xs text-slate-500 dark:text-slate-400 flex-wrap gap-y-1 gap-x-0">'
+              + '<span class="flex items-center gap-1 pr-2 mr-2 border-r border-slate-200 dark:border-slate-700 whitespace-nowrap">'
                 + '<span class="material-symbols-outlined text-sm text-emerald-500" style="font-variation-settings:\'FILL\' 1">thumb_up</span>'
-                + 'Like&nbsp;<strong class="text-slate-700 dark:text-slate-300">' + cntYes + '</strong>'
+                + '<strong class="text-slate-700 dark:text-slate-300">' + cntYes + '</strong>'
               + '</span>'
-              + '<span class="flex items-center gap-1 pr-2.5 mr-2.5 border-r border-slate-200 dark:border-slate-700">'
+              + '<span class="flex items-center gap-1 pr-2 mr-2 border-r border-slate-200 dark:border-slate-700 whitespace-nowrap">'
                 + '<span class="material-symbols-outlined text-sm text-rose-500" style="font-variation-settings:\'FILL\' 1">thumb_down</span>'
-                + 'Dislike&nbsp;<strong class="text-slate-700 dark:text-slate-300">' + cntNo + '</strong>'
+                + '<strong class="text-slate-700 dark:text-slate-300">' + cntNo + '</strong>'
               + '</span>'
-              + '<span class="flex items-center gap-1 pr-2.5 mr-2.5 border-r border-slate-200 dark:border-slate-700">'
+              + '<span class="flex items-center gap-1 pr-2 mr-2 border-r border-slate-200 dark:border-slate-700 whitespace-nowrap">'
                 + '<span class="material-symbols-outlined text-sm text-amber-500">sentiment_neutral</span>'
-                + 'Neutral&nbsp;<strong class="text-slate-700 dark:text-slate-300">' + cntPartial + '</strong>'
+                + '<strong class="text-slate-700 dark:text-slate-300">' + cntPartial + '</strong>'
               + '</span>'
-              + '<span class="flex items-center gap-1">'
+              + '<span class="flex items-center gap-1 whitespace-nowrap">'
                 + '<span class="material-symbols-outlined text-sm text-slate-400">help_outline</span>'
-                + 'Not Sure&nbsp;<strong class="text-slate-700 dark:text-slate-300">' + cntNotSure + '</strong>'
+                + '<strong class="text-slate-700 dark:text-slate-300">' + cntNotSure + '</strong>'
               + '</span>'
             + '</div>'
 
@@ -500,14 +500,14 @@ function toggleVerifyReport(_id, sourceId, source) {
           + '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ' + bm[0] + '">'
             + '<span class="material-symbols-outlined text-sm">' + bm[1] + '</span>' + bm[2]
           + '</span>'
-          + '<div class="flex items-center gap-3">'
-              + '<svg width="72" height="72" viewBox="0 0 72 72" style="transform:rotate(-90deg)">'
+          + '<div class="relative flex items-center justify-center shrink-0" style="width:64px;height:64px">'
+              + '<svg width="64" height="64" viewBox="0 0 72 72" style="transform:rotate(-90deg);position:absolute;inset:0;width:100%;height:100%">'
                 + '<circle cx="36" cy="36" r="28" fill="none" stroke="#e2e8f0" stroke-width="7"/>'
                 + '<circle cx="36" cy="36" r="28" fill="none" stroke="' + ringColor + '" stroke-width="7" stroke-dasharray="' + dash + ' ' + circ + '" stroke-linecap="round"/>'
               + '</svg>'
-              + '<div class="absolute" style="position:relative;margin-left:-60px;width:72px;text-align:center;line-height:1">'
-                + '<span class="text-xl font-black" style="color:' + ringColor + '">' + score + '</span><br>'
-                + '<span class="text-[10px] font-bold text-slate-500">' + escHtml(grade) + '</span>'
+              + '<div class="absolute inset-0 flex flex-col items-center justify-center leading-tight">'
+                + '<span class="text-lg font-black" style="color:' + ringColor + '">' + score + '</span>'
+                + '<span class="text-[9px] font-bold text-slate-500">' + escHtml(grade) + '</span>'
               + '</div>'
           + '</div>'
       + '</div>'
@@ -617,8 +617,8 @@ function renderCommunityDetail(item) {
   var r = 36, circ = 2 * Math.PI * r;
   var dash = (score / 100) * circ;
   var gaugeSvg = `
-    <div class="relative flex items-center justify-center shrink-0" style="width:90px;height:90px">
-      <svg width="90" height="90" viewBox="0 0 90 90" style="transform:rotate(-90deg)">
+    <div class="relative flex items-center justify-center shrink-0 w-16 h-16 sm:w-[90px] sm:h-[90px]">
+      <svg width="100%" height="100%" viewBox="0 0 90 90" style="transform:rotate(-90deg)"
         <circle cx="45" cy="45" r="${r}" fill="none" stroke="#e2e8f0" stroke-width="8"/>
         <circle cx="45" cy="45" r="${r}" fill="none" stroke="${scoreColor}" stroke-width="8"
           stroke-dasharray="${dash} ${circ}" stroke-linecap="round"/>
@@ -677,19 +677,19 @@ function renderCommunityDetail(item) {
         </div>
       </div>
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <button onclick="voteCommunity('${item.id}','yes',this)" class="flex items-center justify-center gap-2 px-3 py-2.5 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-sm font-bold rounded-xl hover:bg-primary hover:text-white hover:border-primary transition-all">
+        <button onclick="voteCommunity('${item.id}','yes',this)" class="flex items-center justify-center gap-2 px-3 py-3 sm:py-2.5 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-sm font-bold rounded-xl hover:bg-primary hover:text-white hover:border-primary transition-all">
           <span class="material-symbols-outlined text-base">thumb_up</span>Like
           <span class="font-black">${String(cntYes).padStart(2,'0')}</span>
         </button>
-        <button onclick="voteCommunity('${item.id}','no',this)" class="flex items-center justify-center gap-2 px-3 py-2.5 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-sm font-bold rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-all">
+        <button onclick="voteCommunity('${item.id}','no',this)" class="flex items-center justify-center gap-2 px-3 py-3 sm:py-2.5 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-sm font-bold rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-all">
           <span class="material-symbols-outlined text-base">thumb_down</span>Dislike
           <span class="font-black">${String(cntNo).padStart(2,'0')}</span>
         </button>
-        <button onclick="voteCommunity('${item.id}','partial',this)" class="flex items-center justify-center gap-2 px-3 py-2.5 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-sm font-bold rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-all">
+        <button onclick="voteCommunity('${item.id}','partial',this)" class="flex items-center justify-center gap-2 px-3 py-3 sm:py-2.5 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-sm font-bold rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-all">
           <span class="material-symbols-outlined text-base">sentiment_neutral</span>Neutral
           <span class="font-black">${String(cntPartial).padStart(2,'0')}</span>
         </button>
-        <button onclick="voteCommunity('${item.id}','notsure',this)" class="flex items-center justify-center gap-2 px-3 py-2.5 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-sm font-bold rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-all">
+        <button onclick="voteCommunity('${item.id}','notsure',this)" class="flex items-center justify-center gap-2 px-3 py-3 sm:py-2.5 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-sm font-bold rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-all">
           <span class="material-symbols-outlined text-base">help_outline</span>Not Sure
           <span class="font-black">${String(cntNotSure).padStart(2,'0')}</span>
         </button>
