@@ -275,7 +275,7 @@ function renderCommunity(tab) {
   items = sortCommunityItems(items);
 
   var emptyMsg = {
-    user:    "You haven't fact-checked any claims yet.",
+    user:    'No community discussions yet.<br><span class="text-sm">Be the first to submit a claim and start the conversation!</span>',
     ainews:  'No AI News fact-checks available.',
     partner: 'No Partner News fact-checks available.',
     all:     'No discussions found.',
