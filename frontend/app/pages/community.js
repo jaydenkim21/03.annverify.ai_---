@@ -669,6 +669,13 @@ function voteCommunity(id, vote, btn) {
           }
         }
       });
+
+      // state.communityItems 의 해당 항목 카운트 동기화 (리스트 카드 반영용)
+      var listItem = (state.communityItems || []).find(function(it) { return it.id === id; });
+      if (listItem) {
+        if (prevVote && voteFieldMap[prevVote]) listItem[voteFieldMap[prevVote]] = Math.max(0, (listItem[voteFieldMap[prevVote]] || 0) - 1);
+        if (voteFieldMap[vote]) listItem[voteFieldMap[vote]] = (listItem[voteFieldMap[vote]] || 0) + 1;
+      }
     });
   }).catch(function(e) {
     console.warn('vote 저장 실패:', e);
