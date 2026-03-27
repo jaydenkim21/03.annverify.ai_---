@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="canonical" href="https://annverify.ai/methodology"/>
+<title>Methodology · ANN Verify</title>
+<meta name="description" content="ANN Verify's fact-checking methodology. Our 7-layer AI verification process, scoring criteria, and editorial standards explained transparently."/>
+<meta name="robots" content="index, follow"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://annverify.ai/methodology"/>
+<meta property="og:site_name" content="ANN Verify"/>
+<meta property="og:title" content="Methodology · ANN Verify"/>
+<meta property="og:description" content="Our 7-layer AI verification process, scoring criteria, and editorial standards explained transparently."/>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=AW-18044344125"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'AW-18044344125');
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#EEF2F7;--sidebar:#FFFFFF;--white:#FFFFFF;--blue:#2563EB;--blue-light:#EFF6FF;--blue-mid:#DBEAFE;--blue-dark:#1D4ED8;--text:#0F172A;--text2:#1E293B;--text3:#475569;--muted:#94A3B8;--border:#E2E8F0;--border2:#CBD5E1;--green:#16A34A;--green-bg:#F0FDF4;--green-bd:#BBF7D0;--red:#DC2626;--red-bg:#FEF2F2;--red-bd:#FECACA;--orange:#EA580C;--orange-bg:#FFF7ED;--orange-bd:#FED7AA;--r:12px;--r2:8px;--r3:6px}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;-webkit-font-smoothing:antialiased}
+.sidebar{width:280px;min-height:100vh;background:var(--sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;position:fixed;top:0;left:0;bottom:0;z-index:50}
+.sb-logo{padding:20px 20px 16px;border-bottom:1px solid var(--border)}
+.sb-logo a{display:flex;align-items:center;gap:10px;text-decoration:none}
+.sb-logo-icon{width:36px;height:36px;flex-shrink:0}
+.sb-logo-name{font-size:1rem;font-weight:700;color:var(--text);letter-spacing:-.01em}
+.sb-logo-sub{font-size:.65rem;color:var(--muted);margin-top:1px}
+.sb-new{margin:14px 16px 4px}
+.sb-new a{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:10px;background:var(--blue);color:#fff;border-radius:24px;font-size:.82rem;font-weight:600;text-decoration:none;transition:background .14s}
+.sb-new a:hover{background:var(--blue-dark)}
+.sb-nav{padding:8px 10px;flex:1}
+.sb-nav a{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--r2);font-size:.84rem;font-weight:500;color:var(--text3);text-decoration:none;transition:all .13s;margin-bottom:2px}
+.sb-nav a:hover{background:var(--blue-light);color:var(--blue)}
+.sb-nav a.on{background:var(--blue-light);color:var(--blue);font-weight:600}
+.sb-nav a svg{width:16px;height:16px;flex-shrink:0;opacity:.7}
+.sb-nav a:hover svg,.sb-nav a.on svg{opacity:1}
+.sb-bottom{padding:12px 16px;border-top:1px solid var(--border)}
+.sb-signin{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:var(--r2);font-size:.82rem;font-weight:500;color:var(--text3);text-decoration:none;background:var(--bg);transition:all .13s}
+.sb-signin:hover{color:var(--blue)}
+.sb-dark{display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:.82rem;color:var(--muted);cursor:pointer;border:none;background:none;margin-top:4px;width:100%;border-radius:var(--r2);transition:all .13s}
+.sb-dark:hover{color:var(--text3)}
+.main{margin-left:280px;flex:1;min-height:100vh;padding:40px 48px 80px;max-width:calc(100vw - 280px)}
+.main-inner{max-width:800px}
+.pg-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;background:var(--blue-light);border:1px solid var(--blue-mid);font-size:.68rem;font-weight:600;color:var(--blue);letter-spacing:.04em;margin-bottom:14px}
+h1{font-size:2rem;font-weight:800;color:var(--text);line-height:1.15;letter-spacing:-.03em;margin-bottom:10px}
+h1 span{color:var(--blue)}
+.pg-desc{font-size:.9rem;color:var(--text3);line-height:1.75;max-width:580px;margin-bottom:14px}
+.patent-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:28px}
+.pt{font-size:.68rem;font-weight:500;color:var(--muted);padding:3px 10px;border-radius:20px;border:1px solid var(--border);background:var(--white);display:flex;align-items:center;gap:4px}
+.pt span{color:var(--blue);font-weight:700}
+.pg-divider{height:1px;background:var(--border);margin-bottom:32px}
+.sec{margin-bottom:36px}
+.sec-num{font-size:.65rem;font-weight:700;color:var(--blue);letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px}
+h2{font-size:1.1rem;font-weight:700;color:var(--text);margin-bottom:10px}
+.body-txt{font-size:.875rem;color:var(--text3);line-height:1.78}
+.body-txt p{margin-bottom:.65rem}.body-txt p:last-child{margin-bottom:0}
+/* selection cards */
+.sel-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-top:14px}
+.sel-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px}
+.sel-ico{font-size:1.2rem;margin-bottom:7px}
+.sel-ttl{font-size:.84rem;font-weight:600;color:var(--text);margin-bottom:3px}
+.sel-txt{font-size:.76rem;color:var(--muted);line-height:1.5}
+/* pipeline */
+.pipeline{display:flex;flex-direction:column;margin-top:18px}
+.layer{display:flex;gap:0}
+.l-side{display:flex;flex-direction:column;align-items:center;width:48px;flex-shrink:0}
+.l-num{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;flex-shrink:0;border:2px solid}
+.l-conn{width:1px;flex:1;min-height:14px;margin:3px 0}
+.l-body{flex:1;padding:0 0 24px 14px}
+.l-head{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+.l-ttl{font-size:.88rem;font-weight:700;color:var(--text)}
+.l-tag{font-size:.62rem;font-weight:600;padding:2px 8px;border-radius:20px}
+.tag-ai{background:var(--green-bg);color:var(--green);border:1px solid var(--green-bd)}
+.tag-rt{background:var(--blue-light);color:var(--blue);border:1px solid var(--blue-mid)}
+.tag-hu{background:#F0F9FF;color:#0369A1;border:1px solid #BAE6FD}
+.tag-cr{background:var(--bg);color:var(--text3);border:1px solid var(--border2)}
+.l-desc{font-size:.83rem;color:var(--text3);line-height:1.68;margin-bottom:8px}
+.l-detail{font-size:.72rem;color:var(--muted);padding:8px 12px;background:var(--bg);border-radius:var(--r3);border:1px solid var(--border);line-height:1.8;font-family:monospace}
+.l-detail .k{color:var(--blue);font-weight:600}.l-detail .v{color:var(--text3)}
+.ln1 .l-num{background:var(--green-bg);border-color:var(--green-bd);color:var(--green)}
+.ln1 .l-conn{background:linear-gradient(to bottom,var(--green-bd),var(--border))}
+.ln2 .l-num{background:rgba(22,163,74,.08);border-color:rgba(22,163,74,.2);color:var(--green)}
+.ln2 .l-conn{background:linear-gradient(to bottom,var(--border),var(--blue-mid))}
+.ln3 .l-num{background:var(--blue-light);border-color:var(--blue-mid);color:var(--blue)}
+.ln3 .l-conn{background:linear-gradient(to bottom,var(--blue-mid),var(--blue-mid))}
+.ln4 .l-num{background:rgba(37,99,235,.08);border-color:rgba(37,99,235,.2);color:var(--blue-dark)}
+.ln4 .l-conn{background:linear-gradient(to bottom,var(--blue-mid),var(--orange-bd))}
+.ln5 .l-num{background:var(--orange-bg);border-color:var(--orange-bd);color:var(--orange)}
+.ln5 .l-conn{background:linear-gradient(to bottom,var(--orange-bd),rgba(234,88,12,.1))}
+.ln6 .l-num{background:rgba(234,88,12,.06);border-color:rgba(234,88,12,.15);color:var(--orange)}
+.ln6 .l-conn{background:linear-gradient(to bottom,rgba(234,88,12,.1),var(--border))}
+.ln7 .l-num{background:var(--bg);border-color:var(--border2);color:var(--text3)}
+/* hybrid grid */
+.hybrid-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.hy-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px}
+.hy-ico{font-size:1.2rem;margin-bottom:8px}
+.hy-ttl{font-size:.87rem;font-weight:700;color:var(--text);margin-bottom:5px}
+.hy-txt{font-size:.81rem;color:var(--text3);line-height:1.62}
+.hy-full{grid-column:1/-1;background:var(--blue-light);border-color:var(--blue-mid)}
+/* verdict table */
+.v-tbl{width:100%;border-collapse:collapse;margin-top:14px;background:var(--white);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.v-tbl th{padding:9px 14px;font-size:.68rem;font-weight:700;color:var(--muted);letter-spacing:.06em;text-align:left;border-bottom:1px solid var(--border);background:var(--bg)}
+.v-tbl td{padding:11px 14px;border-bottom:1px solid var(--border);font-size:.83rem;color:var(--text3)}
+.v-tbl tr:last-child td{border-bottom:none}
+.v-tbl tr:hover td{background:var(--blue-light)}
+.vp{display:inline-block;padding:2px 9px;border-radius:20px;font-size:.65rem;font-weight:700;white-space:nowrap}
+.v-a{background:var(--green-bg);color:var(--green);border:1px solid var(--green-bd)}
+.v-mt{background:#F0FDF4;color:#15803D;border:1px solid #86EFAC}
+.v-mx{background:#FEFCE8;color:#CA8A04;border:1px solid #FEF08A}
+.v-mf{background:var(--orange-bg);color:var(--orange);border:1px solid var(--orange-bd)}
+.v-f{background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd)}
+.v-u{background:var(--bg);color:var(--muted);border:1px solid var(--border2)}
+/* evidence */
+.ev-list{display:flex;flex-direction:column;gap:7px;margin-top:14px}
+.ev-item{display:flex;gap:11px;align-items:flex-start;padding:12px 14px;background:var(--white);border:1px solid var(--border);border-radius:var(--r2)}
+.ev-n{font-size:.7rem;font-weight:700;color:var(--blue);flex-shrink:0;padding-top:1px;min-width:20px}
+.ev-txt{font-size:.83rem;color:var(--text3);line-height:1.62}
+.ev-txt strong{font-weight:600;color:var(--text)}
+/* limitations */
+.lim-box{background:var(--orange-bg);border:1px solid var(--orange-bd);border-radius:var(--r);padding:18px 20px;margin-top:14px}
+.lim-ttl{font-size:.68rem;font-weight:700;color:var(--orange);letter-spacing:.07em;margin-bottom:11px}
+.lim-list{list-style:none;display:flex;flex-direction:column;gap:8px}
+.lim-list li{display:flex;gap:9px;font-size:.82rem;color:var(--text3);line-height:1.62}
+.lim-list li::before{content:'⚠';flex-shrink:0;font-size:.75rem;padding-top:1px}
+@media(max-width:768px){.sidebar{display:none}.main{margin-left:0;padding:24px 20px 60px;max-width:100vw}.hybrid-grid{grid-template-columns:1fr}.l-detail{display:none}}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sb-logo">
+    <a href="/">
+      <svg class="sb-logo-icon" viewBox="0 0 36 36" fill="none"><circle cx="18" cy="18" r="18" fill="#EFF6FF"/><path d="M18 8 L28 13.5 L28 22.5 L18 28 L8 22.5 L8 13.5 Z" fill="none" stroke="#2563EB" stroke-width="1.5"/><circle cx="18" cy="18" r="5" fill="#2563EB" opacity=".2"/><circle cx="18" cy="18" r="2.5" fill="#2563EB"/><line x1="18" y1="8" x2="18" y2="13" stroke="#2563EB" stroke-width="1.5"/><line x1="28" y1="13.5" x2="23.3" y2="16.2" stroke="#2563EB" stroke-width="1.5"/><line x1="28" y1="22.5" x2="23.3" y2="19.8" stroke="#2563EB" stroke-width="1.5"/><line x1="18" y1="28" x2="18" y2="23" stroke="#2563EB" stroke-width="1.5"/><line x1="8" y1="22.5" x2="12.7" y2="19.8" stroke="#2563EB" stroke-width="1.5"/><line x1="8" y1="13.5" x2="12.7" y2="16.2" stroke="#2563EB" stroke-width="1.5"/></svg>
+      <div><div class="sb-logo-name">ANN Verify</div><div style="font-size:.65rem;color:var(--muted);margin-top:1px">AI News Network</div></div>
+    </a>
+  </div>
+  <div class="sb-new"><a href="/"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New Fact Check</a></div>
+  <nav class="sb-nav">
+    <a href="/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>AI News</a>
+    <a href="/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Partner News</a>
+    <a href="/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Community</a>
+    <a href="/methodology.html" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>About & API</a>
+  </nav>
+  <div class="sb-bottom">
+    <a href="/" class="sb-signin"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>Sign In / Sign Up</a>
+    <button class="sb-dark"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>Dark Mode</button>
+  </div>
+</aside>
+<main class="main"><div class="main-inner">
+  <div class="pg-badge">IFCN Principle 4 · Methodology Transparency</div>
+  <h1>How We <span>Verify Claims</span></h1>
+  <p class="pg-desc">ANN Verify uses a proprietary 7-Layer AI analysis pipeline — patent pending — to evaluate claims from public figures, institutions, and viral media. Every verdict is traceable to explicit evidence and human editorial review.</p>
+  <div class="patent-row">
+    <span class="pt"><span>◆</span> Patent Pending · KIPO 2026.02.19</span>
+    <span class="pt"><span>◆</span> PCT International Filing In Progress</span>
+    <span class="pt"><span>◆</span> Inventors: Park Minwoo · Kim Baekjun</span>
+  </div>
+  <div class="pg-divider"></div>
+
+  <div class="sec">
+    <div class="sec-num">// 01</div>
+    <h2>How We Select Claims</h2>
+    <div class="body-txt"><p>We apply a selection filter to ensure resources are focused on claims that matter to the public. Per IFCN requirements, at least 75% of our fact-checks address claims related to public welfare, health, governance, or widely circulated misinformation.</p></div>
+    <div class="sel-grid">
+      <div class="sel-card"><div class="sel-ico">🏛️</div><div class="sel-ttl">Public Figure Statements</div><div class="sel-txt">Politicians, executives, officials — claims made in speeches, interviews, or official documents.</div></div>
+      <div class="sel-card"><div class="sel-ico">📊</div><div class="sel-ttl">Statistical Claims</div><div class="sel-txt">Figures cited in media, scientific papers, or social media that are unverified or misattributed.</div></div>
+      <div class="sel-card"><div class="sel-ico">🦠</div><div class="sel-ttl">Viral Misinformation</div><div class="sel-txt">Claims spreading across platforms related to health, safety, elections, or finance.</div></div>
+      <div class="sel-card"><div class="sel-ico">🌐</div><div class="sel-ttl">Institutional Assertions</div><div class="sel-txt">Claims by governments, NGOs, or international bodies that are contested or disputed.</div></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-num">// 02</div>
+    <h2>The 7-Layer Verification Pipeline</h2>
+    <div class="body-txt"><p>Each claim is processed through seven sequential analysis layers. Layers 1–6 are AI-automated. Layer 7 is the cryptographic integrity seal. A human editor reviews the final output before publication on all high-stakes verdicts.</p></div>
+    <div class="pipeline">
+      <div class="layer ln1"><div class="l-side"><div class="l-num">L1</div><div class="l-conn"></div></div><div class="l-body"><div class="l-head"><div class="l-ttl">Source Credibility Analysis</div><span class="l-tag tag-ai">AI · AUTOMATED</span></div><div class="l-desc">All referenced sources are evaluated for domain authority, publication history, editorial independence, and known bias patterns. Sources are scored 0–100 and weighted in downstream layers.</div><div class="l-detail"><span class="k">input</span>: <span class="v">claim text + cited URLs</span><br><span class="k">output</span>: <span class="v">source_scores[], domain_authority[], bias_flag</span><br><span class="k">model</span>: <span class="v">claude-sonnet-4-6 + Tavily search</span></div></div></div>
+      <div class="layer ln2"><div class="l-side"><div class="l-num">L2</div><div class="l-conn"></div></div><div class="l-body"><div class="l-head"><div class="l-ttl">Cross-Reference Verification</div><span class="l-tag tag-rt">REAL-TIME SEARCH</span></div><div class="l-desc">The core claim is matched against real-time web evidence via Tavily search. We require corroboration from at least two independent primary sources before a claim receives a definitive verdict.</div><div class="l-detail"><span class="k">input</span>: <span class="v">L1 source scores + claim</span><br><span class="k">output</span>: <span class="v">corroboration_count, conflicting_sources[], confidence_band</span><br><span class="k">method</span>: <span class="v">Tavily API · live web retrieval · date-anchored</span></div></div></div>
+      <div class="layer ln3"><div class="l-side"><div class="l-num">L3</div><div class="l-conn"></div></div><div class="l-body"><div class="l-head"><div class="l-ttl">Temporal Consistency Check</div><span class="l-tag tag-rt">REAL-TIME</span></div><div class="l-desc">Claims are evaluated against a timeline of events. We check whether the claim was accurate at the time it was made — date-sensitive claims are verified against the specific date of the original statement.</div><div class="l-detail"><span class="k">input</span>: <span class="v">claim_date, TODAY date, event_timeline</span><br><span class="k">output</span>: <span class="v">temporal_accuracy, context_change_flag, retroactive_alert</span><br><span class="k">note</span>: <span class="v">TSL time-series tracking (Patent #3)</span></div></div></div>
+      <div class="layer ln4"><div class="l-side"><div class="l-num">L4</div><div class="l-conn"></div></div><div class="l-body"><div class="l-head"><div class="l-ttl">Logical Coherence Analysis</div><span class="l-tag tag-ai">AI · AUTOMATED</span></div><div class="l-desc">The internal logic of the claim is evaluated for fallacies, false equivalences, misleading framing, and selective context. A claim can be factually accurate in parts but receive a lower verdict if the framing is designed to mislead.</div><div class="l-detail"><span class="k">input</span>: <span class="v">claim structure, L2 evidence set</span><br><span class="k">output</span>: <span class="v">fallacy_flags[], framing_score, misleading_index</span><br><span class="k">model</span>: <span class="v">claude-sonnet-4-6 extended reasoning</span></div></div></div>
+      <div class="layer ln5"><div class="l-side"><div class="l-num">L5</div><div class="l-conn"></div></div><div class="l-body"><div class="l-head"><div class="l-ttl">Statistical & Data Verification</div><span class="l-tag tag-rt">DATA LOOKUP</span></div><div class="l-desc">Numerical claims — percentages, growth rates, counts, rankings — are retrieved from authoritative databases and verified against original data sources.</div><div class="l-detail"><span class="k">input</span>: <span class="v">numerical_claims[], date_context</span><br><span class="k">output</span>: <span class="v">stat_accuracy[], deviation_pct, manipulation_flag</span><br><span class="k">sources</span>: <span class="v">WHO, World Bank, IMF, government data APIs</span></div></div></div>
+      <div class="layer ln6"><div class="l-side"><div class="l-num">L6</div><div class="l-conn"></div></div><div class="l-body"><div class="l-head"><div class="l-ttl">Expert Consensus Evaluation</div><span class="l-tag tag-hu">HUMAN REVIEW</span></div><div class="l-desc">For scientific, medical, or technical claims, we assess alignment with established expert consensus. Claims that contradict overwhelming scientific consensus receive an automatic flag regardless of other scores.</div><div class="l-detail"><span class="k">input</span>: <span class="v">domain_classification, L2+L5 evidence</span><br><span class="k">output</span>: <span class="v">consensus_alignment, expert_disagreement_flag</span><br><span class="k">escalation</span>: <span class="v">Human editor review for score &lt; 40</span></div></div></div>
+      <div class="layer ln7"><div class="l-side"><div class="l-num">L7</div></div><div class="l-body"><div class="l-head"><div class="l-ttl">BISL Integrity Hash</div><span class="l-tag tag-cr">CRYPTOGRAPHIC SEAL</span></div><div class="l-desc">A SHA-256 hash of the complete fact-check result is generated via the browser-native Web Crypto API. This tamper-evident seal ensures any post-publication alteration is immediately detectable.</div><div class="l-detail"><span class="k">method</span>: <span class="v">SHA-256 · crypto.subtle.digest() · browser-native</span><br><span class="k">output</span>: <span class="v">bisl_hash (hex), timestamp, version_id</span><br><span class="k">note</span>: <span class="v">BISL = Blockchain Integrity Seal Layer (Patent #1)</span></div></div></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-num">// 03</div>
+    <h2>AI + Human Review Structure</h2>
+    <div class="body-txt"><p>ANN Verify is AI-assisted — not fully automated. AI handles evidence retrieval and scoring at scale. Human editors maintain editorial control over final verdicts on sensitive or high-impact topics.</p></div>
+    <div class="hybrid-grid">
+      <div class="hy-card"><div class="hy-ico">🤖</div><div class="hy-ttl">What AI Does</div><div class="hy-txt">Layers 1–6 analysis, real-time evidence retrieval, scoring, cross-referencing, logical fallacy detection, statistical verification, and BISL hash generation.</div></div>
+      <div class="hy-card"><div class="hy-ico">👁️</div><div class="hy-ttl">What Humans Do</div><div class="hy-txt">Final editorial review on all verdicts scoring below 50 or flagged as high-stakes. Editors can override AI verdicts, escalate to senior review, and add Editor's Notes.</div></div>
+      <div class="hy-card hy-full"><div class="hy-ttl">Editorial Independence Guarantee</div><div class="hy-txt">All AI-generated analyses are subject to human editorial review before publication. No funder, advertiser, investor, or external party has any influence over the verdict rendered by our editorial process.</div></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-num">// 04</div>
+    <h2>Verdict Scale & Definitions</h2>
+    <div class="body-txt"><p>Every fact-check results in one of six verdict labels, applied consistently across all topics and political positions.</p></div>
+    <table class="v-tbl">
+      <thead><tr><th>VERDICT</th><th>SCORE</th><th>DEFINITION</th></tr></thead>
+      <tbody>
+        <tr><td><span class="vp v-a">TRUE</span></td><td style="font-family:monospace;font-size:.75rem;color:var(--green)">90–100</td><td>Accurate and complete. All key elements verified by multiple independent primary sources.</td></tr>
+        <tr><td><span class="vp v-mt">MOSTLY TRUE</span></td><td style="font-family:monospace;font-size:.75rem;color:#15803D">75–89</td><td>Substantially accurate but omits important context or contains minor inaccuracies that don't change the overall meaning.</td></tr>
+        <tr><td><span class="vp v-mx">MIXED</span></td><td style="font-family:monospace;font-size:.75rem;color:#CA8A04">50–74</td><td>Contains both accurate and inaccurate elements. Context determines which parts stand.</td></tr>
+        <tr><td><span class="vp v-mf">MOSTLY FALSE</span></td><td style="font-family:monospace;font-size:.75rem;color:var(--orange)">25–49</td><td>Primary claim is inaccurate or exaggerated. A small element may be technically accurate but used out of context.</td></tr>
+        <tr><td><span class="vp v-f">FALSE</span></td><td style="font-family:monospace;font-size:.75rem;color:var(--red)">0–24</td><td>Directly contradicted by multiple credible, independent primary sources. No element of the core claim holds up.</td></tr>
+        <tr><td><span class="vp v-u">UNVERIFIED</span></td><td style="font-family:monospace;font-size:.75rem;color:var(--muted)">—</td><td>Insufficient evidence to render a verdict at the time of analysis.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="sec">
+    <div class="sec-num">// 05</div>
+    <h2>Evidence Standards</h2>
+    <div class="body-txt"><p>Every source used in a verdict is cited so readers can independently verify our findings.</p></div>
+    <div class="ev-list">
+      <div class="ev-item"><div class="ev-n">E1</div><div class="ev-txt"><strong>Primary sources are always preferred.</strong> Official government publications, peer-reviewed research, and institutional reports take precedence over secondary sources.</div></div>
+      <div class="ev-item"><div class="ev-n">E2</div><div class="ev-txt"><strong>All significant sources are cited with links.</strong> Readers can replicate our research. We do not use sources we cannot publicly link to, except where source safety would be compromised.</div></div>
+      <div class="ev-item"><div class="ev-n">E3</div><div class="ev-txt"><strong>Date context is mandatory.</strong> We note the date of each source and flag when a source predates the claim being evaluated.</div></div>
+      <div class="ev-item"><div class="ev-n">E4</div><div class="ev-txt"><strong>Real-time retrieval via Tavily API ensures freshness.</strong> Live search is performed at analysis time — we do not rely solely on model training data.</div></div>
+      <div class="ev-item"><div class="ev-n">E5</div><div class="ev-txt"><strong>Conflicting sources are disclosed, not suppressed.</strong> If credible sources disagree, we present the disagreement transparently.</div></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-num">// 06</div>
+    <h2>Known Limitations</h2>
+    <div class="body-txt"><p>Transparency about what we cannot do is as important as confidence in what we can.</p></div>
+    <div class="lim-box">
+      <div class="lim-ttl">HONEST LIMITATIONS</div>
+      <ul class="lim-list">
+        <li>AI language models may carry training biases. We mitigate this through human review and multi-source cross-referencing, but cannot guarantee complete neutrality.</li>
+        <li>Claims requiring specialized expertise are escalated to human editorial review, but we do not employ domain-specific experts for every field.</li>
+        <li>Real-time retrieval is limited to publicly available web content. Claims supported only by paywalled research receive an UNVERIFIED verdict.</li>
+        <li>Our analysis reflects evidence available at the time of publication. New information may emerge — we encourage correction requests when this happens.</li>
+        <li>ANN Verify does not evaluate intent or motivation — only factual accuracy.</li>
+      </ul>
+    </div>
+  </div>
+</div></main>
+</body>
+</html>
