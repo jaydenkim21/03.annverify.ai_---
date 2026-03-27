@@ -392,6 +392,145 @@ function renderCommunity(tab) {
 }
 
 // ── 공유 ──────────────────────────────────────────────────────────────
+// ── Verify Report 드롭다운 ────────────────────────────────────────────
+var _verifyPanelOpen = false;
+
+function toggleVerifyReport(_id, sourceId, source) {
+  var panel   = document.getElementById('cd-verify-panel');
+  var btnIcon = document.getElementById('cd-verify-btn-icon');
+  if (!panel) return;
+
+  var item  = state.communityDetail || {};
+  var score = item.score || 0;
+
+  // 미검증 기사 → 팩트체크 실행
+  if (!score) {
+    if (source === 'ainews' && sourceId) {
+      if (typeof runNewsCheck === 'function') runNewsCheck(sourceId);
+    } else {
+      var input = item.sourceUrl || item._origUrl || item.title || '';
+      if (typeof _runVerifyAPI === 'function') {
+        _runVerifyAPI(input, item.title || '');
+      } else {
+        state.lastInput = input;
+        state.imageB64  = null;
+        var el = document.getElementById('home-input');
+        if (el) el.value = input;
+        if (typeof runCheck === 'function') runCheck();
+      }
+    }
+    return;
+  }
+
+  if (_verifyPanelOpen) {
+    panel.classList.add('hidden');
+    panel.innerHTML = '';
+    if (btnIcon) btnIcon.textContent = 'expand_more';
+    _verifyPanelOpen = false;
+    return;
+  }
+
+  // AI News: state.newsData에서 전체 분석 데이터 조회
+  var article = source === 'ainews' ? (state.newsData || []).find(function(a) { return a.id === sourceId; }) : null;
+  var item    = state.communityDetail || {};
+
+  var score = article ? (article.trust_score || article.score || item.score || 0) : (item.score || 0);
+  var grade = article ? (article.trust_grade || article.grade || item.grade || '') : (item.grade || '');
+  var summary = article ? (article.d_sum || article.excerpt || article.summary || item.description || '') : (item.description || '');
+  var vc = score >= 80 ? 'verified' : score >= 65 ? 'likely' : score >= 45 ? 'partial' : score >= 30 ? 'misleading' : 'false';
+  var badgeMap = {
+    verified:   ['bg-emerald-100 text-emerald-700 border-emerald-200', 'verified_user', 'VERIFIED HIGH ACCURACY'],
+    likely:     ['bg-blue-100 text-blue-700 border-blue-200',          'thumb_up',      'LIKELY TRUE'],
+    partial:    ['bg-amber-100 text-amber-700 border-amber-200',        'balance',       'PARTIALLY VERIFIED'],
+    misleading: ['bg-orange-100 text-orange-700 border-orange-200',     'warning',       'MISLEADING'],
+    false:      ['bg-red-100 text-red-700 border-red-200',              'cancel',        'FALSE'],
+  };
+  var bm = badgeMap[vc] || badgeMap['partial'];
+  var ringColors = { verified:'#10b981', likely:'#3b82f6', partial:'#f59e0b', misleading:'#f97316', false:'#ef4444' };
+  var ringColor  = ringColors[vc] || '#f59e0b';
+  var circ = 2 * Math.PI * 28;
+  var dash = (score / 100) * circ;
+
+  // Claims
+  var claims = article ? (article.d_claims || []).map(function(c) { return { sentence: c.t || '', status: c.s || 'PARTIAL', verdict: c.v || '' }; })
+                       : [];
+  var claimsHtml = claims.length
+    ? claims.slice(0, 5).map(function(c) {
+        var st = (c.status || '').toUpperCase();
+        var isCon = st === 'CONFIRMED', isDis = st === 'DISPUTED' || st === 'FALSE';
+        var border = isCon ? 'border-l-emerald-500 bg-emerald-50/50 dark:bg-emerald-900/10'
+                   : isDis ? 'border-l-red-500 bg-red-50/50 dark:bg-red-900/10'
+                   :         'border-l-amber-500 bg-amber-50/50 dark:bg-amber-900/10';
+        var badge = isCon ? '<span class="text-emerald-600 text-xs font-bold shrink-0">✓ CONFIRMED</span>'
+                  : isDis ? '<span class="text-red-600 text-xs font-bold shrink-0">✗ DISPUTED</span>'
+                  :         '<span class="text-amber-600 text-xs font-bold shrink-0">~ PARTIAL</span>';
+        return '<div class="border-l-4 ' + border + ' pl-3 py-2 rounded-r-xl">'
+          + '<div class="flex items-start justify-between gap-2">'
+            + '<p class="text-xs text-slate-700 dark:text-slate-300 leading-snug">' + escHtml(c.sentence) + '</p>'
+            + badge
+          + '</div>'
+          + (c.verdict ? '<p class="text-xs text-slate-400 mt-1">' + escHtml(c.verdict) + '</p>' : '')
+          + '</div>';
+      }).join('')
+    : '<p class="text-xs text-slate-400">No claims analysis available.</p>';
+
+  // Evidence
+  var ev = article ? { supporting: article.d_sup || [], contradicting: article.d_con || [] } : {};
+  var evHtml = '';
+  if ((ev.supporting || []).length) {
+    evHtml += '<div class="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-100 dark:border-emerald-800">'
+      + '<p class="text-xs font-bold uppercase text-emerald-700 dark:text-emerald-400 tracking-widest mb-2">Supporting Evidence</p>'
+      + '<ul class="space-y-1">' + ev.supporting.slice(0, 3).map(function(s) {
+          return '<li class="text-xs text-emerald-900 dark:text-emerald-200 flex items-start gap-1.5"><span class="text-emerald-500 shrink-0">✓</span>' + escHtml(s) + '</li>';
+        }).join('') + '</ul></div>';
+  }
+  if ((ev.contradicting || []).length) {
+    evHtml += '<div class="p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-100 dark:border-red-800">'
+      + '<p class="text-xs font-bold uppercase text-red-700 dark:text-red-400 tracking-widest mb-2">Contradicting Evidence</p>'
+      + '<ul class="space-y-1">' + ev.contradicting.slice(0, 3).map(function(s) {
+          return '<li class="text-xs text-red-900 dark:text-red-200 flex items-start gap-1.5"><span class="text-red-500 shrink-0">✗</span>' + escHtml(s) + '</li>';
+        }).join('') + '</ul></div>';
+  }
+
+  panel.innerHTML =
+    '<div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-6 mb-5 space-y-5">'
+
+      // 헤더: 배지 + 점수
+      + '<div class="flex items-center justify-between gap-4 flex-wrap">'
+          + '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ' + bm[0] + '">'
+            + '<span class="material-symbols-outlined text-sm">' + bm[1] + '</span>' + bm[2]
+          + '</span>'
+          + '<div class="flex items-center gap-3">'
+              + '<svg width="72" height="72" viewBox="0 0 72 72" style="transform:rotate(-90deg)">'
+                + '<circle cx="36" cy="36" r="28" fill="none" stroke="#e2e8f0" stroke-width="7"/>'
+                + '<circle cx="36" cy="36" r="28" fill="none" stroke="' + ringColor + '" stroke-width="7" stroke-dasharray="' + dash + ' ' + circ + '" stroke-linecap="round"/>'
+              + '</svg>'
+              + '<div class="absolute" style="position:relative;margin-left:-60px;width:72px;text-align:center;line-height:1">'
+                + '<span class="text-xl font-black" style="color:' + ringColor + '">' + score + '</span><br>'
+                + '<span class="text-[10px] font-bold text-slate-500">' + escHtml(grade) + '</span>'
+              + '</div>'
+          + '</div>'
+      + '</div>'
+
+      // Summary
+      + (summary ? '<p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">' + escHtml(summary) + '</p>' : '')
+
+      // Claims
+      + (claims.length ? '<div>'
+          + '<p class="text-xs font-bold uppercase text-slate-500 tracking-widest mb-3">Claims Analysis</p>'
+          + '<div class="space-y-2">' + claimsHtml + '</div>'
+        + '</div>' : '')
+
+      // Evidence
+      + (evHtml ? '<div class="space-y-3">' + evHtml + '</div>' : '')
+
+    + '</div>';
+
+  panel.classList.remove('hidden');
+  if (btnIcon) btnIcon.textContent = 'expand_less';
+  _verifyPanelOpen = true;
+}
+
 function shareCommunityDetail() {
   var item = state.communityDetail;
   var title = item ? item.title : document.title;
@@ -472,8 +611,7 @@ function renderCommunityDetail(item) {
   var score     = item.score || 0;
   var scoreColor = score >= 80 ? '#10b981' : score >= 60 ? '#3b82f6' : score >= 40 ? '#f59e0b' : '#ef4444';
   var gradeLabel = score >= 80 ? 'A TRUST' : score >= 60 ? 'B TRUST' : score >= 40 ? 'C TRUST' : 'D TRUST';
-  var src       = SOURCE_BADGE[item.source] || SOURCE_BADGE.user;
-  var sourceUrl = item.sourceUrl || '';
+  var src = SOURCE_BADGE[item.source] || SOURCE_BADGE.user;
 
   // 원형 게이지 SVG
   var r = 36, circ = 2 * Math.PI * r;
@@ -512,13 +650,15 @@ function renderCommunityDetail(item) {
         <!-- 우측: 게이지 + Verify Report 버튼 -->
         <div class="flex flex-col items-center justify-center gap-3 shrink-0 w-32">
           ${gaugeSvg}
-          <button onclick="${sourceUrl ? `window.open('${escHtml(sourceUrl)}','_blank')` : 'void(0)'}"
-            class="w-full py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold rounded-xl text-sm hover:opacity-90 transition-all text-center">
-            Verify Report
+          <button id="cd-verify-btn" onclick="toggleVerifyReport('${escHtml(item.id)}','${escHtml(item.sourceId || '')}','${escHtml(item.source || '')}')"
+            class="w-full py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold rounded-xl text-sm hover:opacity-90 transition-all text-center flex items-center justify-center gap-1">
+            <span class="material-symbols-outlined text-sm" id="cd-verify-btn-icon">expand_more</span>Verify Report
           </button>
         </div>
       </div>
-    </div>`;
+    </div>
+    <!-- Verify Report 드롭다운 패널 -->
+    <div id="cd-verify-panel" class="hidden overflow-hidden transition-all duration-300"></div>`;
 
   // 커뮤니티 폴
   var cntYes     = item.yesCount     || 0;
