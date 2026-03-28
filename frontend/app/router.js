@@ -18,7 +18,7 @@ function goPage(page, pushHistory) {
   if (page === 'news'      && !state.newsData.length)      loadNews();
   if (page === 'partner') {
     if (!state.partnerArticles.length) loadPartner();
-    else { renderPartners(); renderPartnerArticles(); }
+    else { renderPartners(); renderPartnerArticles(); renderRankings(); if (_hotSlots.length) renderTodayHot(); else loadTodayHot(); }
   }
   if (page === 'community' && !state.communityData.length) loadCommunity();
   if (page === 'report')             renderReport();
